@@ -1,0 +1,139 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_gettimestr" 3fr "03 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_gettimestr,
+cjg_prttimestr -
+parses or prints a timestring.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "tmo_t cjg_gettimestr (char *" tstr ");"
+.BI "int cjg_prttimestr (char *" tstr ", int " tlen ", tmo_t " tstamp ", int " tform ");"
+.BI "int cjg_gettimestr2 (tmo_t *" out ", char *" tstr ");"
+.BI "tmo_t cjg_gettimestrns (char *" tstr ");"
+.BI "int cjg_prttimestrns (char *" tstr ", int " tlen ", tmo_t " tstamp ", int " tform ");"
+.BI "int cjg_gettimestr2ns (tmo_t *" out ", char *" tstr ");"
+.fi
+
+
+.SH DESCRIPTION
+.SS cjg_gettimestr
+parses a timestring of either format:
+.TP
+.B yyyymmddThhmiss[.micro]
+e.g: 20110503T012523
+.br
+This always parses an absolute time. The microseconds part is optional.
+.TP
+.B yyyy:mm:ddDhh:mi:ss[.micro]
+e.g: 2011:05:03T01:25:23.12
+.br
+This as well parses an absolute time. The microeconds part is optional.
+.TP
+.B YYYY:MM:DDdHH:MI:SS.micro
+The same as above, but with a small 'd' in the middle. This indicates
+a delta time (time difference). Here the only mandatory part is the
+seconds. Field that are missing are treated as 0.
+E.g. 
+.nf
+10 => 10 seconds
+10.23 => 10 seconds and 230 milliseconds.
+2:10 => 2 minutes and 10 seconds
+1:13:10 => 1 hour 13 minutes and 10 seconds.
+1d12:1:10 => 1 day 12 hours 1 minute and 10 seconds.
+.fi
+When the letter 'd' is given the lower parts might miss, e.g.:
+.nf
+1d => 1 day
+1d12 => 1 day 12 hours
+1d12:1 => 1 day 12 hours and 1 minute
+2:17d12 => 2 months 17 days and 12 hours
+1::10d => 1 year and 10 days
+.fi
+All the number can take any value, without range. E.g:
+.nf
+1234.10 => 1234 seconds and 100 milliseconds.
+100:200 => 100 minutes and 200 seconds.
+.fi
+.sp
+This function returns the composed timestamp. The function uses
+the default rule 
+.I CRUL_T_CJG
+for composing.
+.SS cjg_gettimestr2
+works like cjg_gettimestr, but returns the timestamp as a parameter.
+The function will return the kind of timestring found 
+.BR "" "(" CJG_TSTR_T_T ", " CJG_TSTR_T_D " or " CJG_TSTR_T_DDELTA ")."
+In case of error a (negative) error code is returned.
+.SS cjg_prttimestr
+is the contrary to cjg_gettimestr. It takes a timestamp and writes
+out a string representation to the given buffer
+.IR tstr .
+.I tlen
+is the length of the buffer provided. Not more then tlen bytes 
+(including the terminating 0-byte) are written.
+.sp
+.I tform
+can take one of the following:
+.TP
+.B CJG_TSTR_T_T
+prints the T form (including microseconds).
+E.g. 20110503T012523.123456
+.TP
+.B CJG_TSTR_T_D
+prints the D form (including microseconds).
+E.g. 2011:05:03D01:25:23.123456
+.TP
+.B CJG_TSTR_T_DDELTA
+prints the d form (delta time) (including microseconds).
+E.g. 23.123456
+only the relevant parts are written.
+.SS
+.B ""
+This function returns the number of bytes written. If the writing
+was truncated due to little buffer space, the number of bytes, which
+would be written if the space would be large enough is returned.
+The terminating 0-byte is not counted.
+It is legal to pass a NULL buffer and a 0 length to determine the
+buffer length needed.
+.SS
+.B cjg_gettimestrns
+the same as cjg_gettimestr, but the returned timestamp is in nano seconds
+rather than micro seconds.
+.SS
+.B cjg_gettimestr2ns
+the same as cjg_gettimestr2, but the returned timestamp is in 
+nano seconds, rather than micro seconds.
+.SS
+.B cjg_prttimestrns
+the same as cjg_prttimestr, but the timestamp passed is considered being
+in nano seconds rather than micro seconds.
+
+
+.SH "SEE ALSO"
+.BR cjg_breakdown "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR cjg_getyear "(3fr), "
+.BR cjg_isleap "(3fr), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

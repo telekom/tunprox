@@ -1,0 +1,79 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cal" 3fr "01 may 2011" "Frank Reker" "frlib"
+.SH NAME
+frlib - calendar functions, to handle calendar and time based functionality
+
+
+.SH DESCRIPTION
+This section contains a collection of time and calendar based functionality.
+Yet it does contain the following sub categories:
+.TP
+.BR tz " and " tzcorrect
+.B tz(3fr) 
+does contain a parser for timezone information. That is, it can parse
+the posix timezone variable, and the timezone database used on many
+un*x systems nowadays.
+.B tzcorrect(3fr) does contain functions to convert from utc to local
+time and vice versa (including leap second handling).
+.TP
+.B crule
+stands for calendar rule, and make it possible to handle timezone information,
+and other calendar rules, such as the gregorian reform with a single
+integer. This is used by other calendar functions. See 
+.B crule(3fr)
+for details.
+.TP
+.B cjg
+stands for Julian-Gregorian Calendar, and handles the most wide spread
+calendar system nowadays. See
+.B cjg(3fr)
+for more detail.
+.TP
+.B romkal
+functions to print out or parse a date in latin, e.g.
+.nf
+ante diem III kalendas aprilias MMDCCLXIV ab urbe condita
+.fi
+correspondes to the 30 march 2764 ab urbe condita or 2011 a.d.
+However these functions don't use the old roman calendar (prior
+to caesar), but do use the julian-gregorian calendar. only that
+they calculate in ab urbe condita (since the foundation of
+the city of rome in 753 bc).
+See
+.B romkal(3fr)
+for more details.
+.TP
+.B tmo
+Does contain now depricated functions. They remain here for
+backward compatibility, but should not be used any more.
+Therfore they are not documented. Some of them are still
+documented in timeop(3fr).
+
+
+.SH "SEE ALSO"
+.BR tz "(3fr), "
+.BR tzcorrect "(3fr), "
+.BR crule "(3fr), "
+.BR cjg "(3fr), "
+.BR romkal "(3fr), "
+.BR timeop "(3fr), "
+.BR tzset "(3), "
+.BR tzfile "(5), "
+.BR frlib "(3fr)."
+
+
+
+

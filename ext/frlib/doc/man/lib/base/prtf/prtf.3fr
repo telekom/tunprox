@@ -1,0 +1,79 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "printf" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+fdprtf,
+vfdprtf,
+asprtf,
+vasprtf,
+sasprtf,
+vsasprtf
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/prtf.h>
+.sp
+.BI "int fdprtf (int fd, char *fmt, ...);"
+.BI "int vfdprtf (int fd, char *fmt, va_list ap);"
+.sp
+.BI "char *asprtf (char *fmt, ...);"
+.BI "char *vasprtf (char *fmt, va_list ap);"
+.BI "char *sasprtf (char *fmt, ...);"
+.BI "char *vsasprtf (char *fmt, va_list ap);"
+.fi
+
+
+
+.SH DESCRIPTION
+.TP
+.B fdprtf
+is a printf (3) compatible function, which prints to an open file descriptor.
+Under Linux this function does call dprintf(3). On other plattforms it is
+reimplemented using other printf(3) function calls.
+.TP
+.B vfdprtf
+identical to fdprtf, but uses a va_list pointer instead of a variable
+argument list.
+.TP
+.B asprtf
+works like sprintf, but the buffer the string is written to is allocated and
+needs to be freed.
+.TP
+.B vasprtf
+is the va_list version of asprtf.
+.TP
+.B sasprtf
+like asprtf, but the buffer is a static variable and overwritten with the
+next call to sasprtf. The buffer must NOT be freed.
+.br
+.B Note:
+This function is NOT thread safe.
+.TP
+.B vsasprtf
+is the va_list version of sasprtf.
+
+.SH Compability
+All functions above are implemented using the libc-printf functions, thus
+the behaviour depends on the libc, that's used.
+
+
+.SH "SEE ALSO"
+.BR printf "(3), "
+.BR frlib "(3fr)."
+
+
+
+

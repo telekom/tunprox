@@ -1,0 +1,82 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "rerr_getstr" 3fr "27 oct 2009" "Frank Reker" "frlib"
+.SH NAME
+rerr_getstr, rerr_getstr2, rerr_getstr2s, rerr_getstr2m, 
+rerr_getstr3 - converts an error number to a human readable
+error message.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "char *rerr_getstr (int " myerrno ");"
+.BI "char *rerr_getstr2  (char *" outstr ", int " outlen ", int " myerrno ");"
+.BI "char *rerr_getstr2m (int " myerrno ");"
+.BI "char *rerr_getstr2s (int " myerrno ");"
+.sp
+.BI "#define rerr_getstr3(" myerrno ")  (rerr_getstr2(errstr, sizeof(errstr), (myerrno)))"
+.fi
+
+.SH DESCRIPTION
+These functions take an frlib error number and returns a human readable error
+message. 
+.TP
+.B rerr_getstr
+does return a pointer to a constant string representing the error message.
+.TP
+.B rerr_getstr2
+does print the error message to the buffer
+.IR outstr "."
+In case the error number was
+.I RERR_SYSTEM
+the output of strerror is appended to the error message.
+At most 
+.I outlen 
+bytes are printed (including the terminating NUL character).
+.TP
+.B rerr_getstr2m
+does do the same as rerr_getstr2, but allocates the needed memory.
+.br
+.B Note:
+The returned buffer needs to be freed.
+.TP
+.B rerr_getstr2s
+works like rerr_getstr2m, but uses a static buffer, which will become
+invalid after the next call of rerr_getstr2s
+.br
+.B Note:
+This function is
+.B not
+thread safe.
+.TP
+.B rerr_getstr3
+is a macro, that calls rerr_getstr2 passing to it the local variable
+.IR errstr "."
+That means you need to declare that variable.
+.B Note,
+that the array needs to be of constant size; e.g.:
+.nf
+char errstr[128];
+.fi
+
+
+.SH "SEE ALSO"
+.BR errors "(5fr), "
+.BR rerr_register "(3fr)."
+
+
+
+

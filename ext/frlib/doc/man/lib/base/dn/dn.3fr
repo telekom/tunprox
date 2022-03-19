@@ -1,0 +1,79 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "dn" 3fr "11 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+dn_split,
+dn_cmp,
+dn_cmp_struct,
+dn_getpart,
+dn_hfree,
+dn_cpy
+\- functions to handle destinguished names.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/dn.h>
+.sp
+.BI "#define DN_NULL"
+.sp
+.BI "int dn_split (struct dn *" dns ", char *" dn ");"
+.BI "int dn_cmp (char *" dn1 ", char *" dn2 ");"
+.BI "int dn_cmp_struct (struct dn *" dn1 ", struct dn *" dn2 ");"
+.BI "char * dn_getpart (struct dn *" dn ", char *" var ");"
+.sp
+.BI "int dn_hfree (struct dn *" dn ");"
+.BI "int dn_cpy (struct dn *" dn1 ", struct dn *" dn2 ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B dn_split
+splits a destinguished name into a list of variable / value pairs.
+The list is then sorted lexicographical (only variable part, the values
+are left in unchanged order).
+.TP
+.B dn_cmp
+compares two destinguished names. The function returns 0 if both are
+equal -1 if the first is considered "smaller" than the second one
+and +1 if it is considered "bigger".
+.br
+A destinguished name is considered smaller if it contains less elements or
+comparing each element (first variable then value) after sorting (see dn_split).
+The variable part is compared case insensitive and the value case sensitive.
+.TP
+.B dn_cmp_struct
+like dn_cmp, but compares destinguished names already split.
+.TP
+.B dn_getpart
+returns the value part of the first appearance of given variable.
+.TP
+.B dn_cpy
+copies a split destinguished name.
+.TP
+.B dn_hfree
+frees a split destinguished name. To avoid calling this function to an
+unitialized structure (which might result in a segmentation fault),
+initialize the structure using the macro DN_NULL.
+.nf
+struct dn mydn = DN_NULL;
+.fi
+
+.SH "SEE ALSO"
+.BR frlib "(3fr)."
+
+
+
+

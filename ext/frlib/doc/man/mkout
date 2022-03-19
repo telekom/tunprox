@@ -1,0 +1,76 @@
+#!/bin/bash
+
+test -d out || mkdir out
+find ./ -name '*.?fr' -print0 | \
+	while read -d $'\0' i; do 
+		test "`echo $i | tr / \\n | grep -w bak`" && continue; 
+		test "`echo $i | tr / \\n | grep -w out`" && continue; 
+		j="`basename $i`"
+		e="`echo -n $i | sed -e 's/.*\.\([^\.]*\)/\1/'`"; 
+		test -d out/man$e || mkdir -p out/man$e; 
+		if test -e "out/man$e/$j"; then
+			#diff -q "$i" "out/man$e/$j" >/dev/null 2>&1 && continue;
+			test "$i" -nt "out/man$e/$j" || continue;
+			rm -fv "out/man$e/$j"
+		elif test -e "out/man$e/$j.bz2"; then
+			#bunzip2 -c "out/man$e/$j.bz2" > xxx
+			#diff -q "$i" xxx >/dev/null 2>&1
+			#ret=$?
+			#rm -f xxx
+			#test $ret -eq 0 && continue;
+			test "$i" -nt "out/man$e/$j.bz2" || continue;
+			rm -fv "out/man$e/$j.bz2"
+		fi
+		cp -v "$i" "out/man$e/";
+		cd out/man$e
+		for m in `cat ../../meta.man`; do
+			test "$j" = "$m" && break
+		done || \
+		cat "$j" | \
+			sed -n -e '/^\.SH[ \t]*NAME/,/^\.SH/p' | \
+			grep -v ^.SH | tr ", \t" \\n | tr -d '\\' | \
+			sed -n -e '1,/^\-$/p' | \
+			grep -vx "" | grep -vx "-" | \
+			while read k; do 
+				test "$j" = "$k.$e" -o "$j" = "$k.$e.bz2" && continue 
+				test -e "$k.$e" && { test "$j" -nt "$k.$e" || continue; }
+				test -e "$k.$e.bz2" && { test "$j" -nt "$k.$e.bz2" || continue; }
+				echo create "man$e/$k.$e"
+				echo ".so man$e/$j" > "$k.$e"; 
+				bzip2 -9 "$k.$e"
+			done
+		cd ../..
+		bzip2 -9 "out/man$e/$j"
+	done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# Overrides for XEmacs and vim so that we get a uniform tabbing style.
+# XEmacs/vim will notice this stuff at the end of the file and automatically
+# adjust the settings for this buffer only.  This must remain at the end
+# of the file.
+# ---------------------------------------------------------------------------
+# Local variables:
+# c-indent-level: 3
+# c-basic-offset: 3
+# tab-width: 3
+# End:
+# vim:tw=0:ts=3:wm=0:
+#

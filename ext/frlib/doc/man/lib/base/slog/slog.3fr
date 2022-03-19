@@ -1,0 +1,192 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "slog" 5fr "26 sep 2009" "Frank Reker" "frlib"
+.SH NAME
+slogf,
+vslogf,
+slogstr,
+smlogf,
+vsmlogf,
+smlogstr,
+shlogf,
+vshlogf,
+shlogstr,
+slog_gethandle,
+slog_releasehandle,
+slogfinish,
+slog_getlevel,
+slog_minlevel,
+smlog_minlevel,
+shlog_minlevel,
+slog_set_prog,
+slog_get_prog,
+slog_setpid,
+slog_reconfig
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "int slogf (int " level ", char *" fmt ", ...);"
+.BI "int vslogf (int " level ", char *" fmt ", va_list " ap ");"
+.BI "int slogstr (int " level ", char *" msg ");"
+.sp
+.BI "int smlogf (char *" module ", int " level ", char *" fmt ", ...);"
+.BI "int vsmlogf (char *" module ", int " level ", char *" fmt ", va_list " ap ");"
+.BI "int smlogstr (char *" module ", int " level ", char *" msg ");"
+.sp
+.BI "int shlogf (int " handle ", int " level ", char *" fmt ", ...);"
+.BI "int vshlogf (int " handle ", int " level ", char *" fmt ", va_list " ap ");"
+.BI "int shlogstr (int " handle ", int " level ", char *" msg ");"
+.sp
+.BI "int slog_gethandle (char *" module ");"
+.BI "void slog_releasehandle (int " handle ");"
+.BI "int slogfinish ();"
+.sp
+.BI "int slog_getlevel (char *" level ");"
+.BI "int slog_minlevel ();"
+.BI "int smlog_minlevel (char *" module ");"
+.BI "int shlog_minlevel (int " handle ");"
+.sp
+.BI "int slog_set_prog (char *" prog ");"
+.BI "char *slog_get_prog ();"
+.BI "int slog_setpid (int " pid ");"
+.BI "void slog_reconfig ();"
+.sp
+.BI "extern int SLOG_H_FRLIB;"
+.BI "int frlogf (int " level ", char *" fmt ", ...);"
+.fi
+
+.SH DESCRIPTION
+These function serve for writing log messages to a logfile. Furthermore
+they can write to /dev/console, to syslog and stderr if configured. 
+The destinations to log to are determined by the config file, as well
+as the minimum log level to write to. The configuration is quite
+powerfull and allow distinguisching between different programmes and
+modules.
+.br
+The most important functions are 
+.IR slogf ", " smlogf " and " shlogf .
+The 
+.IR "sm- " and " sh- "
+versions allow the specification of modules, while the 
+.I "s- "
+version uses global settings (without module specifications).
+.sp
+The macros
+.IR SLOGF ", " SMLOGF " and " SHLOGF .
+add filename, line number and function to the output.
+Otherwise, they are identical to ther small letter correspondence.
+.sp
+The handle
+.I SLOG_H_FRLIB
+and the function
+.IR frlogf " or " FRLOGF
+are for usage of the frlib only. The frlib does use the module 
+.IR frlib ", "
+and these functions are for that purpose. So don't use them outside
+the scope of the frlib.
+.sp
+For more information see the individual man pages.
+
+
+.SH Levels for Log Messages
+
+The levels are the same as for syslog(3), with some additions.
+.TP
+.BR LOG_VVERB ", " "LOG_VVERBOSE (9)"
+debug message - for very verbose output.
+.TP
+.BR LOG_VERB ", " "LOG_VERBOSE (8)"
+debug message - for verbose output.
+.TP
+.B LOG_DEBUG (7)
+normal debug messages.
+.TP
+.B LOG_INFO (6)
+informational message. Here should appear messages, that are interesting 
+in normal operation, not only in debug. (e.g. if a programme makes connection
+to the outside world).
+.TP
+.B LOG_NOTICE (5)
+warning message for normal conditions.
+This is for messages, that are significant to note, but the programme
+is still in normal operation.
+.TP
+.BR LOG_WARNING ", " "LOG_WARN (4)"
+warning messages for abnormal conditions. The programme can continue, but
+might cause an error condition later on.
+.TP
+.BR LOG_ERR ", " "LOG_ERROR (3)"
+error message - for normal errors.
+.TP
+.B LOG_CRIT (2)
+error message - in critical conditions (e.g. other programmes might be
+affected as well).
+.TP
+.B LOG_ALERT (1)
+a manual intervention is neccessary immediately. Generally a reboot can
+resolve this problem.
+.TP
+.BR LOG_EMERG ", " "LOG_PANIC (0)"
+The system is unusable. - Even after a reboot.
+.TP
+.B LOG_NONE (10)
+Messages with this level are never written. It comes handy, when using
+a variable to hold the level; thus you can easily disable logging.
+.TP
+.B LOG_STDERR (0x10)
+You can OR the level with LOG_STDERR. In this case the message is written
+to stderr as well. Note: Only the message preceded by the programme name
+is written, but not the timestamp etc. 
+.TP
+.B LOG_MASK_LEVEL (0x0f)
+Is a mask, that can be used to get the level part (without the LOG_STDERR).
+.TP
+.B LOG_ERR2 (LOG_ERR|LOG_STDERR)
+Is a short hand for LOG_ERR | LOG_STDERR. Thus the message is written to
+the log file with lever LOG_ERR and to stderr.
+.TP
+.B LOG_CRIT2 (LOG_CRIT|LOG_STDERR)
+Is a short hand for LOG_CRIT | LOG_STDERR. Thus the message is written to
+the log file with lever LOG_CRIT and to stderr.
+
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slogf "(3fr), "
+.BR vslogf "(3fr), "
+.BR slogstr "(3fr), "
+.BR smlogf "(3fr), "
+.BR vsmlogf "(3fr), "
+.BR smlogstr "(3fr), "
+.BR shlogf "(3fr), "
+.BR vshlogf "(3fr), "
+.BR shlogstr "(3fr), "
+.BR slog_gethandle "(3fr), "
+.BR slog_releasehandle "(3fr), "
+.BR slogfinish "(3fr), "
+.BR slog_getlevel "(3fr), "
+.BR slog_minlevel "(3fr), "
+.BR smlog_minlevel "(3fr), "
+.BR shlog_minlevel "(3fr), "
+.BR slog_set_prog "(3fr), "
+.BR slog_get_prog "(3fr), "
+.BR slog_setpid "(3fr), "
+.BR slog_reconfig "(3fr)."
+
+
+
+

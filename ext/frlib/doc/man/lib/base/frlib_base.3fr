@@ -1,0 +1,164 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "frlib_base" 3fr "24 feb 2010" "Frank Reker" "frlib"
+
+.SH NAME
+frlib - a collection of usefull functions and tool written by Frank Reker
+
+.SH DESCRIPTION
+The base section contains a variety of different functions. Here you'll
+find an overview of what it contains.
+.TP
+.B frinit(3fr)
+A function for initializing the frlib. It is not neccessary to initialize the
+frlib, but wise doing so.
+.TP
+.B config(3fr)
+The frlib contains a very powerfull config file parser.
+A couple of frlib functions do make use of that and request variables from the 
+config files, to make its behaviour configurable. See 
+.BR frlib.rc "(5fr) "
+for the format of the config file and for a set of config variables used by
+the frlib.
+.TP
+.B secureconfig(3fr)
+Sometimes certain configuration parameters, such as database passwords, ...
+are not wise to write in cleartext to disk, but passing them all to the
+running programmes by user intervention is neither a good idea. For
+that the secureconfig functions provide a safe way to store such information,
+in an encrypted config file. 
+.TP
+.B slog(3fr)
+Functions for writing logmessages to logfiles or the syslog daemon.
+.TP
+.B bo(3fr)
+Contains functions for byte order conversion.
+.TP
+.B rerr_getstr(3fr)
+A function for getting error strings.
+.TP
+.B errors(5fr)
+A list of error codes.
+.TP
+.B crc(3fr)
+Functions for calculating a cyclic redundancy checksum.
+.TP
+.B dn(3fr)
+Functions for handling destinguished names as used in ldap or ssl certificates.
+.TP
+.B gzip(3fr)
+Contains a couple of (de-)compression functions.
+.TP
+.B frdaemonize(3fr)
+A function to daemonize a programme.
+.TP
+.B iopipe(3fr)
+Functions for executing commands, that read from stdin and write to stdout.
+These functions can pass data to those programmes and read there output.
+.TP
+.B md5sum(3fr)
+Calculates md5 and sha1 checksums.
+.TP
+.B numbits32(3fr)
+Returns the number of 1 bits set in an integer.
+.TP
+.B procop(3fr)
+Contains functions for process handling.
+.TP
+.B prtf(3fr)
+printf like functions.
+.TP
+.B random(3fr)
+Functions for returning random numbers.
+.TP
+.B setenv(3fr)
+Functions for setting environment variables, working directory, ...
+.TP
+.B startprog(3fr)
+Function for starting and eventually monitor other programmes.
+.TP
+.B once(3fr)
+A "loop" that is executed exactly once. In other words a block that can be
+left with break.
+.TP
+.B strcase(3fr)
+A case like instruction for strings.
+.TP
+.B timeop(3fr)
+Contains time operation functions.
+.TP
+.B textop(3fr)
+Contains text/string processing functions.
+.TP
+.B fileop(3fr)
+Contains file handling functions.
+.TP
+.B keymap(3fr)
+Functions for key/value mapping.
+.TP
+.B frassert(3fr)
+Assertion with logging functionality.
+.TP
+.B mutex(3fr)
+Mutex functions, for process synchronisation.
+.TP
+.B roman(3fr)
+Conversion for roman number.
+.TP
+.B stktr_prtstack(3fr)
+prints a stack trace.
+.TP
+.B tlst(3fr)
+Contains functions handling a tree list.
+
+.SH "SEE ALSO"
+.BR config "(3fr), "
+.BR secureconfig "(3fr), "
+.BR slog "(3fr), "
+.BR frinit "(3fr), "
+.BR frdaemonize "(3fr), "
+.BR numbits32 "(3fr), "
+.BR procop "(3fr), "
+.BR timeop "(3fr), "
+.BR fileop "(3fr), "
+.BR textop "(3fr), "
+.BR prtf "(3fr), "
+.BR timeop "(3fr), "
+.BR random "(3fr), "
+.BR iopipe "(3fr), "
+.BR setenv "(3fr), "
+.BR startprog "(3fr), "
+.BR once "(3fr), "
+.BR trcase "(3fr), "
+.BR md5sum "(3fr), "
+.BR bo "(3fr), "
+.BR dn "(3fr), "
+.BR crc "(3fr), "
+.BR gzip "(3fr), "
+.BR rerr_getstr "(3fr), "
+.BR errors "(5fr), "
+.BR keymap "(3fr), "
+.BR frassert "(3fr), "
+.BR mutex "(3fr), "
+.BR roman "(3fr), "
+.BR stktr_prtstack "(3fr), "
+.BR tlst "(3fr), "
+.BR frlib.log "(5fr), "
+.BR frlib.rc "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

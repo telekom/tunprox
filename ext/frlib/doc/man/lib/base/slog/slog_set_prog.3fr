@@ -1,0 +1,57 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "slog_set_prog" 5fr "26 sep 2009" "Frank Reker" "frlib"
+.SH NAME
+slog_set_prog,
+slog_get_prog,
+slog_setpid
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "int slog_set_prog (char *" prog ");"
+.BI "char *slog_get_prog ();"
+.BI "int slog_setpid (int " pid ");"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B slog_set_prog ()
+sets the programme name to be printed to the config file. This
+function is implicitely invoked by frinit(3fr).
+.TP
+.B slog_get_prog ()
+returns the programme name set.
+.TP
+.B slog_setpid ()
+sets the process id to be printed to the logfile. Normally this is 
+automatically set by getpid(2).
+
+.SH RETURN VALUE
+slog_get_prog returns the programme name or NULL if none has been set.
+.br
+The other functions do return an error code (RERR_OK (0) if everything is ok).
+
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slog "(3fr), "
+.BR slogf "(3fr), "
+.BR frinit "(3fr)."
+
+
+
+

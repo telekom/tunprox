@@ -1,0 +1,9 @@
+#
+# ldt configuration
+#
+config LDT
+        tristate "ldt"
+        ---help---
+          LDT is a (mp-)dccp tunnel in kernel space.
+
+

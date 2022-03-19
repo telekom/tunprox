@@ -1,0 +1,58 @@
+.\" Copyright (c) 1999 by Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.TH BUFFILEOPEN 3fr  "July 16, 1999" "Frank Reker" "frlib"
+.SH NAME
+buffileopen, buffileclose
+\- opens or closes the file of filebuffers.
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI int\ buffileopen\ (BUFFER\ buf);
+.sp
+.BI int\ buffileclose\ (BUFFER\ buf,\ int\ force);
+.sp
+.fi
+.SH DESCRIPTION
+.B buffileopen\ ()
+for filebuffers, this function opens the file. If the file is already open, only
+a reference counter is incremented. This is interessting with the flag 
+BUF_F_AUTOCLOSE, when writing several data to it, to avoid an open/close on every 
+single write.
+.nf
+.nl
+.fi
+.B buffileclose\ ()
+then does decrement the reference counter and if 0, the file is closed.
+When setting force to a non zero value the file is closed whatever the
+reference counter says.
+.SH "RETURN VALUES"
+The functions do return an frlib error code (RERR_OK on success).
+.SH "BUGS"
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are
+welcome, too.
+.SH "SEE ALSO"
+.BR buffer (3fr)

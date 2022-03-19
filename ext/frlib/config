@@ -1,0 +1,78 @@
+#!/bin/bash
+
+
+function usage()
+{
+	cat << .
+usage: ./config --enable-xxx | --disable-xxx
+  options are:
+     --enable-debug             (default: $USE_DEBUG)
+     --enable-efence            (default: $USE_EFENCE)
+     --enable-fakeregistry      (default: $INCLUDE_FAKE_REGISTRY)
+     --enable-shlib             (default: not $STATIC_ONLY)
+     --enable-tools             (default: $MAKE_TOOLS)
+     --enable-cc                (default: $MK_CPLUSPLUS)
+     --enable-stacktrace        (default: not $NO_STACKTRACE)
+.
+}
+
+trap "rm -f Makefile.config.tmp" EXIT
+cat config.default config.tools > Makefile.config.tmp || exit $?
+
+while test "$1"; do
+	case "$1" in
+	--enable-tools) 
+		for V in $(cat Makefile.config.tmp | grep ^CONFIG_TOOL_ | cut -f1 -d= | tr -d " \t"); do
+			sed -i -e s/$V=.*/$V=yes/g Makefile.config.tmp
+		done
+		;;
+	--disable-tools) 
+		for V in $(cat Makefile.config.tmp | grep ^CONFIG_TOOL_ | cut -f1 -d= | tr -d " \t"); do
+			sed -i -e s/$V=.*/$V=no/g Makefile.config.tmp
+		done
+		;;
+	--enable-*)
+		V=CONFIG_$(echo $1 | cut -f4- -d- | tr a-z- A-Z_)
+		sed -i -e s/$V=.*/$V=yes/g Makefile.config.tmp
+		;;
+	--disable-*)
+		V=CONFIG_$(echo $1 | cut -f4- -d- | tr a-z- A-Z_)
+		sed -i -e s/$V=.*/$V=no/g Makefile.config.tmp
+		;;
+	-h|--help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "unknown option >>$1<<" >&2
+		exit 1
+		;;
+	esac
+	shift
+done
+
+
+diff -q Makefile.config Makefile.config.tmp >/dev/null 2>&1 || \
+	mv -f Makefile.config.tmp Makefile.config
+
+
+
+
+
+
+
+
+
+#
+# Overrides for XEmacs and vim so that we get a uniform tabbing style.
+# XEmacs/vim will notice this stuff at the end of the file and automatically
+# adjust the settings for this buffer only.  This must remain at the end
+# of the file.
+# ---------------------------------------------------------------------------
+# Local variables:
+# c-indent-level: 3
+# c-basic-offset: 3
+# tab-width: 3
+# End:
+# vim:tw=0:ts=3:wm=0:
+#

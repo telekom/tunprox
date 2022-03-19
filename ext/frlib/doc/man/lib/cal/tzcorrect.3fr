@@ -1,0 +1,108 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "tzcorrect" 3fr "02 may 2011" "Frank Reker" "frlib"
+.SH NAME
+ctz_utc2local,
+ctz_local2utc -
+function to apply timezone information
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/tzcorrect.h>
+.sp
+.fi
+.BI "int ctz_utc2local (tmo_t *" otstamp ", tmo_t " tstamp ", "
+.BI "struct ctz_info *" info ", int " tz ", int " flags ");"
+.sp
+.BI "int ctz_local2utc (tmo_t *" otstamp ", tmo_t " tstamp ", int " tz ", "
+.BI "int " flags ");"
+
+
+
+.SH DESCRIPTION
+.TP
+.B ctz_utc2local
+converts utc timestamps to local times, hence to microseconds since
+1 january 1970 0:00 localtime. The time is leap seconds corrected, so
+it can be used for implementing breakdown functions.
+.br
+If 
+.B info
+is not NULL, it is filled in with the corresponding data (see below).
+.br
+.B flags
+are currently not accepted. The parameter should therefor always be 0.
+.TP
+.B ctz_local2utc
+is the contrary to ctz_utc2local, and converts local time to utc.
+This function can be used to implement compose functions.
+
+
+.SH STRUCTURE
+.nf
+struct ctz_info {
+   int   actleapsec;
+   int   totleapsec;
+   int   isdst;
+   char  *abbrname;
+   tmo_t gmtoff;
+};
+.fi
+.TP
+.B actleapsec
+will be 1 if the actual second is a leap second. If it is already the
+second leap second in row, it will be 2, a.s.o. According to the
+international standard the value can never be greater than 2 (even thu
+these function would accept it). Yet never had been more than 1 leap
+second at once.
+.TP
+.B totleapsec
+gives the total number of leap seconds passed so far (including the 
+actleapsec from above).
+.TP
+.B isdst
+is 1 if daylight saving time is in effect and 0 otherwise.
+.TP
+.B abbrname
+the name of the timezone. Generally in abbreviate form (e.g. CET for
+central european time).
+.TP
+.B gmtoff
+the difference to utc in microseconds. (east is positive and west is
+negative).
+
+
+.SH THREAD SAFETY
+These functions are thread safe, but, do rely on 
+.BR ctz_get ", "
+which, when called with the standard timezones (
+.IR CTZ_TZ_UTC ", " CTZ_TZ_SYSTEM ")"
+for the first time is not thread safe.
+To assure
+thread safety, one can call ctz_get with the default timezones once
+before forking the threads.
+
+
+.SH "SEE ALSO"
+.BR tz "(3fr), "
+.BR crule "(3fr), "
+.BR tzset "(3), "
+.BR tzfile "(5), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

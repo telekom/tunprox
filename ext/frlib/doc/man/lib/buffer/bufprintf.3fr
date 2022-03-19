@@ -1,0 +1,97 @@
+.\" Copyright (c) 1999 by Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.TH BUFPRINT 3fr  "July 16, 1999" "Frank Reker" "frlib"
+.SH NAME
+bufprintf, bufnprintf, buftprintf, 
+bufvprintf, bufvnprintf, bufvtprintf
+\- writes a string to the buffer
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI int\ bufprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ ...);
+.nl
+.BI int\ bufnprintf\ (BUFFER\ buf,\ u_int32_t\ num,\ const\ char\ *\ fmt,\ ...);
+.nl
+.BI int\ buftprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ ...);
+.sp
+.BI int\ bufvprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ va_list\ ap);
+.nl
+.BI int\ bufvnprintf\ (BUFFER\ buf,\ u_int32_t\ num,\ const\ char\ *\ fmt,\ va_list\ ap);
+.nl
+.BI int\ bufvtprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ va_list\ ap);
+.sp
+.SH DESCRIPTION
+.B bufprintf\ ()
+appends a formated string to the buffer. The syntax is aquivalent to that of
+.B fprintf\ ().
+If using a file buffer, the string is printed directly into 
+the buffer. 
+.B Afterwards
+the length is evaluated, and if necessary the buffer is truncated to
+.B max_size
+again.
+.nf
+.nl
+.fi
+.B bufnprintf\ ()
+is aquivalent to  bufprintf, but the length is restricted to the given
+.I n.
+.nf
+.nl
+.fi
+.B buftprintf\ ()
+identical to bufnprintf with a length of 1024. If you are sure, that the
+length is less than or equal to 1024 Bytes, than buftprintf is slightly
+faster than bufprintf. For file buffers there is no difference in
+performance.
+.PP
+.B bufvprintf\ (),
+.nf
+.nl
+.fi
+.B bufvnprintf\ (),
+.nf
+.nl
+.fi
+.B bufvtprintf\ ()
+works like their corresponding functions, but take a pointer to the
+argument list as last parameter. 
+This is useful if writing a function with 
+a variable argument list.
+.SH "RETURN VALUES"
+The functions do return an frlib error code (RERR_OK on success).
+.SH "BUGS"
+Using bufprintf with file buffers can lead to security problems, cause the buffer
+might become larger then max_size during the operation.
+.nf
+.nl
+.fi
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are
+welcome, too.
+.SH "SEE ALSO"
+.BR buffer "(3fr), " bufsetflags "(3fr), " bufprint (3fr),
+.BR fprintf "(3fr), " va_arg (3)

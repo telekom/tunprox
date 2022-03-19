@@ -1,0 +1,66 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "shm" 3fr "22 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_new,
+sm_del,
+sm_delall -
+functions to create/destroy shared memory pages
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+.BI "int sm_new (int *" id ", int " size ");"
+.BI "int sm_del (int " id ");"
+.BI "int sm_delall ();"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B sm_new
+This function creates a new non-named shared memory page of size
+.IR size "(using "
+shmget(2). The id is returned. The key is always set to 
+.IR IPC_PRIVATE .
+The page is automatically attached and inserted into internal structures
+used to find the pages by sm_ptmap(3fr). The id to identify the page and
+to be used inside shared memory pointers is returned in
+.IR id .
+.TP
+.B sm_del
+detaches and if owner destroy the page. The page is really only destroyed
+when everybody has detached. Therefore it is marked as deleted (a flag
+at the beginning of the page, that anyone can consult). Furthermore the
+internal structure is deleted. The page can only be deleted if it is
+mapped.
+.TP
+.B sm_delall
+calls sm_del for all mapped shared pages.
+
+
+.SH "SEE ALSO"
+.BR shm "(3fr), "
+.BR sm_start "(3fr), "
+.BR sm_ptmap "(3fr), "
+.BR sm_page_getinfo "(3fr), "
+.BR sm_page_base "(3fr), "
+.BR sm_page_size "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

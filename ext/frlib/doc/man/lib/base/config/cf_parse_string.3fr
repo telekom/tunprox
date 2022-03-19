@@ -1,0 +1,71 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_parse_string" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_parse_string,
+cf_parse_table
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.BI "int cf_parse_string (char *" str ", int " type ");"
+.BI "int cf_parse_table (char *" str ", int32_t **" table ");"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B cf_parse_string
+parses a string in the same way the cf_parse function parses the values
+assigned to the variable. See frlib.rc(5fr) for details on how these
+strings are parsed.
+The 
+.I type 
+parameter can be:
+.br
+.BR 0 " - "
+parsing as if the string would be inside double quotes.
+.br
+.BR 1 " - "
+parsing as if the string would be inside single quotes.
+.br
+.BR 2 " - "
+parsing as if the string would be inside braces.
+.br
+.BR 3 " - "
+parsing as if the string would be inside double quotes, plus \\0
+is substituted by a nul-byte.
+.sp
+The original string is modified!
+.TP
+.B cf_parse_table
+parses a table of unicode characters. The format of this table is
+explained in frlib.rc(5fr).
+.br
+.B Note:
+The original string is modified!
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr)."
+
+
+
+

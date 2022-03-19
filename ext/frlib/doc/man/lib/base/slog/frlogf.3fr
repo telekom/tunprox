@@ -1,0 +1,54 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "frlogf" 5fr "26 sep 2009" "Frank Reker" "frlib"
+.SH NAME
+frlogf
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "extern int SLOG_H_FRLIB;"
+.BI "int frlogf (int " level ", char *" fmt ", ...);"
+.fi
+
+.SH DESCRIPTION
+The function
+.I frlogf
+is identical to 
+.I shlogf (SLOG_H_FRLIB, level, fmt, ...);
+only, that at its first call the handle SLOG_H_FRLIB is initialized.
+.sp
+The frlib internally does use the module 
+.IR """frlib""" .
+The handle SLOG_H_FRLIB then does point to the settings for that module.
+
+.SH RETURN VALUE
+The function does return an error code (RERR_OK (0) if everything is ok).
+
+.SH NOTE
+Note, that this function is for usage of the frlib itself. You should not
+use this function, nor that handle, outside the scope of the frlib.
+However, if you do write extentions to the frlib, do use frlogf for logging.
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slog "(3fr), "
+.BR slogf "(3fr), "
+.BR slog_reconfig "(3fr)."
+
+
+
+

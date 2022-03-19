@@ -1,0 +1,103 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "strcase" 3fr "27 okt 2009" "Frank Reker" "frlib"
+.SH NAME
+sswitch, scase, sicase, sncase, snicase, esac - a switch like instruction
+for strings.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/strcase.h>
+.sp
+.BI "#define sswitch(" _refstr ")"
+.sp
+.BI "#define scase(" str ")"
+.sp
+.BI "#define sncase(" str ")"
+.sp
+.BI "#define sicase(" str ")"
+.sp
+.BI "#define snicase(" str ")"
+.sp
+.BI "#define sincase(" str ")"
+.sp
+.BI "#define sdefault"
+.sp
+.BI "#define esac"
+.fi
+
+.SH DESCRIPTION
+These are a couple of macros, that defines a switch like syntax for strings
+in C. You give a reference string to
+.IR "sswitch (refstr)" "."
+This is followed by a couple of 
+.I scase (mystr)
+cases and an optional 
+.IR sdefault "."
+The sswitch environment has in contrary to the standard switch instruction be
+terminated by an esac. This is
+.B important.
+If missing you will get a lot of strange error messages, becaus this macro
+defines three closing braces.
+.br
+Another difference to standard switch is, that the strings to scase must be
+enclosed in paranthesis and the colon must miss.
+.sp
+The sswitch environment can be left using break.
+.br
+sswitch environments can be nested.
+.sp
+In addition to scase, a couple of further cases do exist:
+.TP
+.B scase
+Makes a comparison wether the string is equal (in the sense of strcmp == 0)
+to the reference string.
+.TP
+.B sicase
+makes a case insensitive compare (like strcasecmp).
+.TP
+.B sncase
+compares only the first n chars, where n is the length of the given
+string (strncmp (_refstr, str, strlen (str)) == 0).
+.TP
+.B sincase, snicase
+compares the first n chars case insensitive, where n is the length of the
+given string (strncasecmp (_refstr, str, strlen (str)) == 0).
+
+.SH EXAMPLE
+.nf
+sswitch (myvar) {
+scase ("foobar")
+    do_something ();
+    break;
+sincase ("foo")
+    /* fall thru */
+sncase ("bar")
+   do_anything ();
+   break;
+sdefault
+   print_error ();
+   break;
+} esac;
+.fi
+
+.SH "SEE ALSO"
+.BR strcmp "(3), "
+.BR once "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

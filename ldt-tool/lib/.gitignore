@@ -1,0 +1,7 @@
+*.o
+*.a
+.depend*
+bak
+*.so
+*.log
+

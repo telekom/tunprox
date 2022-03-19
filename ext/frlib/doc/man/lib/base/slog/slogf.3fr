@@ -1,0 +1,92 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "slog" 5fr "26 sep 2009" "Frank Reker" "frlib"
+.SH NAME
+slogf,
+vslogf,
+slogstr,
+smlogf,
+vsmlogf,
+smlogstr,
+shlogf,
+vshlogf,
+shlogstr
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "int slogf (int " level ", char *" fmt ", ...);"
+.BI "int vslogf (int " level ", char *" fmt ", va_list " ap ");"
+.BI "int slogstr (int " level ", char *" msg ");"
+.sp
+.BI "int smlogf (char *" module ", int " level ", char *" fmt ", ...);"
+.BI "int vsmlogf (char *" module ", int " level ", char *" fmt ", va_list " ap ");"
+.BI "int smlogstr (char *" module ", int " level ", char *" msg ");"
+.sp
+.BI "int shlogf (int " handle ", int " level ", char *" fmt ", ...);"
+.BI "int vshlogf (int " handle ", int " level ", char *" fmt ", va_list " ap ");"
+.BI "int shlogstr (int " handle ", int " level ", char *" msg ");"
+.fi
+
+.SH DESCRIPTION
+These function serve for writing log messages to a logfile. Furthermore
+they can write to /dev/console and to syslog if configured. 
+The destinations to log to are determined by the config file, as well
+as the minimum log level to write to. The configuration is quite
+powerfull and allow distinguisching between different programmes and
+modules.
+.br
+The most important functions are 
+.IR slogf ", " smlogf " and " shlogf .
+The 
+.IR "sm- " and " sh- "
+versions allow the specification of modules, while the 
+.I "s- "
+version uses global settings (without module specifications).
+.sp
+The
+.I "sm- "
+version takes the module name as argument, while the
+.I "sh- "
+version takes an handle as argument, which you need to acquire using 
+slog_gethandle(3fr). Working with handles is somewhat faster.
+.sp
+The 
+.I "v- "
+version is for usage inside a function with variable argument list.
+And the 
+.I "-str"
+version takes a non formated string as input, which is slightly faster.
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+.SH NOTE
+Repeating log messages are written only once. When a different message 
+is to be logged, a message "The last message repeated n times" is logged.
+To achieve this message for the last message before programme termination
+you may use slogfinish(3fr).
+
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slog "(3fr), "
+.BR slog_gethandle "(3fr), "
+.BR slogfinish "(3fr)."
+
+
+
+

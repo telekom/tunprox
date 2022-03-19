@@ -1,0 +1,316 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "errors" 5fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH THIS DOCUMENT
+This document explains the error codes used by the frlib.
+Programmes using the frlib, might use this error codes or define there own,
+starting from RERR_OFFSET.
+
+.SH The Error Codes
+
+.TP
+.BR "RERR_OK (0)" ", " "RERR_TRUE"
+everything is ok - no error.
+Used as true value as well.
+.TP
+.BR "RERR_FALSE (-1)
+false value for boolean assumption.
+.TP
+.B RERR_EOT (-2)
+end of text (not an error)
+.TP
+.B RERR_REDIRECT (-3)
+connection redirected (not an error)
+.TP
+.B RERR_DELAYED (-4)
+operation delayed or scheduled for later operation
+.TP
+.BR "RERR_FAIL (-5)
+general unspecified failure.
+.TP
+.B RERR_NODATA (-6)
+no data available
+.TP
+.B RERR_BREAK (-7)
+break encountered. This error is used by interfaces such as rs232. As well it is 
+used to indicate termination of execution. E.g. an exit command was inserted and
+the caller function shall break its loop.
+.TP
+.B RERR_INTERNAL (-8)
+internal error - probably an implementation error or a hard to trace back error
+.TP
+.B RERR_SYSTEM (-9)
+error in system call
+.TP
+.B RERR_PARAM (-10)
+invalid parameter
+.TP
+.B RERR_NOMEM (-11)
+out of memory
+.TP
+.B RERR_NOT_FOUND (-12)
+object not found
+.TP
+.B RERR_TIMEDOUT (-13)
+operation timed out
+.TP
+.B RERR_FORBIDDEN (-14)
+operation forbidden
+.TP
+.B RERR_DISABLED (-15)
+requested function disabled
+.TP
+.B RERR_NOT_SUPPORTED (-16)
+requested function not supported or implemented
+.TP
+.B RERR_NOT_AVAILABLE (-17)
+requested resource not available
+.TP
+.B RERR_NODIR (-18)
+not a directory
+.TP
+.B RERR_CHILD (-19)
+some child process produced an error or could not be created
+.TP
+.B RERR_SCRIPT (-20)
+the script child returned a non zero value
+.TP
+.B RERR_CONFIG (-21)
+invalid or missing configuration variable
+.TP
+.B RERR_AUTH (-22)
+authentication failed
+.TP
+.B RERR_CONNECTION (-23)
+connection error
+.TP
+.B RERR_SSL_CONNECTION (-24)
+error in ssl connection
+.TP
+.B RERR_SERVER (-25)
+server error
+.TP
+.B RERR_UTF8 (-26)
+invalid utf8 char
+.TP
+.B RERR_EMPTY_BODY (-27)
+mail body empty
+.TP
+.B RERR_DECRYPTING (-28)
+error decrypting
+.TP
+.B RERR_INVALID_CF (-29)
+invalid or missing config file
+.TP
+.B RERR_INVALID_SCF (-30)
+invalid secure config file
+.TP
+.B RERR_NO_CRYPT_CF (-31)
+missing secure config file
+.TP
+.B RERR_INVALID_DATE (-32)
+invalid date
+.TP
+.B RERR_INVALID_ENTRY (-33)
+invalid entry
+.TP
+.B RERR_INVALID_FILE (-34)
+invalid filename or content in invalid format
+.TP
+.B RERR_INVALID_FORMAT (-35)
+invalid format
+.TP
+.B RERR_INVALID_HOST (-36)
+invalid host
+.TP
+.B RERR_INVALID_IP (-37)
+invalid ip
+.TP
+.B RERR_INVALID_MAIL (-38)
+invalid mail
+.TP
+.B RERR_INVALID_PROT (-39)
+invalid protocol
+.TP
+.B RERR_INVALID_PWD (-40)
+invalid password
+.TP
+.B RERR_INVALID_SIGNATURE (-41)
+invalid signature
+.TP
+.B RERR_INVALID_SPOOL (-42)
+invalid spool file
+.TP
+.B RERR_INVALID_TYPE (-43)
+invalid type
+.TP
+.B RERR_INVALID_URL (-44)
+invalid url
+.TP
+.B RERR_INVALID_REPVAR (-45)
+invalid repository variable
+.TP
+.B RERR_INVALID_NAME (-46)
+invalid name
+.TP
+.B RERR_INVALID_SHM (-47)
+invalid shared memory page
+.TP
+.B RERR_INVALID_VAL (-48)
+invalid value
+.TP
+.B RERR_INVALID_VAR (-49)
+invalid variable
+.TP
+.B RERR_INVALID_CMD (-50)
+invalid command
+.TP
+.B RERR_INVALID_CHAN (-51)
+invalid channel
+.TP
+.B RERR_INVALID_PATH (-52)
+invalid path element
+.TP
+.B RERR_INVALID_PAGE (-53)
+invalid page
+.TP
+.B RERR_INVALID_LEN (-54)
+invalid length
+.TP
+.B RERR_INVALID_TAG (-55)
+invalid (xml) tag
+.TP
+.B RERR_INVALID_TZ (-56)
+invalid timezone
+.TP
+.B RERR_INVALID_ID (-57)
+invalid identifier
+.TP
+.B RERR_INVALID_MODE (-58)
+invalid mode
+.TP
+.B RERR_INVALID_PARAM (-59)
+invalid parameter in user input
+.TP
+.B RERR_LOOP (-60)
+loop encountered
+.TP
+.B RERR_MAIL_NOT_ENCRYPTED (-61)
+mail not encrypted
+.TP
+.B RERR_MAIL_NOT_SIGNED (-62)
+mail not signed
+.TP
+.B RERR_NO_VALID_ATTACH (-63)
+mail has no valid attachment
+.TP
+.B RERR_NOIPV4 (-64)
+IPv6 is not a mapped IPv4
+.TP
+.B RERR_NOKEY (-65)
+invalid key value
+.TP
+.B RERR_NOT_BASE64 (-66)
+not in base64 format
+.TP
+.B RERR_NO_XML (-67)
+not an xml
+.TP
+.B RERR_REGISTRY (-68)
+problems accessing the windows registry
+.TP
+.B RERR_OUTOFRANGE (-69)
+value is out of range
+.TP
+.B RERR_NOTINIT (-70)
+object isn't initialized yet
+.TP
+.B RERR_ALREADY_OPEN (-71)
+requested object is already open
+.TP
+.B RERR_ALREADY_EXIST (-72)
+object does already exist
+.TP
+.B RERR_LOCKED (-73)
+object is locked
+.TP
+.B RERR_FULL (-74)
+object is full
+.TP
+.B RERR_INSUFFICIENT_DATA (-75)
+has insufficient data to complete task
+.TP
+.B RERR_TOO_LONG (-76)
+object (filename, ...) is too long
+.TP
+.B RERR_TOO_MANY_HOPS (-77)
+too many hops encountered
+.TP
+.B RERR_STACK_OVERFLOW (-78)
+stack overflow
+.TP
+.B RERR_NOT_UNIQ (-79)
+object is not unique
+.TP
+.B RERR_SYNTAX (-80)
+syntax error in user input
+.TP
+.B RERR_PROTOCOL (-81)
+protocol error
+.TP
+.B RERR_CHKSUM (-82)
+checksum error
+.TP
+.B RERR_VERSION (-83)
+invalid version number
+.TP
+.B RERR_MAX (-83)
+maximum error code
+.TP
+.B RERR_OFFSET (RERR_MAX-10)
+macro, that can be used for your own error codes, e.g.:
+.nf
+#define MERR_INVALID_NUMBER	(RERR_OFFSET-1)
+.fi
+
+.SH MACROS
+The frlib defines the following macros to work with error codes:
+.TP
+.B RERR_ISOK(ret)
+returns 1 if ret is RERR_OK, 0 otherwise
+.TP
+.B RERR_ISERR(ret)
+returns 1 if ret is an error code (all negative values  except
+RERR_FALSE, RERR_EOT, RERR_REDIRECT and RERR_DELAYED) and 0 otherwise.
+.br
+.B Note:
+RERR_ISERR is not the same as !RERR_ISOK
+.TP
+.B RERR_ISTRUE(ret)
+returns 1 if ret is RERR_TRUE otherwise 0
+.TP
+.B RERR_ISFALSE(ret)
+the contrary to RERR_ISTRUE, hence returns 0 if ret is RERR_TRUE and
+1 otherwise.
+
+
+.SH "SEE ALSO"
+.BR rerr_getstr "(3fr), " frlib.log "(5fr)."
+
+
+
+
+

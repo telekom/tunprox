@@ -1,0 +1,77 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "frinit" 3fr "27 okt 2009" "Frank Reker" "frlib"
+.SH NAME
+frinit, fr_getarg, fr_getprog, fr_getprogpath
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/frinit.h>
+.sp
+.BI "#define FR_F_NONE          0x00"
+.BI "#define FR_F_USCORE        0x01"
+.BI "#define FR_F_NOLOCAL_CF    0x02"
+.BI "#define FR_F_NOHOME_CF     0x04"
+.BI "#define FR_F_NOGLOBAL_CF   0x08"
+.sp
+.BI "int frinit (int " argc ", char **" argv ", int " flags ");"
+.sp
+.BI "int fr_getargs (int *" argc ", char ***" argv ");"
+.BI "char *fr_getprog ();"
+.BI "char *fr_getprogpath ();"
+.sp
+.BI "#define SETPROG(" s ")"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B frinit
+saves the argument list and calls 
+.IR slog_set_prog " (to "
+initialize the logging functions) and 
+.IR cf_default_cfname " (to "
+initialize the config file reader).
+The flags
+.IR FR_F_USCORE ", " FR_F_NOLOCAL_CF ", " FR_F_NOHOME_CF " and " FR_F_NOGLOBAL_CF
+are identical to 
+.IR CF_FLAG_DEF_USCORE ", "  CF_FLAG_NOLOCAL_CF ", " CF_FLAG_NOHOME_CF " and "
+.IR CF_FLAG_NOGLOBAL_CF ", see " cf_default_cfname "(3fr)"
+for more details.
+.TP
+.B fr_getargs
+returns the argument list saved by frinit.
+.TP
+.B fr_getprog
+returns the name of the running programme, hence argv[0] without the path.
+.TP
+.B fr_getprogpath
+returns argv[0].
+.TP
+.B SETPROG
+is a macro which saves the basename of argv[0] in the variable 
+.IR s .
+.B Note:
+The variable argv must be known in the scope where SETPROG is called.
+
+
+.SH "SEE ALSO"
+.BR frdaemonize "(3fr), "
+.BR slog_set_prog "(3fr), "
+.BR cf_default_cfname "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

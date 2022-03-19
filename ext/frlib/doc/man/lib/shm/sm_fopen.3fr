@@ -1,0 +1,173 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "sm_fopen" 3fr "19 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_fopen,
+sm_fclose,
+sm_getpname,
+sm_fpage_exist -
+functions to create/open or destroy named shared memory pages
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+.BI "#define SM_T_SHMOPEN   " 0x00
+.BI "#define SM_T_VOLATILE  " 0x01
+.BI "#define SM_T_PERMANENT " 0x02
+.BI "#define SM_T_SEARCH    " 0x03
+.BI "#define SM_T_MASK      " 0x03
+.BI "#define SM_F_CREAT     " 0x04
+.BI "#define SM_F_RDONLY    " 0x08
+.BI "#define SM_F_RECREAT   " 0x10
+.BI "#define SM_F_STARTPAGE " 0x20
+.BI "#define SM_F_DESTROY   " 0x40
+.sp
+.BI "int sm_fopen (char *" name ", int " size ", int " flags ");"
+.BI "int sm_fclose (char *" name ", int " flags ");"
+.BI "int sm_getpname (char **" outname ", char *" pname ");"
+.BI "int sm_fpage_exist (int *" otype ", char *" pname ");"
+.BI "int sm_fpage_isopen (char *" name ");"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B sm_fopen
+opens a (shared memory) file identified by name, memory maps it
+and closes it again. When the flag 
+.I SM_F_CREAT
+is given the shared memory file is created, before it is opened.
+It is an error to create an already existing shared memory file,
+if not the flag
+.I SM_F_RECREAT
+is given, in which case the old file is overwritten and newly
+created.
+.br
+.B Note:
+The parameter size is ignored if SM_F_CREAT or SM_F_RECREAT isn't given.
+.sp
+The lower 2 bits of the
+.I flag
+parameter identify the type of shared memory file to use.
+With
+.I SM_T_SHMOPEN
+the shared memory page is created/opened using the shm_open(2)
+call. It then does not matter wether /dev/shm is mounted or not.
+This function should work on all posix compliant systems, wether
+they do support memory file systems or not.
+.br
+.I SM_T_VOLATILE
+and
+.I SM_T_PERMANENT
+do create the files in the filesystem using the open(2) system call.
+The name is then relative to the path specified by 
+.I sm_volatile_dir
+or
+.I sm_perm_dir
+in the configuration file. sm_volatile_dir should point to a directory
+in an tempfs filesystem (by default /dev/shm/);
+while sm_perm_dir should point to a directory in the ordinary
+filsystem (by default /var/permshm/).
+.br
+.I SM_T_SEARCH
+do search in all three locations above. SM_T_SEARCH cannot be given
+together with SM_F_CREAT.
+.sp
+The flag 
+.I SM_F_RDONLY
+opens the page read only. This cannot be given together with SM_F_CREAT.
+.br
+The flag
+.I SM_F_STARTPAGE
+makes this page a startpage (see sm_start(3fr) for more detail).
+.br
+The flag
+.I SM_F_DESTROY
+is ignored for sm_fopen.
+.sp
+For each page an internal sturcture is created and linked into a binary
+tree. These structures are used by sm_fclose, sm_fpage_getinfo(3fr), ...
+
+.TP
+.B sm_fclose
+This function does unmap a named shared memory page. And deletes the internal
+structure created by sm_fopen(). The page can be opened again using sm_fopen().
+.br
+If the flag
+.I SM_F_DESTROY
+is given the shared memory file is unlinked (deleted) as well.
+
+.TP
+.B sm_fpage_exist
+This function checks wether the page already does exists in one of the
+three possible locations. If so, and if 
+.I otype
+is not NULL, the type (SM_T_SHMOPEN, SM_T_VOLATILE or SM_T_PERMANENT)
+is returned in otype.
+.br
+This function returns 
+.I RERR_OK
+if the file does exist and
+.I RERR_NOT_FOUND
+if not. Any other return value indicate an error condition.
+
+.TP
+.B sm_getpname
+Page names must contain only the standard letters (a-z) as only minuscles,
+numbers (0-9), underscore (_) and slashes (/). The page must not begin with
+a slash and sequences of slashes are not allowed neither. The function
+sm_getpname, checks the name for correctness, and if present converts
+upper case letters in lower case, eliminates slashes at the beginning and
+sequences of slashes are converted to single slashes. If the name contains
+other characters sm_getpname returns with an ERR_INVALID_NAME.
+.br
+If the name starts with an at symbol (@), first the name 
+is mapped to the final name consulting the configuration variable 
+.I sm_page_name
+in the config file. If the name is not found (as index to sm_page_name),
+then the given name without the @ is used as page name.
+.br
+If a NULL pointer is passed to sm_getpname, the default name from the
+config file (sm_page_name without index) is returned.
+.sp
+.B Note:
+The 
+.I outname
+is malloc'ed, and need to be freed. If the function does return anything
+else than RERR_OK, the content of outname is undefined (might be modified
+or not by sm_getpname) und must not be freed.
+
+.TP
+.B sm_fpage_isopen
+returns RERR_OK if the page was already opened using sm_fopen(). It
+returns RERR_NOT_FOUND if the page wasn't yet opened or already closed
+using sm_fclose(). In case of error an apropriate error code is returned.
+
+
+.SH "SEE ALSO"
+.BR shm "(3fr), "
+.BR sm_getpname "(3fr), "
+.BR sm_fpage_exist "(3fr), "
+.BR sm_start "(3fr), "
+.BR sm_fpage_getinfo "(3fr), "
+.BR sm_fpage_base "(3fr), "
+.BR sm_fpage_size "(3fr), "
+.BR sm_fpage_getpage "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

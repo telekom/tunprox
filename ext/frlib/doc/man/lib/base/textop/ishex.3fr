@@ -1,0 +1,74 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "ishex" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+iswhite,
+isnum,
+range,
+ishex,
+isoctal,
+ISB64CHAR,
+top_isnum
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "#define iswhite(" c ")"
+.BI "#define isnum(" c ")"
+.BI "#define range(" c "," l "," u ")"
+.BI "#define ishex(" c ")"
+.BI "#define isoctal(" c ")"
+.BI "#define ISB64CHAR(" c ")"
+.BI "int top_isnum (char *" str ");"
+
+
+.SH DESCRIPTION
+.TP
+.B iswhite
+returns 1 when given char is a white space. This macro is identical
+to isspace(3). I always misstyped it, so I defined it ;-)
+.TP
+.B isnum
+returns 1 when given char i a digit. This macro is identical to
+isdigit(3).
+.TP
+.B range
+returns 1 if given char is in range between 
+.IR l " and " u " (inclusive)."
+.TP
+.B ishex
+returns 1 if given char is a hex digit (i.e. 0-9, a-z or A-Z).
+.TP
+.B isoctal
+returns 1 if given char is a octal digit (i.e. 0-7).
+.TP
+.B ISB64CHAR
+returns 1 if given char is a base64 char (i.e. 0-9, A-Z, a-Z, /, + or =).
+.TP
+.B top_isnum
+returns 1 if the entire string is a decimal number, otherwise 0 is returned.
+
+.SH NOTE
+Apart of top_isnum, all functions are implemented as macros.
+
+.SH "SEE ALSO"
+.BR isspace "(3), "
+.BR frlib "(3fr)."
+
+
+
+

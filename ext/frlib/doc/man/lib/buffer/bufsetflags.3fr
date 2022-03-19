@@ -1,0 +1,188 @@
+.\" Copyright (c) 1999 by Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.TH BUFSETFLAGS 3fr  "July 16, 1999" "Frank Reker" "frlib"
+.SH NAME
+bufsetflags, bufunsetflags, bufgetflags, bufsetmaxsize, bufsetfilename,
+bufgetmaxsize, bufsetmaxmemsize, bufgetmaxmemsize, bufgetfilename
+\- control the behaviour of the buffer
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI int\ bufsetfilename\ (BUFFER\ buf,\ char\ *filename);
+.sp
+.BI int\ bufsetflags\ (BUFFER\ buf,\ u_int32_t\ _flags);
+.sp
+.BI int\ bufunsetflags\ (BUFFER\ buf,\ u_int32_t\ _flags);
+.sp
+.BI int\ bufsetmaxsize\ (BUFFER\ buf,\ u_int32_t\ _max_size);
+.sp
+.BI int\ bufsetmaxmemsize\ (BUFFER\ buf,\ u_int32_t\ _max_mem_size);
+.sp
+.BI char*\ bufgetfilename\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufgetflags\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufgetmaxsize\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufgetmaxmemsize\ (BUFFER\ buf);
+.sp
+.SH DESCRIPTION
+.B bufsetflags\ ()
+sets flags. The flags are stored in a bitarray. Hence to set multiple flags
+you might use the bitwise OR operator, e.g.:
+.nf
+.nl
+.B bufsetflags\ (buf,\t BUF_F_AUTOCONVERT\ |
+.B \t\t\t\t BUF_F_NO_RECONVERT\ );
+.fi
+This is identical to:
+.nf
+.nl
+.B \ \ bufsetflags\ (buf,\ BUF_F_AUTOCONVERT);
+.nl
+.B \ \ bufsetflags\ (buf,\ BUF_F_NO_RECONVERT);
+.fi
+.PP
+The following flags are valid:
+.nf
+.nl
+.fi
+.B BUF_F_MAXSIZE
+\- if this flag is set, the buffer never can become larger than 
+.I max_size.
+If you write to a buffer, and the string to print is larger than the remaining 
+space, the string is truncated and the overflow variable is incremented.
+If the buffer is full, only the overflow is incremented.
+If you set the flag and the buffer allready is larger than 
+.I max_size,
+the buffer is truncated to max_size and overflow is incremented, unless
+the maxsize is 0 (This indicates, that the max_size is not yet set.)
+.nf
+.nl
+.fi
+.B BUF_F_AUTOCONVERT
+\- if this flag is set, and the buffer becomes larger than 
+.I max_mem_size,
+the buffer is converted to a file buffer, if it is of another type.
+If you set this flag and the buffer is allready larger than 
+.I max_mem_size
+it is converted immediately, unless max_mem_size is 0.
+If the buffer size later falls under max_mem_size again,
+the buffer is reconverted to its original type.
+.nf
+.nl
+.fi
+.B BUF_F_NO_RECONVERT 
+surpresses the reconversion. The buffer, if once converted to a file buffer
+remains a file buffer.
+.nf
+.nl
+.fi
+.B BUF_F_GROW_FAST
+\- this flag is only used for 
+.B R_CONT_BUFFER
+\'s. \- Continous buffers use one large string as a buffer. If this buffer
+becomes too small, a realloc () is performed. Normally the buffer is 
+incremented by R_BUFFER_PAGE, which is 1024 bytes.
+If this flag is set, the buffer is doubled in size each time a realloc ()
+is done.
+.nf
+.nl
+.fi
+.B BUF_F_NO_DELETE
+For file buffers, this flag causes not to unlink the file after closing the
+buffer. For cont buffers the string is not freed on close. For all other
+buffers this flag has no effect.
+.nf
+.nl
+.fi
+.B BUF_F_AUTOCLOSE
+For file buffers, the file is opened and closed on every write. This slows down
+the operation, but you don't have to bother about too many open files when
+working with a lot of buffers.
+.nf
+.nl
+.fi
+.B BUF_F_NOLINK
+Whith this flag the buffer is not linked into the global linked list of all
+buffers, thus the buffer is not closed on bufcloseall. This option is considered
+only during buffer creation, thus on a bufopen/bufinit call. Later changing of
+this flag has no effect. It is used automatically by the C++ binding.
+.nf
+.nl
+.fi
+.B BUF_F_APPEND
+When using file buffers and an already existing file is given, the contents
+of the file remains in the buffer. Thus newly written data is appended to
+that file.
+.nf
+.nl
+.fi
+.B BUF_F_ALL
+\- this ``flag'' can be used to set or unset all available flags.
+.PP
+.B bufunsetflags\ ()
+deletes flags. It is used the same way as bufsetflags ().
+.PP
+.B bufgetflags\ ()
+\- this returns the bitarray (flags).
+To check whether a flag is set, you may use something like
+the following expression:
+.nf
+.nl
+.fi
+.B \ \ if\ (bufgetflags(buf)\ &\ BUF_F_MAXSIZE)\ ...
+.PP
+.B bufsetmaxsize\ ()
+sets the
+.I max_size.
+.PP
+.B bufgetmaxsize\ ()
+returns the 
+.I max_size.
+.PP
+.B bufsetmaxmemsize\ ()
+sets the
+.I max_mem_size.
+.PP
+.B bufgetmaxmemsize\ ()
+returns the
+.I max_mem_size.
+.PP
+.B bufsetfilename\ ()
+sets the file name to use for file buffers.
+.PP
+.B bufgetfilename\ ()
+returns the file name in use for file buffers.
+.SH "RETURN VALUES"
+The get functions return the requested value or 0 on error.
+The other functions do return an frlib error code (RERR_OK on success).
+.SH "BUGS"
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are
+welcome, too.
+.SH "SEE ALSO"
+.BR buffer "(3fr), " bufoverflow (3fr)

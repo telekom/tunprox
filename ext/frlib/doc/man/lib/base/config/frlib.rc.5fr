@@ -1,0 +1,804 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH frlib.rc 5fr "16 November 2019" "Frank Reker" "frlib"
+.SH NAME
+<program>.rc \- is the configuration file used by your application and the
+frlib.
+
+.SH SYNOPSIS
+/etc/<program>.rc
+
+.SH DESCRIPTION
+This manual page documents the general format of the configuration file parsed
+by the frlib, and the configuration variables known by the frlib itself.
+
+.SH FILE FORMAT
+Empty lines and lines beginning with the hash sign (#) are ignored.
+Lines can terminate in line feed character (0x0a) or carrige return
+(0x0d) or a combination. However it is recomended to use line feed only!
+.PP
+Entries are of the form:
+.B variable=value.
+Spaces before and after the equal sign are allowed.
+
+.SS Character Set
+The config file can be in plain ASCII or any 1-Byte character set
+containing plain ASCII in the lower 127 characters or in UTF-8.
+Variables and all syntax structures are plain ASCII. Comments can
+be in any character set that can be visualized by the system.
+However plain ASCII is recomended.
+The charset of the values do depend on the programme. UTF-8 is
+recomended. The non printable characters 0x01 thru 0x08, 0x0b,
+0x0c, 0x0e thru 0x1f should not be used. If neccessary in values
+they can be quoted (e.g. "\\x17"). NUL-Bytes must not be used.
+They do terminate the parsing of the config file.
+
+
+.SS Variable Names
+The variable name is case insensitive and may contain letters, digits and
+underscores. It might not start with digits. Underscores in variables
+are ignored. Hence foobar, foo_bar, Foo_Bar_ refere are all to the same 
+variable. Only at the beginning the underscore is evaluated, hence
+foobar and _foobar are different variables.
+.sp
+Variables might have indeces (see section ARRAYS below).
+E.g. 
+.nf
+foo[bar] = "pippo"
+.fi
+.sp
+Variables might have namespaces (see section NAMESPACES below).
+E.g.
+.nf
+foo/bar = "pippo"
+foo[x]/bar[y] = "pippo"
+.fi
+For namespaces do apply the same rules as for variable names.
+
+.SS Values
+The value can either be unquoted, enclosed in single quotes 
+(e.g. 'value'), double quotes (e.g. "value"), curly braces
+(e.g. {value}) or follow a backquote, in which case it
+ends at end of line. E.g:
+.nf
+var = `my value
+.fi
+
+.SS Unquoted Values
+Unquoted Variables might contain the alphanumeric characters, containing
+the 26 letters of the english alphabet (A-Z, a-z) numbern (0-9) and the
+characters: underscore (_), minus (-), plus (+), dot (.), comma (,) and
+the at-sign (@). The value starts with the first non-whitespace and ends
+with the last allowed character. E.g:
+.nf
+pippo = hello;world
+.fi
+would result in the string "hello" everything following up to end of
+line is ignored. However one should non rely on that, behaviour might
+change in future. If you want to comment use the hash sign. E.g.:
+.nf
+pippo = hello   # my comment
+.fi
+Spaces between the value and the comment are allowed.
+
+.SS Values Following the Back Quote
+E.g.:
+.nf
+pippo = `hello world
+.fi
+The value starts with the character following the back quota up to end of
+line (including trailing white spaces). Any character is allowed except
+line feed and carrige return. The value is treated litarately, no 
+substitution is done.
+
+.SS Values Enclosed in Single Quotes
+E.g.:
+.nf
+pippo = 'hello world'
+.fi
+Any character inbetween two single quotes are part of the value. A sequence
+of two single quotes do not terminate the value, but are substituted by a
+single single quote. E.g.:
+.nf
+pippo = 'my ''special'' value'
+.fi
+will result in "my 'special' value".
+Any character following the terminating single quote up to end of line is ignored.
+However one should non rely on that, behaviour might
+change in future. If you want to comment use the hash sign. E.g.:
+.nf
+pippo = 'hello'   # my comment
+.fi
+Spaces between the value and the comment are allowed.
+
+.SS Values Enclosed in Double Quotes
+E.g.:
+.nf
+pippo = "hello world"
+.fi
+Any character inbetween two double quotes are part of the value.
+Any character following the terminating double quote up to end of line is ignored.
+However one should non rely on that, behaviour might
+change in future. If you want to comment use the hash sign. E.g.:
+.nf
+pippo = "hello"   # my comment
+.fi
+Spaces between the value and the comment are allowed.
+Backslashes (\\) and dollar signs ($) in values enclosed in double quotes
+are interpreted special.
+
+.SS The following backslash squences are known:
+.\" .IP "\\\\\\\\"
+.IP
+.nf
+\\\\   - results in a single backslash (\\).
+.fi
+.\" .IP "\\\\"""
+.IP
+.nf
+\\"   - a double quote character (").
+.fi
+.\" .IP "\\\\'"
+.IP
+.nf
+\\'   - a single quote character (').
+.fi
+.\" .IP "\\\\$"
+.IP
+.nf
+\\$   - the dollar sign ($).
+.fi
+.\" .IP "\\\\n"
+.IP
+.nf
+\\n   - the new line character.
+.fi
+.\" .IP "\\\\r"
+.IP
+.NF
+\\r   - the carrige return character.
+.fi
+.\" .IP "\\\\t"
+.IP
+.nf
+\\t   - the (horizontal) tab character.
+.fi
+.\" .IP "\\\\v"
+.IP
+.nf
+\\v   - the vertical tab character.
+.fi
+.\" .IP "\\\\b"
+.IP
+.nf
+\\b   - the bell (console beep).
+.fi
+.\" .IP "\\\\ followed by three octal digits"
+.IP
+.nf
+\\ followed by three octal digits - 
+.fi
+the unicode character represented by the given octal number (e.g. \\012 represents
+the line feed (newline) character). The character is converted to utf-8.
+.\" .IP "\\\\x followed by two hex numbers"
+.IP
+.nf
+\\x followed by two hex numbers -
+.fi
+the unicode character represented by the given hexadecimal number (e.g. \\x0d
+represents the carrige return character). The character is converted to utf-8.
+.\" .IP "\\\\X followed by two hex numbers"
+.IP
+.nf
+\\X followed by two hex numbers -
+.fi
+the ascii code represented by the given hexadecimal number (e.g. \\x0d
+represents the carrige return character). The value is converted to a one byte
+value. No utf-8 conversion is performed.
+.IP
+.nf
+\\u followed by four hex digits -
+.fi
+a 16bit unicode character, which is converted to utf8.
+.IP
+.nf
+\\U followed by 6 hex digits -
+.fi
+a 21bit unicode character, which is converted to utf8. Note, that only values
+between \\u000001 and \\u10ffff (1114111d) are valid unicode characters.
+.IP
+.nf
+\\0, \\000, \\x00, \\X00, \\u0000, \\U000000 -
+are not valid! By now they are converted to the sequence \\0. However this
+might change in future.
+.IP
+.nf
+\\? -
+.fi
+Thus any other (not specified) backslash sequence by now is converted to the character
+following the backslash. E.g.:
+.nf
+\\y - is converted to y
+.fi
+However one should not rely on that. This belaviour might change in future.
+
+.SS Dollar Conversion
+In double quotes the dollar sign is interpreted special, too, unless it is
+prefixed by a backslash.
+The following dollar conversions are known so far (others will follow):
+.IP
+.nf
+$$ - will result in a single dollar sign ($)
+.fi
+.IP
+.nf
+$\\... - performes a backslash conversion as described above.
+.fi
+.IP
+.nf
+${var} - 
+.fi
+subsititutes the dollar expression with the content of
+the variable inside the curley braces. The variable has to be
+defined earlier in the config file.
+E.g.:
+.nf
+foo = "hello"
+bar = "${foo} world"
+.fi
+This will result in the string "hello world".
+The variable might contain namespaces and/or array indeces. E.g.:
+.nf
+foo = "${my/path/of/var[foobar]/pippo[17]}"
+.fi
+
+.SS Values in Curley Braces
+Values in curley braces might span several lines. E.g.:
+.nf
+pippo = {
+    hello world
+    what so ever
+    another line
+}
+.fi
+The value might contain curley braces if matching or quoted.
+E.g.:
+.nf
+pippo = {
+    matching { braces } might be included in values
+    a quoted \\} does not terminate the value
+}
+.fi
+The open curley brace might be followed by an @-sign, a sequence of
+curley braces and another @-sign, e.g.:
+.nf
+pippo = {@{{@ my value contains }} two unmatched curley braces}
+.fi
+The number of open curley braces specify the number of unmatching
+closing curley braces in the value, and vice versa.
+The value do start after the second @.
+Note, that if the value starts with two @@ the value starts with
+the second @, not after that. E.g.:
+.nf
+pippo = {@@foo}
+.fi
+will result in @foo
+.sp
+Values in curley braces are interpreted litarately. No conversion
+is performed. If the two @ signes at the beginning do enclose a
+dollar sign, dollar conversions are performed as with double quotes.
+E.g.:
+.nf
+pippo = {@$@
+    foo = ${foo}
+}
+.fi
+Note: backslash conversions are not performed, but one might use $\\.
+.PP
+.B Note:
+Carrige returns are converted to line feed characters. Thus a
+CR-LF combination will result in two line feed characters, and
+thus is empty lines.
+
+.SS NUL Character
+There is no way to specify NUL characters.
+If a programme does need it, it must specify its own conversion.
+E.g. %0 could be converted to a NUL char, while %% will result in a single %.
+However, this is programme specific. The config file parser in the frlib does
+not treat those conversions!
+
+.SS Boolean Values
+To interprete boolean values the frlib offers the function cf_isyes, which
+interpretes all of the following as positive values (true):
+.IR yes ", " y ", " true ", " 
+.IR 1 ", " ja ", " si ", " 
+.IR oui
+(case doesn't matter).
+All other values are interpreted as a negative value (false).
+Note: A programme might choose to not use cf_isyes, but interprete the 
+values on its own way.
+
+.SS Time Values
+Often one must specify timeouts or other times (time differences, not absolute
+times). Therefore the frlib offers the function cf_atotm(3fr). Times are
+specified in seconds, optional with fractions (up to microsecond precision).
+E.g.:
+.nf
+1.15   (1 second and 150 miliseconds)
+0.003  (3 miliseconds)
+.fi
+further one might specify minutes, hours or days, e.g.:
+.nf
+1:30.4         (1 minute 30 seconds and 400 miliseconds)
+2:15:30        (2 hours 15 minutes and 30 seconds)
+4d10           (4 days 10 hours)
+1d3:30         (1 day 3 hours and 30 minutes)
+17d0:1:0.0001  (17 days 1 minute and 100 microseconds)
+.0000009       (0, because the maximum precision is microseconds - the final 9 is discarded)
+.fi
+
+
+.SH ARRAYS
+Variables can occur in its pure form 
+.I myvar=value
+or as an array
+.I myvar[index]=value
+index can be any string containing alphanumeric characters (A-Z, a-z and 0-9),
+the underscore (_), at (@), dot (\.), colon (:), slash (/), minus (-) and
+plus (+) character. E.g. the following are all valid declaration:
+.nf
+.nl
+pippo="value1"
+pippo[1] = "value2"
+pippo[foobar] = "value3"
+pippo[frank@reker.net] = "my email address"
+.fi
+.sp
+Indeces are case insensitive (e.g. pippo[foo] and pippo[Foo] are identical.
+But underscores in indeces are honored, hence pippo[foobar] and pippo[foo_bar]
+are distinct. 
+.sp
+Numeric indeces are interpreted numericaly, e.g. pippo[1] and pippo[01]
+are equal. But pippo[a1] and pippo[a01] are different.
+.sp
+If a variable is defined as an array and in the normal form, the normal form
+works as a default value for all non defined array indeces. E.g. if in the
+example above the variable pippo[2] is requested, value1 (${pippo}) is returned.
+
+
+.SH MULTI-DIMENSION ARRAYS
+Arrays may have more than one index:
+.I myvar [index1, index2, ...] = value
+e.g.:
+.nf
+.nl
+pippo[foo,bar]="value4"
+.fi
+.sp
+If a variable pippo[foobar,bar] would be requested, which is not defined,
+The default would be pippo[foobar], and if that would not exist pippo
+would be used as default.
+.sp
+Even here numerical indeces are interpreted numerical, e.g. pippo[1,1] and
+pippo[01,1] and pippo[1,01] and pippo[01,01] are all identical.
+
+
+.SH NAMESPACES
+As mentioned earlier, variables might have namespaces. Namespaces are
+separated from the variable by a slash (/). Namespaces might have array
+indeceses. The same rules do aply as for variable indeceses.
+E.g.:
+.nf
+foo[bar]/pippo[1] = ...
+.fi
+Namespaces can be nested. E.g.:
+.nf
+foo[bar,1:01]/bar[xxx]/foo/pippo[1] = ...
+.fi
+A leading slash is ignored:
+/foo/bar is identical to foo/bar
+.PP
+If several variables with the same namespace shall be configured, the
+variable might be grouped into the same namespace using curley braces. E.g.:
+.nf
+foo {
+    var1 = "..."
+    var2 = "..."
+}
+.fi
+would be the same as:
+.nf
+foo/var1 = "..."
+foo/var2 = "..."
+.fi
+Array indeceses do work as well:
+.nf
+modem[ec25] {
+	vendor = Quectel
+	product = EC25
+}
+modem[mc7710] {
+	vendor = "Sierra Wireless Inc."
+	product = "MC 7710"
+}
+modem[ec25]/cname = "ec25"
+.fi
+
+
+.SH INCLUDE
+Using the command 
+.I include """/other/file.rc"""
+includes the file with the name /other/file.rc, i.e. the contents is read
+and interpreted as a config file. The variables are inserted at the point
+where the file is included. If one variable is defined more than once,
+the latter definition overwrites the former one. So you can first include
+another config file and then overwrite some of its variables. This
+makes life easier when dealing with several different configurations.
+
+.SH Undefine Variables
+With the command 
+.I undef myvar
+you can undefine the prior defined variable (myvar). It is than as if 
+myvar would never have been set. This is usefull when including another
+config file which has myvar set to some value.
+.br
+.I undef myvar[myindex]
+would delete the array variable myvar with the index myindex. Other
+occurences of myvar would be left as is.
+.br
+.I undef myvar[]
+does delete the whole array (one or more dimensional) 
+inclusive the default value.
+.B Note: undef doesn't work well with namespace variables yet.
+
+
+.SH SECURE CONFIG FILE
+The frlib provides the possibility to use secure (encrypted) config
+files. To activate the usage you need to specify the variable:
+.BR crypt_cf ", " secure_cf " or " secure_config_file .
+.br
+If one of the variables (that specify the path to the secure config
+file) is present, it is decrypted and parsed as done with normal
+config files. Only includes in secure config files are not permitted.
+However, includes are treated, but the include file cannot be
+encrypted. Therefore its usage doesn't make sense.
+.br
+The idea behind encrypted config files is to store passwords (e.g.
+database passwords), pins and the like in here. Thus you need only
+one password (for decrypting the config files).
+.sp
+.B Note:
+Secure config files need to be activated by your application, which
+has to provide the password for decrypting the secure config file,
+too. (Mechanisms for doing so are present in the frlib).
+Thus it depends on your application wether or not secure config
+files are available.
+
+
+.SS Variable used for Secure Config Files
+.TP
+.BR crypt_cf ", " secure_cf ", " secure_config_file
+This is the path to an encryted config file. The encrypted config file
+is decrypted and than parsed as the normal config file. Only that
+includes are not supported in encrypted config files. The password for
+decrypting genarally is asked by your application or the start application
+and further passed to the daemons.
+By default this is not set.
+
+
+.SH BUGS
+The following bugs are known. More bugs might be present:
+.nf
+- undef
+.fi
+The undef instruction, do not work properly with namespaces.
+.sp
+.nf
+- includes doesn't support shell globbing yet.
+
+
+.SH EXAMPLE
+An example configuration file:
+.PP
+.nf
+### ------------ start config file -----------------------
+
+###
+### include other config files
+###
+
+## uncomment if you want to use a secure config file
+
+#secure_cf = "/etc/pec.d/pec.scf"
+
+
+###
+### Logging Options
+###
+
+log_file = "/opt/myprog/log/myprog.log"
+log_file[mymod] = "/opt/myprog/log/mymod.log"
+logfile_leaveopen=no
+log_syslog=no
+log_console=no
+logstderr=no
+loglevel[myprog]=debug
+loglevel="error"
+logstacktrace=crit
+
+logthrow=yes
+log_exec_cmd = "/opt/myprog/sbin/mytrap.sh -p %p -P %P -l %l -L %L -M %M -m %m"
+log_exec_level = crit
+log_cmd_timeout = 2
+logmatch[mymod] = "myfunc()"
+#logfmatch[mymod] = "myfunc[ ]*(.*):"
+
+## if you want the whole output for each iopipe call, set this to yes
+iopipe_log_output = no
+
+
+
+## the decrypt creates a lot of error messages even if it,
+## goes right, thus by default it is supressed. Set
+## smim_sslout_ondecrypt to ye to see this messages.
+smim_sslout_ondecrypt = no
+
+
+
+###
+### HSM and Crypto Options
+###
+
+## set to yes if you want to use the hsm
+smim_use_hsm = no
+
+## better put this variable in the secure config file
+smim_hsm_pin = "1234"
+
+## the password for encryption keys
+## better put this variable in the secure config file
+smim_key_pass = "secret"
+
+## this is the certificate of the root ca (it must be equal for all
+## certificates used in the communication proccess)
+#smim_ca_cert_file = "/etc/myrog.d/certs/root_ca.cert"
+
+## if you have more then one certificate, you might use
+## ca_cert_dir and put all certificates in here
+smim_ca_cert_dir = "/etc/myprog.d/ca"
+
+## allowed values for cipher are: rc2-40 rc2-128 aes-128 aes-196 aes-256
+smim_cipher = "rc2-128"
+
+
+## this is the timeout used when calling the external programm openssl
+smim_timeout = 1800	# in seconds - 0 means no timeout
+
+## if no /dev/urandom device exists you can use the egd daemon and use
+## this as path to socket (you must configure egd as well!)
+## uncomment if needed
+#smim_egd_path = "/opt/myprog/var/egd.sock"
+
+## the default configuration for signing and encrypting
+smim_default_signfor    = default
+smim_default_encryptfor = default
+
+## repeat the following settings for all encryption configurations
+
+## the destinguished name
+smim_dn [default]         = 'C=DE, St=Hessen, L=Oberursel, O=ZES, OU=Entwicklung, CN=default'
+## cross link to other config - uncomment if needed
+#smim_signfor [default]    = "other-config"
+## the certificate file to use
+smim_cert_file [default]  = "/etc/myprog.d/certs/default.cer"
+## the private key file to use
+smim_key_file [default]   = "/etc/myprog.d/certs/default.key"
+## destination email to use
+smim_email [default]      = "default@zes.com"
+## from email to use
+smim_from_email [default] = "default@zes.com"
+## we want encrypt the mail
+smim_docrypt [default]    = yes
+## we want sign the mail
+smim_dosign [default]     = yes
+## use clear signing
+smim_clearsign [default]  = yes
+## other certs to include into signature
+smim_sign_certs [default] = "/etc/myprog.d/certs/cert1.cer,/etc/myrpog.d/certs/cert2.cer"
+
+
+
+
+
+###
+### Paths and Programmes
+###
+
+
+## what programmes to handle by the start script
+all_progs="myprog1, myprog2, fetchmail"
+allow_any_prog=no
+
+## path to the various programmes
+prog[sendmail]  = "/usr/local/bin/sendmail"
+prog[fetchmail] = "/usr/local/bin/fetchmail -f /etc/myprog.d/fetchmail.rc -d 30"
+prog[openssl]   = "/usr/local/bin/openssl"
+
+prog[spoold]    = "/opt/myprog/sbin/myprog_spoold"
+prog[starter]   = "/opt/myprog/sbin/myprog_starter"
+
+prog[myprog1]   = "/opt/myprog/bin/myprog1"
+prog[myprog2]   = "/opt/myprog/bin/myprog2"
+
+
+## sockets used by pecd for the various programmes
+spool_sock[myprog2] = "/opt/myprog/var/myprog2.sock"
+
+
+## the programmes called by spoold
+start_spoold[myprog1] = no
+start_spoold[myprog2] = yes
+
+## daemonize myprog1
+prog_daemonize[myprog1] = yes
+prog_watch_errors[myrpog1] = yes
+prog_watch_errors = no
+
+## environment for programmes
+## put into this file all environment variables
+setenv_file = "/etc/myprog.d/setenv"
+## the system user under which running the programmes
+user[myprog1] = root
+user = myprog
+## the working directory
+pwd = "/opt/myprog/home"
+
+
+###
+### Spooling Options
+###
+
+## base dir for spooling subdirs
+spool_basedir = "/opt/myprog/spool"
+
+## spooling dir for single spools
+#spooldir[myprog2] = "/opt/myrpog/other_spool"
+
+## default spool if none given
+spool_default = myprog2
+
+## we want subdirs for spooling - should be set to yes
+spool_to_subdir = yes
+
+## the max. number of files per subdir
+spool_num_files_per_subdir = 1000
+
+## yes - definetely we want fast spooling
+spool_use_fast_spooler = yes
+
+## the cache to spoold is valid for max. 20 seconds
+spool_cache_maxtime = 20
+
+## the max. elaboration time is 1 day
+spool_max_elabtime = 86400
+
+## timeout after which elaboration is stopped (1 minute)
+spoold_timeout = 60
+
+## after mai_elabtime the files are automatically reinserted
+spool_reinsert_ontimeout = yes
+
+## if  you put the spool on a nfs set this to yes
+spool_nfs_workaround = no
+
+## lock file timeouts
+spool_lock_maxwait = 60
+spool_lockfile_timeout = 2
+
+## use sockets
+spool_do_sock = yes
+
+## if you have big files to spool set this to yes
+spool_stream = no
+
+## the number of programmes spoold might launch in parallel
+spoold_scale[myprog2] = 2
+
+## if you want to sent a trap in case of error during elaboration, 
+## uncomment the following
+#spoold_trap[myprog2] = "/opt/myprog/sbin/trap.sh -s"
+
+
+
+
+###
+### Random Options
+###
+
+## use a file con random numbers to initialize the pseudo random number
+## generator, in case there is no /dev/urandom
+## however - it's better to install the /dev/urandom device
+use_randfile = no
+randfile = "/etc/myprog.d/randfile"
+
+
+###
+### Shared Memory Options
+###
+
+## initial page name
+sm_page_name = myprog
+
+## set page size to 64k
+sm_page_size = 65536
+
+## timeout for creating
+sm_max_wait = 5
+
+
+###
+### Connection Options
+###
+
+## timeouts
+connection_timeout = 10
+getdoc_timeout = 10
+readln_timeout = 10
+
+## default values for getdoc
+getdoc_url = "http://myserver.de:8080/mypath"
+## if url is set the following are not needed
+getdoc_host = myserver.de
+getdoc_path = mypath
+getdoc_port = 8080
+
+## authentication information
+getdoc_user = myuser
+getdoc_pass = secret
+
+## url parsing options
+url_default_protocoll = http
+url_default_port = 80
+
+
+###
+### Sendmail Options
+###
+sendmail_default_from = default@zes.com
+sendmail_timeout = 30
+
+
+###
+### Repository Options
+###
+
+## the fake repository file for linux
+repository = "/opt/myprog/var/fake_rep"
+
+
+
+### ------------ end config file -----------------------
+.fi
+
+
+
+
+
+.SH "SEE ALSO"
+.BR scf "(1fr)."
+
+
+
+

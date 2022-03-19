@@ -1,0 +1,95 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_rulesetreform" 3fr "03 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_rulesetreform,
+cjg_defreform,
+cjg_rulesetdef,
+cjg_ruledel -
+functions to handle calendar rules for the julian gregorian
+calendar.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "int cjg_rulesetreform (int " rul ", int " reform ");"
+.BI "int cjg_rulesetreform (int " rul ", " CJG_REF_DATE ", int " year ", int " mon ", int " day ");"
+.BI "int cjg_defreform (int " reform ");"
+.BI "int cjg_rulesetdef (struct cjg_rule*" rul ");"
+.BI "int cjg_ruledel (struct cjg_rule*" rul ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B cjg_rulesetreform
+Sets the reform for given rule. For available reforms see below. If reform is
+.IR CJG_REF_DATE ", "
+then the function takes additionally the year, month and day as int.
+.B Note: The function is implemented with a variable argument list, which 
+means, that no automatic casting is performed for year, mon and day.
+The date must be the first day in the gregorian calendar.
+.TP
+.B cjg_defreform
+Sets the deault reform as obtained by 
+.IR CJG_REF_DEF .
+The CJG_REF_DEF reform is used as default for crule(3fr) initialization.
+.B Note:
+cjg_defreform can not handle CJG_REF_DATE.
+.TP
+.B cjg_rulesetdef
+initializes the cjg_rule structure with the default rule. This function is
+used internally by the crul_new(3fr) function.
+.TP
+.B cjg_ruledel
+actually does nothing, but is needed by the crul_del(3fr) function.
+
+.SH REFORM
+The available reforms are:
+.TP
+.B CJG_REF_DEF
+The default reform as set by 
+.IR cjg_defreform .
+.TP
+.B CJG_REF_JUL
+uses always julian calendar, as if the gregorian never would have been 
+introduced.
+.TP
+.B CJG_REF_GREG
+uses always gregorian calendar.
+.TP
+.B CJG_REF_1582
+uses the 1582 reform (15th october 1582).
+.TP
+.B CJG_REF_1752
+uses the 1752 reform (14th september 1752).
+.TP
+.B CJG_REF_SWEDEN
+uses the special case for Sweden.
+.TP
+.B CJG_REF_DATE
+uses a user specified date. The date must be the firt date of the gregorian
+calender.
+
+
+.SH "SEE ALSO"
+.BR cjg "(3fr), "
+.BR crule "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

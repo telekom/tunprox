@@ -1,0 +1,68 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "rerr_register" 3fr "27 oct 2009" "Frank Reker" "frlib"
+.SH NAME
+rerr_register, rerr_unregister 
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/errors.h>
+.sp
+struct rerrmap {
+   int   rerrno;
+   char  *rerrstr;
+};
+.sp
+.BI "int rerr_register (struct rerrmap *" errormap ");"
+.BI "int rerr_unregister (struct rerrmap *" errormap ");"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B rerr_register
+With rerr_register
+you can register your own error map. Thus adding your own errors,
+you might also add your mapping, so it is accessible via the
+rerr_getstr functions.
+.TP
+.B rerr_unregister
+you delete a prior defined error map, so it is no longer available
+for the rerr_getstr functions.
+
+.SH EXAMPLE
+.nf
+struct rerrmap  myerrormap[] = {
+   { MYERR_ERROR1, "This is error one" },
+   { MYERR_ERROR2, "This is error two" },
+   { -1, NULL }};
+.fi
+.B Note
+the last line. The array must be terminated with an entry { -1, NULL }.
+.sp
+Then you can register the map using:
+.nf
+rerr_register (myerrormap);
+.fi
+
+
+
+
+.SH "SEE ALSO"
+.BR errors "(5fr), "
+.BR rerr_getstr "(3fr)."
+
+
+
+

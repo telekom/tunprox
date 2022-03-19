@@ -1,0 +1,45 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "slogfinish" 5fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+slogfinish
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "int slogfinish ();"
+.fi
+
+.SH DESCRIPTION
+If a log message is written repeatedly, the logger does write it to the 
+log file only once. As soon as is written a different message, the logger
+writes a message "last message repeated n times" to the log file. This 
+message is not written if the programme terminates, unless you call the
+function slogfinish() before terminating.
+
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slog "(3fr), "
+.BR slogf "(3fr)."
+
+
+

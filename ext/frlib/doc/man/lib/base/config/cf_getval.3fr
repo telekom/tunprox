@@ -1,0 +1,136 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_getval" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_getval,
+cf_getval2,
+cf_getnumarr,
+cf_getarr,
+cf_getarr2,
+cf_getarrnodef,
+cf_getarri,
+cf_getarri2,
+cf_getarrx,
+cf_getarrxwi,
+cf_getmarr,
+cf_getmarr2,
+cf_vgetmarr,
+cf_vgetmarr2,
+cf_get2arr,
+cf_get2arr2
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.BI "char * cf_getval (char *" var ");"
+.BI "char * cf_getval2 (char *" var ", char *" defvalue ");"
+.sp
+.BI "int cf_getnumarr (char *" var ");"
+.BI "char * cf_getarr (char *" var ", char *" idx ");"
+.BI "char * cf_getarr2 (char *" var ", char *" idx ", char *" defvalue ");"
+.BI "char * cf_getarrnodef (char *" var ", char *" idx ");"
+.sp
+.BI "char * cf_getarri (char *" var ", int " idx ");"
+.BI "char * cf_getarri2 (char *" var ", int " idx ", char *" defvalue ");"
+.sp
+.BI "char * cf_getarrx (char *" var ", int " x ");"
+.BI "char * cf_getarrxwi (char *" var ", int " x ", char **" idx ");"
+.BI "char * cf_getmarr (char *" var ", int " numidx ", ...);"
+.BI "char * cf_getmarr2 (char *" var ", char *" defval ", int " numidx ", ...);"
+.BI "char * cf_vgetmarr (char *" var ", int " numidx ", va_list " ap ");"
+.BI "char * cf_vgetmarr2 (char *" var ", char *" defval ", int " numidx ", va_list " ap ");"
+.BI "char * cf_get2arr (char *" var ", char *" idx1 ", char *" idx2 ");"
+.BI "char * cf_get2arr2 (char *" var ", char *" idx1 ", char *" idx2 ", char * "defval ");"
+.fi
+
+.SH DESCRIPTION
+The functions 
+.IR cf_getval " and " cf_getval2 
+do return the value for the given
+configuration variable. The functions 
+.IR cf_getarr ", " cf_getarr2 ", " cf_getarrnodef ", "
+.IR cf_getarri " and " cf_getarri2 
+do return the value for the given configuration array variable
+with given index. The functions
+.IR cf_get2arr " and " cf_get2arr2
+do the same with two dimensional arrays, and
+.IR cf_getmarr ", " cf_getmarr2 ", " cf_vgetmarr " and " cf_vgetmarr2
+for multidimensional arrays. The getmarr- functions take the number
+of indexes and a variable argument list as parameter. The corresponding
+vgetmarr- functions take a va_list instead of the variable argument list.
+The cf_getarri functions take the index as numerical value instead of a
+string.
+.sp
+The function
+.I cf_getarrx
+return the value of the x-th index of the given array variable. With that
+you can request the array size with cf_getnumarr and then loop over the
+whole array. The order however is unspecified, so don't trust on that.
+Indeed they appear in alphanumerical order sorted by the index. For this
+function it does not matter if the index is one or multidimensional.
+The function
+.I cf_getarrxwi
+is identical, but returns the index, too. If the index is multidimensional,
+the single indices are seperated by a comma. 
+
+.SH RETURN VALUE
+The function
+.I cf_getnumarr
+does return the array size (the number of variables with the same variable name
+and different indices). The other functions do return the requested value.
+In case the requested variable cannot be found the functions
+.IR cf_getval ", " cf_getarrnodef ", " cf_getarrx " and " cf_getarrxwi
+do return a NULL pointer. The other array functions
+do return the value of the same variable with one index less (without the
+last index), and finally the value of the variable without any index.
+The functions with a 
+.I 2
+at the end, take a default value which is returned when the requested value
+is not found.
+.sp
+E.g.:
+.nf
+char *pippo = cf_get2arr2 ("pippo", "foo", "bar", "hello world");
+.fi
+would return the value of
+.I pippo[foo,bar]
+if that does not exist
+.I pippo[foo]
+is returned, and if that does not exist
+.I pippo
+is returned. And if even this does not exist
+.I "hello world"
+is returned.
+.sp
+.B NOTE:
+The returned value is a reference to the internal structure. If you
+modify it, it will effect future calls. Furthermore the references
+lose there validity after a cf_reread call. If you want rereading
+encapsulate the calls inbetween cf_begin_read(3fr) and cf_end_read(3fr)
+calls.
+
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr), "
+.BR cf_begin_read "(3fr), "
+.BR cf_isyes "(3fr)."
+
+
+
+

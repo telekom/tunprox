@@ -1,0 +1,161 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "time operations" 3fr "30 apr 2011" "Frank Reker" "frlib"
+.SH NAME
+tmo_now
+tmo_sleep,
+tmo_msleep,
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/timeop.h>
+.sp
+.BI "typedef int64_t tmo_t;"
+.sp
+.BI "tmo_t tmo_now ();"
+.BI "tmo_t tmo_nowns ();"
+.sp
+.BI "int tmo_sleep (tmo_t " usec ");"
+.BI "int tmo_sleepns (tmo_t " nsec ");"
+.BI "int tmo_msleep (unsigned long " msec ");"
+.sp
+.BI "#define TMO_TOTVAL(" tv "," tmo ")"
+.BI "#define TMO_FROMTVAL(" tv ")"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B tmo_t
+This type is a 64bit signed integer and stores the microseconds since
+1st january 1970 0:0 GMT. Compared to time_t it has the advantage, to
+have a higher resolution (microseconds compared to seconds) and a wider
+range (>240,000 years into future and past). This is enough for most
+usage.
+.TP
+.B tmo_now
+returns the actual timestamp (in microseconds since 1970).
+.TP
+.B tmo_nowns
+returns the actual timestamp (in nanoseconds since 1970).
+.B Note:
+works only between 1386 AD and 2554 AD. Beyond this range an overflow will occur.
+.TP
+.B tmo_sleep
+sleeps
+.I usec
+microseconds. This function is implemented using nanosleep(2), or 
+if not available usleep(3).
+.TP
+.B tmo_sleepns
+sleeps
+.I nsec
+nanoseconds. This function is implemented using nanoseconds(2).
+If it is not available an error RERR_NOT_FOUND is returned.
+.TP
+.B tmo_msleep
+sleeps 
+.I msec
+milliseconds. This function is implemented using nanosleep(2), or 
+if not available usleep(3).
+.TP
+.B TMO_TOTVAL
+converts a timestamp of type tmo_t into a tval structure.
+.TP
+.B TMO_FROMTVAL
+converts a time in a tval structure into a timestamp of type
+tmo_t (which is returned).
+
+
+
+.SH Depricated Functions
+The following functions are depricated. They remain only for
+backward compatibility. You should use the cjg(3fr) functions 
+instead.
+.TP
+.B tmo_gmktime
+works like mktime(3), but assumes always GMT. Leap seconds are
+not considered.
+.TP
+.B tmo_getrfctime
+parses a date in RFC 1820 format, as used in emails. 
+(e.g.: Tue, 24 Jul 2001 02:38:54 +0200)
+.TP
+.B tmo_parsefreedate
+is a quite flexible date/time parser. A lot of different input formats
+are accepted.
+.br
+.B Note:
+The european format day/month/year is always preferred before the american
+month/day/year format.
+.br
+If the argument
+.I ende
+is set to 1 and only date (no time) is given the time is considered the last
+possible (i.e. 23:59:59). 
+If ende is set to 0, the minimum time is considered (i.e. 00:00:00).
+The same is true if only seconds are missing.
+.TP
+.B tmo_strptime
+is a primitive strptime implementation. If available the standard strptime(3)
+should be used. This implementation honors only the following conversions:
+.IP
+.I %y, %Y
+year
+.IP
+.I %m
+month
+.IP
+.I %d
+day
+.IP
+.I %H
+hour
+.IP
+.I %M
+minute
+.IP
+.I %S
+second
+.TP
+.B tmo_parsemetadate
+parses dates in the form %Y-%m-%d %H:%M:%S.
+.TP
+.B tmo_adjustdate
+takes as input a date in the form %Y-%m-%d %H:%M:%S,
+and an optional timezone in the form +-%H%M (e.g.: +0200).
+The single fields are range checked and corrected if neccessary
+(e.g. if month > 12 -> month = 12) and the timezone is converted
+to GMT.
+.br
+When 
+.I with_tz
+is set to 1, a +0000 is appended to the output string, otherwise the
+output is in the form: %Y-%m-%d %H:%M:%S without o timezone.
+.br
+.B Note:
+The output is written to a static buffer and overwritten at the next
+call to tmo_adjustdate. Thus it is not thread safe.
+
+.SH "SEE ALSO"
+.BR cjg "(3fr), "
+.BR nanosleep "(2), "
+.BR usleep "(3), "
+.BR frlib "(3fr)."
+
+
+
+

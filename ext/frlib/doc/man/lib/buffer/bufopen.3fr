@@ -1,0 +1,65 @@
+.\" Copyright (c) 1999 by Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.TH BUFOPEN 3fr  "July 16, 1999" "Frank Reker" "frlib"
+.SH NAME
+bufopen
+\- creates a new buffer
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI BUFFER\ bufopen\ (int\ buffer_type,\ u_int32_t\ flags);
+.sp
+.SH DESCRIPTION
+.B bufopen\ ()
+creates a new buffer. A pointer to this buffer is returned. The pointer is of 
+type BUFFER. 
+bufopen () takes the buffer type as input. It might be
+.B BUF_TYPE_NULL
+\- This is only a dummy buffer. All operations are allowed on this buffer 
+type, but nothing is buffered.
+.B BUF_TYPE_MEM
+\- This type uses a linked list of strings as buffer. The strings may vary in 
+length.
+.B BUF_TYPE_CONT
+\- One long string is used as buffer. If this string becomes too small, a 
+realloc () is performed.
+.B BUF_TYPE_BLOCK
+\- As with mem buffers, a linked list of strings is used for buffering, but
+the strings are of constant length (1024 B by default). This in the average
+case does avoid to many mallocs.
+.B BUF_TYPE_FILE
+\- This type uses a temporary file as buffer. 
+.SH "RETURN VALUES"
+The function returns a pointer to the buffer. It is of type 
+.B BUFFER.
+If an error occurs NULL is returned.
+.SH "BUGS"
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are
+welcome, too.
+.SH "SEE ALSO"
+.BR buffer "(3fr), " bufsetflags "(3fr), " bufsetmaxsize (3fr),
+.BR bufsetmaxmemsize (3fr)

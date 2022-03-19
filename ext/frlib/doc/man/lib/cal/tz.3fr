@@ -1,0 +1,224 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "tz" 3fr "01 may 2011" "Frank Reker" "frlib"
+.SH NAME
+ctz_set,
+ctz_setdef,
+ctz_get,
+ctz_del -
+function to handle / parse timezone information
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/tz.h>
+.sp
+.BI "int ctz_set (char *" tzstr ", int " flags ");"
+.BI "int ctz_setdef (int " tz ");"
+.BI "struct ctz *ctz_get (int " num ");"
+.BI "int ctz_del (int " num ");"
+.fi
+
+
+.SH FLAGS
+.B ctz_set
+honors the following flags:
+.TP
+.B CTZ_F_OLDFMT
+When parsing timezone specification, one can specify the offset
+to 
+.IR UTC ,
+where generally east of GMT is positive and west is negative.
+Using the CTZ_F_OLDFMT flag, east is negative and west of GMT
+is positive, as defined by the POSIX TZ environment variable.
+.TP
+.B CTZ_F_DEFAULT
+Makes the timezone the default timezone. Similar to
+call 
+.BI ctz_set ,
+and then 
+.BI ctz_setdef .
+With the only difference, that the old default timezone is
+automatically removed from the system.
+
+.SH TIMEZONE NUMBERS
+The parsed timezone is stored in an internal structure, which
+is referenced by an integer returned by ctz_set. The following
+timezones are predefined by the lib:
+.TP
+.B CTZ_TZ_UTC
+Represents UTC (Universal Time Coordinates) also known as GMT
+(Greenwich Mean Time).
+.TP
+.B CTZ_TZ_SYSTEM
+The system default settings. This is determined as follows:
+When the environment variable 
+.B FRTZ
+does exist, this is parsed with the flag
+.I CTZ_F_OLDFMT
+unset. If this does not exit, the variable 
+.B TZ
+is searched, and when it exists, it is parsed with the flag
+.I CTZ_F_OLDFMT
+set. When none of them exist, it is looked into the config file,
+wether the config variable timezone exists, which specify a
+timezone file. When this does exist it is parsed. If not, the
+content of /etc/timezone is read, and the corresponding file
+is searched and parsed. If this fails the file /etc/localtime
+is parsed. If all fails, the system time is set to UTC.
+.TP
+.B CTZ_TZ_DEFAULT
+This is the default timezone set by 
+.I ctz_setdef
+or by 
+.I ctz_set
+using the flag
+.IR CTZ_F_DEFAULT .
+At library initialization it is set to 
+.BR CTZ_TZ_SYSTEM ", "
+hence the system default, which is good in most cases.
+
+
+.SH DESCRIPTION
+.TP
+.B ctz_set
+This is the most important function. It parses the given timezone
+string, which can be either a timezone specification (see below)
+or a timezonefile prefixed by a colon (:). If passed a NULL
+pointer, the timezone specification is searched as described for
+CTZ_TZ_SYSTEM above. The function returns an integer representing
+the timezone.
+.TP
+.B ctz_setdef
+sets default time zone.
+.TP
+.B ctz_del
+removes timezone from system.
+.TP
+.B ctz_get
+returns the structure with timezone information that corresponds
+to timezone number. This function is mainly used by the 
+.I tzcorrect(3fr) 
+functions, and is rarely needed outside this scope
+
+.SH TIMEZONE SPECIFICATION
+The timezone specification is a string similar to that specified
+for the 
+.B TZ
+environment variable. (See also tzset(3) for more details.)
+.br
+If the string begins with a colon (:) it is considered a timezone
+file (see below). Otherwise the string has one of the following
+formats:
+.br
+The first form is
+.sp
+.B STD(+|-)Offset
+.sp
+STD is the name of the timezone. The offset is the offset to UTC
+and can be HH.MM.SS or HH:MM:SS where HH are hours, MM minutes
+and SS seconds. Minutes and seconds might miss.
+.B Note:
+The offset is in standard format, hence positive means east of
+GMT and negative means west of GMT. The posix TZ environment variable
+defines it contrary. Using the flag 
+.I CTZ_F_OLDFMT
+the posix behaviour can be forced.
+.sp
+The second form is when daylight saving time (also known as summer time)
+is in use. Its form is
+.sp
+.B std offset dst [offset],start[/time],end[/time]
+.sp
+STD and offset is as above. DST and offset is the name and offset of
+daylight saving time. When offset is missing, it is assumed that it is
+one hour ahead of std time.
+Start and end defines when daylight saving time starts, and when it ends.
+These fields can have one of the following forms:
+.sp
+.I Jn
+The julian day (day of year) with 1 <= n <= 365. The 29 feb. is never
+counted neither in leap years.
+.sp
+.I n
+The julian day (day of year) with 1 <= n <= 365. The 29 feb. is 
+counted in leap years.
+.sp
+.I Dm.d
+defines the month (m) and day (d).
+.sp
+.IR Mm.w.d or Wm.w.d
+defines the:
+.br
+- month m (1 <= m <= 12)
+.br
+- week w (1 <= w <= 5) week 5 means always the last week.
+Or (-5 <= w <= -1) does count backwards from last to first week of month.
+.br
+- day (0 <= w <= 7) 1 is monday and 7 (or 0) is sunday.
+If day is missing sunday is assumed.
+.sp
+.I TIME
+is the time of day, when the switch occurs. When left out, it is taken
+as 02:00:00 (for both switches - to and from dst).
+
+
+.SH TIMEZONE FILE
+To specify a timezone file, one need to prefix it with a colon (:)
+in the 
+.I tzstr
+string passed to ctz_set.
+When the filename does begin with a slash (/) it is considered to be
+an absolute path name. Otherwise the file is searched in
+.IR /usr/share/frtz " (can"
+be changed by the config variable
+.IR tzdir "), "
+.IR /usr/share/zoneinfo/ " and " /usr/lib/zoneinfo/ .
+.sp
+Currently only timezone files of the format of the timezone database
+as used in many operating systems (e.g. linux) can be parsed.
+Other formats will follow.
+For details about the format see
+.I tzfile(5).
+
+.SH BUGS
+The functions 
+.BR ctz_set " and " ctz_del
+are
+.B NOT
+threadsafe. If you want to call them from multiple threads you need
+to do synchronisation.
+.sp
+The function 
+.B ctz_get
+is threadsafe, but when called the first time with one of the default
+timezones (CTZ_TZ_UTC or CTZ_TZ_SYSTEM) the function
+.B ctz_set
+is called, which is not thread safe. The function ctz_get is called
+by other breakdown functions, which are otherwie threadsafe. To assure
+thread safety, one can call ctz_get with the default timezones once
+before forking the threads.
+
+
+.SH "SEE ALSO"
+.BR tzcorrect "(3fr), "
+.BR crule "(3fr), "
+.BR tzset "(3), "
+.BR tzfile "(5), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

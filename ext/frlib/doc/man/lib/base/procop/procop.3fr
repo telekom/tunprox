@@ -1,0 +1,56 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "process operations" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+pop_parentof,
+pop_numchild,
+pop_getcmdname
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/procop.h>
+.sp
+.BI "int pop_parentof (pid_t *" ppid ", pid_t " pid ");"
+.BI "int pop_numchild (int *" numchild ", pid_t " pid ");"
+.BI "int pop_getcmdname (char *" name ", int " size ", pid_t " pid ");"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B pop_parentof
+returns the id of the father process of a given process.
+.TP
+.B pop_numchild
+returns the number of child processes a given process has.
+.TP
+.B pop_getcmdname
+returns the command name of a given process id. The output is written
+to
+.IR name .
+.I size
+gives the maximum number of bytes (including the terminating NUL character)
+written.
+
+.SH NOTE:
+All three functions do use the proc file system which needs to be mounted 
+at /proc. Otherwise the functions will fail with a RERR_SYSTEM.
+
+
+.SH "SEE ALSO"
+.BR frlib "(3fr)."
+
+
+
+

@@ -1,0 +1,274 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "tlst" 3fr "29 apr 2011" "Frank Reker" "frlib"
+.SH NAME
+TLST_NEW,
+tlst_new,
+TLST_PUTLST,
+tlst_putlst,
+TLST_ADD,
+tlst_add,
+TLST_SET,
+tlst_set,
+TLST_GETMAX,
+tlst_getmax,
+TLST_GETNUM,
+tlst_getnum,
+TLST_RESET,
+tlst_reset,
+TLST_GET,
+tlst_get,
+TLST_GETPTR,
+tlst_getptr,
+TLST_FREE,
+tlst_free,
+TLST_REMOVE,
+tlst_remove,
+TLST_FIND,
+tlst_find,
+TLST_INSERT,
+tlst_insert,
+TLST_SEARCH,
+tlst_search,
+tlst_cmpint,
+tlst_cmpdblint,
+tlst_cmpint64,
+tlst_cmpdblint64,
+tlst_cmpstr,
+tlst_cmpistr,
+tlst_cmpdblstr,
+tlst_cmpdblistr,
+TLST_LIMPSIZE,
+TLST_FINDINT,
+TLST_HASINT,
+TLST_FOREACH2,
+TLST_FOREACH,
+TLST_FOREACHPTR2,
+TLST_FOREACHPTR -
+tree list functions
+
+
+.SH SYNOPSIS
+.nf
+.BI "int tlst_new (struct tlst*" tlst ", size_t " size ");"
+.BI "int tlst_putlst (struct tlst*" tlst ", void *" src ", unsigned " num ", int " flags ");"
+.BI "int tlst_add (struct tlst*" tlst ", void *" data ");"
+.BI "int tlst_set (struct tlst*" tlst ", unsigned " idx ", void *" data ");"
+.BI "int tlst_getmax (struct tlst*" tlst ");"
+.BI "int tlst_getnum (struct tlst*" tlst ");"
+.BI "int tlst_reset (struct tlst*" tlst ");"
+.BI "int tlst_get (void *" outdata ", struct tlst*" tlst ", unsigned " idx ");"
+.BI "int tlst_getptr (void *" outdata ", struct tlst*" tlst ", unsigned " idx ");"
+.BI "int tlst_free (struct tlst*" tlst ");"
+.BI "int tlst_remove (struct tlst*" tlst ", unsigned " idx ", int " flags ");"
+.BI "int tlst_find (unsigned *" idx ", void *" data ", struct tlst*" tlst ", int (*" cmp ")(void*,void*), void *" key ");"
+.BI "int tlst_insert (struct tlst*" tlst ", void *" data ", int (*" cmpfunc ")(void*,void*));"
+.BI "int tlst_search (struct tlst*" tlst ", void *" data ", int (*" cmpfunc ")(void*,void*));"
+.BI "int tlst_cmpint (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpdblint (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpint64 (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpdblint64 (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpstr (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpistr (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpdblstr (void *" ptr ", void *" val ");"
+.BI "int tlst_cmpdblistr (void *" ptr ", void *" val ");"
+.sp
+.BI "#define TLST_SET(" list "," idx "," data ")"
+.BI "#define TLST_PUTLST(" list "," src "," num ")"
+.BI "#define TLST_LIMPSIZE"
+.BI "#define TLST_ADD(" list "," data ")"
+.BI "#define TLST_GET(" outdata "," list "," idx ")"
+.BI "#define TLST_GETPTR(" outptr "," list "," idx ")"
+.BI "#define TLST_NEW(" list "," type ")"
+.BI "#define TLST_FREE(" list ")"
+.BI "#define TLST_GETMAX(" list ")"
+.BI "#define TLST_GETNUM(" list ")"
+.BI "#define TLST_RESET(" list ")"
+.BI "#define TLST_REMOVE(" list "," idx "," flags ")"
+.BI "#define TLST_FIND(" idx "," list "," cmp "," key ")"
+.BI "#define TLST_FINDINT(" idx "," list "," key ")"
+.BI "#define TLST_HASINT(" list "," key ")"
+.BI "#define TLST_INSERT(" list "," data "," cmp ")"
+.BI "#define TLST_SEARCH(" list "," key "," cmp ")"
+.sp
+.BI "#define TLST_FOREACH2(" data "," list "," i ")"
+.BI "#define TLST_FOREACH(" data "," list ")"
+.BI "#define TLST_FOREACHPTR2(" ptr "," list "," i ")"
+.BI "#define TLST_FOREACHPTR(" ptr "," list ")"
+.fi
+
+.SH FLAGS
+The following flags are accepted:
+.TP
+.B TLST_F_CPYLAST
+.TP
+.B TLST_F_SHIFT
+
+.SH DESCRIPTION
+.TP
+.BR TLST_NEW ", " tlst_new
+/* initializes list */
+.TP
+.BR TLST_PUTLST ", " tlst_putlst
+/* puts data list into struct */
+.TP
+.BR TLST_ADD ", " tlst_add
+/* apends element at end */
+.TP
+.BR TLST_SET ", " tlst_set
+/* inserts element at given position */
+.TP
+.BR TLST_GETMAX ", " tlst_getmax
+.TP
+.BR TLST_GETNUM ", " tlst_getnum
+.TP
+.BR TLST_RESET ", " tlst_reset
+.TP
+.BR TLST_GET ", " tlst_get
+.TP
+.BR TLST_GETPTR ", " tlst_getptr
+.TP
+.BR TLST_FREE ", " tlst_free
+.TP
+.BR TLST_REMOVE ", " tlst_remove
+.TP
+.BR TLST_FIND ", " tlst_find
+/* find searches all entrys */
+.TP
+.BR TLST_INSERT ", " tlst_insert
+/* inserts element into sorted list */
+.TP
+.BR TLST_SEARCH ", " tlst_search
+/* makes a binary search which is faster but assumes that the list is sorted */
+.TP
+.B TLST_FINDINT
+.TP
+.B TLST_HASINT
+.TP
+.B TLST_LIMPSIZE
+
+.SS Conpare Functions
+/* compare functions - can be used for find, insert, search */
+.TP
+.B tlst_cmpint
+/* compare ints in first position */
+.TP
+.B tlst_cmpdblint
+/* compare two ints in first position */
+.TP
+.B tlst_cmpint64
+/* compare 64 bit ints in first position */
+.TP
+.B tlst_cmpdblint64
+/* compare two 64 bit ints in first position */
+.TP
+.B tlst_cmpstr
+/* compare strings in first position */
+.TP
+.B tlst_cmpistr
+/* compare strings case insensitive in first position */
+.TP
+.B tlst_cmpdblstr
+/* compare two strings in first position */
+.TP
+.B tlst_cmpdblistr
+/* compare two strings case insensitive in first position */
+
+.SS Foreach Loops
+.TP
+.B TLST_FOREACH2
+.TP
+.B TLST_FOREACH
+.TP
+.B TLST_FOREACHPTR2
+.TP
+.B TLST_FOREACHPTR
+
+
+
+.SH Macros
+The Macros are defined as follows
+.nf
+#define TLST_SET(list,idx,data)      tlst_set (&(list), (idx), &(data))
+#define TLST_PUTLST(list,src,num)    tlst_putlst (&(list), (src), (num), 0)
+#define TLST_LIMPSIZE                16
+#define TLST_ADD(list,data)          tlst_add (&(list), &(data))
+#define TLST_GET(outdata,list,idx)   tlst_get (&(outdata), &(list), (idx))
+#define TLST_GETPTR(outptr,list,idx) tlst_getptr (&(outptr), &(list), (idx))
+#define TLST_NEW(list,type)          tlst_new (&(list), sizeof (type))
+#define TLST_FREE(list)              tlst_free (&(list))
+#define TLST_GETMAX(list)            ((list).max)
+#define TLST_GETNUM(list)            ((list).num)
+#define TLST_RESET(list)             tlst_reset (&(list))
+#define TLST_REMOVE(list,idx,flags)  tlst_remove (&(list),(idx),(flags))
+#define TLST_FIND(idx,list,cmp,key)  tlst_find (&(idx),NULL,&(list),(cmp),&(key))
+#define TLST_FINDINT(idx,list,key)   TLST_FIND((idx),(list),tlst_cmpint,(key))
+#define TLST_HASINT(list,key)        tlst_find (NULL,NULL,&(list),tlst_cmpint,&(key))
+#define TLST_INSERT(list,data,cmp)   tlst_insert(&(list),&(data),(cmp));
+#define TLST_SEARCH(list,key,cmp)    tlst_search(&(list),&(key),(cmp));
+.nf
+
+
+
+.SH "SEE ALSO"
+.BR "TLST_NEW" "(3fr), "
+.BR "tlst_new" "(3fr), "
+.BR "TLST_PUTLST" "(3fr), "
+.BR "tlst_putlst" "(3fr), "
+.BR "TLST_ADD" "(3fr), "
+.BR "tlst_add" "(3fr), "
+.BR "TLST_SET" "(3fr), "
+.BR "tlst_set" "(3fr), "
+.BR "TLST_GETMAX" "(3fr), "
+.BR "tlst_getmax" "(3fr), "
+.BR "TLST_GETNUM" "(3fr), "
+.BR "tlst_getnum" "(3fr), "
+.BR "TLST_RESET" "(3fr), "
+.BR "tlst_reset" "(3fr), "
+.BR "TLST_GET" "(3fr), "
+.BR "tlst_get" "(3fr), "
+.BR "TLST_GETPTR" "(3fr), "
+.BR "tlst_getptr" "(3fr), "
+.BR "TLST_FREE" "(3fr), "
+.BR "tlst_free" "(3fr), "
+.BR "TLST_REMOVE" "(3fr), "
+.BR "tlst_remove" "(3fr), "
+.BR "TLST_FIND" "(3fr), "
+.BR "tlst_find" "(3fr), "
+.BR "TLST_INSERT" "(3fr), "
+.BR "tlst_insert" "(3fr), "
+.BR "TLST_SEARCH" "(3fr), "
+.BR "tlst_search" "(3fr), "
+.BR "tlst_cmpint" "(3fr), "
+.BR "tlst_cmpdblint" "(3fr), "
+.BR "tlst_cmpint64" "(3fr), "
+.BR "tlst_cmpdblint64" "(3fr), "
+.BR "tlst_cmpstr" "(3fr), "
+.BR "tlst_cmpistr" "(3fr), "
+.BR "tlst_cmpdblstr" "(3fr), "
+.BR "tlst_cmpdblistr" "(3fr), "
+.BR "TLST_LIMPSIZE" "(3fr), "
+.BR "TLST_FINDINT" "(3fr), "
+.BR "TLST_HASINT" "(3fr), "
+.BR "TLST_FOREACH2" "(3fr), "
+.BR "TLST_FOREACH" "(3fr), "
+.BR "TLST_FOREACHPTR2" "(3fr), "
+.BR "TLST_FOREACHPTR" "(3fr), "
+.BR frlib_base "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

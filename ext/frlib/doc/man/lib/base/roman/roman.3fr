@@ -1,0 +1,112 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "roman" 3fr "29 apr 2011" "Frank Reker" "frlib"
+.SH NAME
+roman2num, num2roman - converts integer to roman numbers and vice versa.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/roman.h>
+.sp
+.BI "" "int " roman2num " (int *" num ", char *" roman ", int " flags ")"
+.nl
+.BI "" "int " num2roman " (char *" buf ", int " len ", int " num ", int " flags ")"
+.fi
+
+.SH FLAGS
+The following flags are accepted to num2roman only:
+.TP
+.B ROM_LCASE
+The output will be in lower case (default is upper case).
+.TP
+.B ROM_UCASE
+The output will be in upper case (this is default).
+.TP
+.B ROM_ADD
+Use the additive (old style) system. E.g. 4 is represented as IIII.
+.TP
+.B ROM_SUB
+Use the later subtractive system. E.g. 4 is represented as IV.
+.TP
+.B ROM_MUL
+For numbers greater than 3999 use the multiply rule. That is
+the number so far is multiplied by 1000 indicating it by 
+.BR *M ". (This"
+is default).
+E.g. 
+.nf
+10234 is X*MCCXXXIV
+1234 is MCCXXXIV
+.fi
+.TP
+.B ROM_CIFRAO
+For numbers greater than 999 use the CIFRAO rule, that is that
+each thousand block is separated by a dollar (cifrao) sign.
+E.g.
+.nf
+10234 is X$CCXXXIV
+1234 is I$CCXXXIV
+.fi
+.TP
+.B ROM_DOT
+Like COM_CIFRAO, but a . (dot) is used as separator.
+.TP
+.B ROM_NEG
+If number is negative and this flag is given the output is
+prefixed with a - (minus sign). If the flag is not given, the
+function fails for negative numbers with RERR_OUTOFRANGE.
+
+
+.SH DESCRIPTION
+.TP
+.B roman2num
+The string
+.I roman
+is parsed and converted to an integer saved in num. This function
+does not accept any flags, but any valid string is accepted as
+input. 
+.sp
+The function returns the number of letters parsed. In case the
+input cannot be parsed it fails with RERR_INVALID_FORMAT. (Any
+return value less then 0 is to be considerd an error).
+
+.TP
+.B num2roman
+converts the number to a roman number (string) written to 
+.IR "buf" "."
+At most
+.I len
+bytes are written (including the terminating nul byte). If
+len is 0 or buf is NULL, nothing is written.
+.sp
+A 0 is represented by an
+.BR N .
+.sp
+The function returns the number of letters written (without
+the terminating 0 byte). If the output is truncated 
+due to a buffer to small, the function
+returns the number of letters that would be written.
+Thus is it legitime to call the function with a NULL pointer
+an zero length to determine the buffer size that is needed.
+
+
+.SH "SEE ALSO"
+.BR "<http://en.wikipedia.org/wiki/Roman_numerals>" ","
+.BR "<http://de.wikipedia.org/wiki/R%C3%B6mische_Zahlendarstellung>" "(german),"
+.BR frlib "(3fr)."
+
+
+
+

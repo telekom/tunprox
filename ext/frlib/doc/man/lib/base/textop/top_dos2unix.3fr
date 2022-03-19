@@ -1,0 +1,60 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "dos2unix" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+top_dos2unix,
+top_unix2dos,
+top_delcr
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "int top_delcr (char * " str ");"
+.BI "int top_dos2unix (char *" ibuf ", char **" obuf ");"
+.BI "int top_unix2dos (char *" ibuf ", char **" obuf ");"
+
+
+.SH DESCRIPTION
+.TP
+.B top_dos2unix
+converts the carrage return / newline sequences of the 
+.I ibuf
+in-buffer to newline characters. 
+The output is written to an allocated buffer and returned in 
+.IR obuf .
+The output is NUL-terminated.
+.TP
+.B top_unix2dos
+converts a newline character in the
+.I ibuf
+in-buffer to a carrage return / newline sequence. 
+The output is written to an allocated buffer and returned in 
+.IR obuf .
+The output is NUL-terminated.
+.TP
+.B top_delcr
+like top_dos2unix, but the changes are done inline, i.e. the in-buffer
+is modified.
+
+
+.SH "SEE ALSO"
+.BR errors "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

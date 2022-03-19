@@ -1,0 +1,1431 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH frlib.rc 5fr "26 August 2009" "Frank Reker" "frlib"
+.SH NAME
+<program>.rc \- is the configuration file used by your application and the
+frlib.
+
+.SH SYNOPSIS
+/etc/<program>.rc
+
+.SH DESCRIPTION
+This manual page documents the general format of the configuration file parsed
+by the frlib, and the configuration variables known by the frlib itself.
+
+.SH FILE FORMAT
+Empty lines and lines beginning with the hash sign (#) are ignored.
+Lines can terminate in line feed character (0x0a) or carrige return
+(0x0d) or a combination. However it is recomended to use line feed only!
+.PP
+Entries are of the form:
+.B variable=value.
+Spaces before and after the equal sign are allowed.
+
+.SS Character Set
+The config file can be in plain ASCII or any 1-Byte character set
+containing plain ASCII in the lower 127 characters or in UTF-8.
+Variables and all syntax structures are plain ASCII. Comments can
+be in any character set that can be visualized by the system.
+However plain ASCII is recomended.
+The charset of the values do depend on the programme. UTF-8 is
+recomended. The non printable characters 0x01 thru 0x08, 0x0b,
+0x0c, 0x0e thru 0x1f should not be used. If neccessary in values
+they can be quoted (e.g. "\\x17"). NUL-Bytes must not be used.
+They do terminate the parsing of the config file.
+
+
+.SS Variable Names
+The variable name is case insensitive and may contain letters, digits and
+underscores. It might not start with digits. Underscores in variables
+are ignored. Hence foobar, foo_bar, Foo_Bar_ refere are all to the same 
+variable. Only at the beginning the underscore is evaluated, hence
+foobar and _foobar are different variables.
+.sp
+Variables might have indeces (see section ARRAYS below).
+E.g. 
+.nf
+foo[bar] = "pippo"
+.fi
+.sp
+Variables might have namespaces (see section NAMESPACES below).
+E.g.
+.nf
+foo/bar = "pippo"
+foo[x]/bar[y] = "pippo"
+.fi
+For namespaces do apply the same rules as for variable names.
+
+.SS Values
+The value can either be unquoted, enclosed in single quotes 
+(e.g. 'value'), double quotes (e.g. "value"), curly braces
+(e.g. {value}) or follow a backquote, in which case it
+ends at end of line. E.g:
+.nf
+var = `my value
+.fi
+
+.SS Unquoted Values
+Unquoted Variables might contain the alphanumeric characters, containing
+the 26 letters of the english alphabet (A-Z, a-z) numbern (0-9) and the
+characters: underscore (_), minus (-), plus (+), dot (.), comma (,) and
+the at-sign (@). The value starts with the first non-whitespace and ends
+with the last allowed character. E.g:
+.nf
+pippo = hello;world
+.fi
+would result in the string "hello" everything following up to end of
+line is ignored. However one should non rely on that, behaviour might
+change in future. If you want to comment use the hash sign. E.g.:
+.nf
+pippo = hello   # my comment
+.fi
+Spaces between the value and the comment are allowed.
+
+.SS Values Following the Back Quote
+E.g.:
+.nf
+pippo = `hello world
+.fi
+The value starts with the character following the back quota up to end of
+line (including trailing white spaces). Any character is allowed except
+line feed and carrige return. The value is treated litarately, no 
+substitution is done.
+
+.SS Values Enclosed in Single Quotes
+E.g.:
+.nf
+pippo = 'hello world'
+.fi
+Any character inbetween two single quotes are part of the value. A sequence
+of two single quotes do not terminate the value, but are substituted by a
+single single quote. E.g.:
+.nf
+pippo = 'my ''special'' value'
+.fi
+will result in "my 'special' value".
+Any character following the terminating single quote up to end of line is ignored.
+However one should non rely on that, behaviour might
+change in future. If you want to comment use the hash sign. E.g.:
+.nf
+pippo = 'hello'   # my comment
+.fi
+Spaces between the value and the comment are allowed.
+
+.SS Values Enclosed in Double Quotes
+E.g.:
+.nf
+pippo = "hello world"
+.fi
+Any character inbetween two double quotes are part of the value.
+Any character following the terminating double quote up to end of line is ignored.
+However one should non rely on that, behaviour might
+change in future. If you want to comment use the hash sign. E.g.:
+.nf
+pippo = "hello"   # my comment
+.fi
+Spaces between the value and the comment are allowed.
+Backslashes (\\) and dollar signs ($) in values enclosed in double quotes
+are interpreted special.
+
+.SS The following backslash squences are known:
+.\" .IP "\\\\\\\\"
+.IP
+.nf
+\\\\   - results in a single backslash (\\).
+.fi
+.\" .IP "\\\\"""
+.IP
+.nf
+\\"   - a double quote character (").
+.fi
+.\" .IP "\\\\'"
+.IP
+.nf
+\\'   - a single quote character (').
+.fi
+.\" .IP "\\\\$"
+.IP
+.nf
+\\$   - the dollar sign ($).
+.fi
+.\" .IP "\\\\n"
+.IP
+.nf
+\\n   - the new line character.
+.fi
+.\" .IP "\\\\r"
+.IP
+.NF
+\\r   - the carrige return character.
+.fi
+.\" .IP "\\\\t"
+.IP
+.nf
+\\t   - the (horizontal) tab character.
+.fi
+.\" .IP "\\\\v"
+.IP
+.nf
+\\v   - the vertical tab character.
+.fi
+.\" .IP "\\\\b"
+.IP
+.nf
+\\b   - the bell (console beep).
+.fi
+.\" .IP "\\\\ followed by three octal digits"
+.IP
+.nf
+\\ followed by three octal digits - 
+.fi
+the unicode character represented by the given octal number (e.g. \\012 represents
+the line feed (newline) character). The character is converted to utf-8.
+.\" .IP "\\\\x followed by two hex numbers"
+.IP
+.nf
+\\x followed by two hex numbers -
+.fi
+the unicode character represented by the given hexadecimal number (e.g. \\x0d
+represents the carrige return character). The character is converted to utf-8.
+.\" .IP "\\\\X followed by two hex numbers"
+.IP
+.nf
+\\X followed by two hex numbers -
+.fi
+the ascii code represented by the given hexadecimal number (e.g. \\x0d
+represents the carrige return character). The value is converted to a one byte
+value. No utf-8 conversion is performed.
+.IP
+.nf
+\\u followed by four hex digits -
+.fi
+a 16bit unicode character, which is converted to utf8.
+.IP
+.nf
+\\U followed by 6 hex digits -
+.fi
+a 21bit unicode character, which is converted to utf8. Note, that only values
+between \\u000001 and \\u10ffff (1114111d) are valid unicode characters.
+.IP
+.nf
+\\0, \\000, \\x00, \\X00, \\u0000, \\U000000 -
+are not valid! By now they are converted to the sequence \\0. However this
+might change in future.
+.IP
+.nf
+\\? -
+.fi
+Thus any other (not specified) backslash sequence by now is converted to the character
+following the backslash. E.g.:
+.nf
+\\y - is converted to y
+.fi
+However one should not rely on that. This belaviour might change in future.
+
+.SS Dollar Conversion
+In double quotes the dollar sign is interpreted special, too, unless it is
+prefixed by a backslash.
+The following dollar conversions are known so far (others will follow):
+.IP
+.nf
+$$ - will result in a single dollar sign ($)
+.fi
+.IP
+.nf
+$\\... - performes a backslash conversion as described above.
+.fi
+.IP
+.nf
+${var} - 
+.fi
+subsititutes the dollar expression with the content of
+the variable inside the curley braces. The variable has to be
+defined earlier in the config file.
+E.g.:
+.nf
+foo = "hello"
+bar = "${foo} world"
+.fi
+This will result in the string "hello world".
+The variable might contain namespaces and/or array indeces. E.g.:
+.nf
+foo = "${my/path/of/var[foobar]/pippo[17]}"
+.fi
+
+.SS Values in Curley Braces
+Values in curley braces might span several lines. E.g.:
+.nf
+pippo = {
+    hello world
+    what so ever
+    another line
+}
+.fi
+The value might contain curley braces if matching or quoted.
+E.g.:
+.nf
+pippo = {
+    matching { braces } might be included in values
+    a quoted \\} does not terminate the value
+}
+.fi
+The open curley brace might be followed by an @-sign, a sequence of
+curley braces and another @-sign, e.g.:
+.nf
+pippo = {@{{@ my value contains }} two unmatched curley braces}
+.fi
+The number of open curley braces specify the number of unmatching
+closing curley braces in the value, and vice versa.
+The value do start after the second @.
+Note, that if the value starts with two @@ the value starts with
+the second @, not after that. E.g.:
+.nf
+pippo = {@@foo}
+.fi
+will result in @foo
+.sp
+Values in curley braces are interpreted litarately. No conversion
+is performed. If the two @ signes at the beginning do enclose a
+dollar sign, dollar conversions are performed as with double quotes.
+E.g.:
+.nf
+pippo = {@$@
+    foo = ${foo}
+}
+.fi
+Note: backslash conversions are not performed, but one might use $\\.
+.PP
+.B Note:
+Carrige returns are converted to line feed characters. Thus a
+CR-LF combination will result in two line feed characters, and
+thus is empty lines.
+
+.SS NUL Character
+There is no way to specify NUL characters.
+If a programme does need it, it must specify its own conversion.
+E.g. %0 could be converted to a NUL char, while %% will result in a single %.
+However, this is programme specific. The config file parser in the frlib does
+not treat those conversions!
+
+.SS Boolean Values
+To interprete boolean values the frlib offers the function cf_isyes, which
+interpretes all of the following as positive values (true):
+.IR yes ", " y ", " true ", " 
+.IR 1 ", " ja ", " si ", " 
+.IR oui
+(case doesn't matter).
+All other values are interpreted as a negative value (false).
+Note: A programme might choose to not use cf_isyes, but interprete the 
+values on its own way.
+
+.SS Time Values
+Often one must specify timeouts or other times (time differences, not absolute
+times). Therefore the frlib offers the function cf_atotm(3fr). Times are
+specified in seconds, optional with fractions (up to microsecond precision).
+E.g.:
+.nf
+1.15   (1 second and 150 miliseconds)
+0.003  (3 miliseconds)
+.fi
+further one might specify minutes, hours or days, e.g.:
+.nf
+1:30.4         (1 minute 30 seconds and 400 miliseconds)
+2:15:30        (2 hours 15 minutes and 30 seconds)
+4d10           (4 days 10 hours)
+1d3:30         (1 day 3 hours and 30 minutes)
+17d0:1:0.0001  (17 days 1 minute and 100 microseconds)
+.0000009       (0, because the maximum precision is microseconds - the final 9 is discarded)
+.fi
+
+
+.SH ARRAYS
+Variables can occur in its pure form 
+.I myvar=value
+or as an array
+.I myvar[index]=value
+index can be any string containing alphanumeric characters (A-Z, a-z and 0-9),
+the underscore (_), at (@), dot (\.), colon (:), slash (/), minus (-) and
+plus (+) character. E.g. the following are all valid declaration:
+.nf
+.nl
+pippo="value1"
+pippo[1] = "value2"
+pippo[foobar] = "value3"
+pippo[frank@reker.net] = "my email address"
+.fi
+.sp
+Indeces are case insensitive (e.g. pippo[foo] and pippo[Foo] are identical.
+But underscores in indeces are honored, hence pippo[foobar] and pippo[foo_bar]
+are distinct. 
+.sp
+Numeric indeces are interpreted numericaly, e.g. pippo[1] and pippo[01]
+are equal. But pippo[a1] and pippo[a01] are different.
+.sp
+If a variable is defined as an array and in the normal form, the normal form
+works as a default value for all non defined array indeces. E.g. if in the
+example above the variable pippo[2] is requested, value1 (${pippo}) is returned.
+
+
+.SH MULTI-DIMENSION ARRAYS
+Arrays may have more than one index:
+.I myvar [index1, index2, ...] = value
+e.g.:
+.nf
+.nl
+pippo[foo,bar]="value4"
+.fi
+.sp
+If a variable pippo[foobar,bar] would be requested, which is not defined,
+The default would be pippo[foobar], and if that would not exist pippo
+would be used as default.
+.sp
+Even here numerical indeces are interpreted numerical, e.g. pippo[1,1] and
+pippo[01,1] and pippo[1,01] and pippo[01,01] are all identical.
+
+
+.SH NAMESPACES
+As mentioned earlier, variables might have namespaces. Namespaces are
+separated from the variable by a slash (/). Namespaces might have array
+indeceses. The same rules do aply as for variable indeceses.
+E.g.:
+.nf
+foo[bar]/pippo[1] = ...
+.fi
+Namespaces can be nested. E.g.:
+.nf
+foo[bar,1:01]/bar[xxx]/foo/pippo[1] = ...
+.fi
+A leading slash is ignored:
+/foo/bar is identical to foo/bar
+.PP
+If several variables with the same namespace shall be configured, the
+variable might be grouped into the same namespace using curley braces. E.g.:
+.nf
+foo {
+    var1 = "..."
+    var2 = "..."
+}
+.fi
+would be the same as:
+.nf
+foo/var1 = "..."
+foo/var2 = "..."
+.fi
+Array indeceses do work as well:
+.nf
+modem[ec25] {
+	vendor = Quectel
+	product = EC25
+}
+modem[mc7710] {
+	vendor = "Sierra Wireless Inc."
+	product = "MC 7710"
+}
+modem[ec25]/cname = "ec25"
+.fi
+
+
+.SH INCLUDE
+Using the command 
+.I include """/other/file.rc"""
+includes the file with the name /other/file.rc, i.e. the contents is read
+and interpreted as a config file. The variables are inserted at the point
+where the file is included. If one variable is defined more than once,
+the latter definition overwrites the former one. So you can first include
+another config file and then overwrite some of its variables. This
+makes life easier when dealing with several different configurations.
+
+.SH Undefine Variables
+With the command 
+.I undef myvar
+you can undefine the prior defined variable (myvar). It is than as if 
+myvar would never have been set. This is usefull when including another
+config file which has myvar set to some value.
+.br
+.I undef myvar[myindex]
+would delete the array variable myvar with the index myindex. Other
+occurences of myvar would be left as is.
+.br
+.I undef myvar[]
+does delete the whole array (one or more dimensional) 
+inclusive the default value.
+.B Note: undef doesn't work well with namespace variables yet.
+
+
+.SH SECURE CONFIG FILE
+The frlib provides the possibility to use secure (encrypted) config
+files. To activate the usage you need to specify the variable:
+.BR crypt_cf ", " secure_cf " or " secure_config_file .
+.br
+If one of the variables (that specify the path to the secure config
+file) is present, it is decrypted and parsed as done with normal
+config files. Only includes in secure config files are not permitted.
+However, includes are treated, but the include file cannot be
+encrypted. Therefore its usage doesn't make sense.
+.br
+The idea behind encrypted config files is to store passwords (e.g.
+database passwords), pins and the like in here. Thus you need only
+one password (for decrypting the config files).
+.sp
+.B Note:
+Secure config files need to be activated by your application, which
+has to provide the password for decrypting the secure config file,
+too. (Mechanisms for doing so are present in the frlib).
+Thus it depends on your application wether or not secure config
+files are available.
+
+
+.SH KNOWN VARIABLES
+The following variables are recognized by frlib. Variables that are not
+recognized are silently ignored. So keep attention not to misspell
+the variables. Variable names are all case insensitive so
+write_log and Write_Log and WRITE_LOG are all the same. The values
+however are mostly case sensitive.
+
+.TP
+.BR crypt_cf ", " secure_cf ", " secure_config_file
+This is the path to an encryted config file. The encrypted config file
+is decrypted and than parsed as the normal config file. Only that
+includes are not supported in encrypted config files. The password for
+decrypting genarally is asked by your application or the start application
+and further passed to the daemons.
+By default this is not set.
+.PP
+The following variables are subdevided into subsections.
+
+.SS Logging Options:
+All logging options are two dimensional arrays.
+The first index corresponds to the programme, that produces the log message
+(usefull if the same config file is used for several binaries).
+The second index corresponds to the module inside the programme (if and which
+modules do exist depends on your application). The frlib itself does use the
+module
+.IR frlib .
+Further you can specify your own modules using the log_match option (see below).
+.TP 
+.BR logfile
+is the path to the logfile (The default value depends on your application,
+but generally it is
+.IR "/var/log/<program_name>.log" ")."
+.TP
+.B write_log
+is of type boolean and controlls wether logmessages are written to a logfile
+(default is 
+.IR yes 
+if logfile is set and
+.I no
+otherwise).
+.TP
+.BR log_syslog ", " use_syslog
+is of type boolean and controlls wether logmessages are passed to syslog
+(default is 
+.IR no ")."
+.TP
+.BR log_console
+is of type boolean and if set to yes, log messages are written to 
+.IR "/dev/console" . (default is
+.IR no ")."
+.TP
+.BR log_stderr
+is of type boolean and if set to yes, log messages are written to
+stderr. (default is
+.IR no ")."
+.TP
+.BR loglevel
+specifies the maxmum level a message may have to be logged. The
+levels are the same as for syslog(3). In addition the levels
+LOG_VERB (8, verbose) and LOG_VVERB (9, very verbose) are specified.
+The level can be either specified
+by the number or the corresponding name with or without the LOG_ prefix.
+Hence 7, LOG_DEBUG and debug are all the same (the value is case 
+insensitive). 
+(default is 
+.IR LOG_ERR ")."
+.TP
+.BR log_stacktrace
+The value can be any valid log level, 
+.IR no ", " yes " or " all "."
+yes is identical to LOG_CRIT and all is identical to what is set by 
+loglevel. If the message has a level lower or equal to the given
+stacktrace level, then a stacktrace is written to the log file.
+When set to
+.I no
+the feature is disabled. (default is 
+.IR yes ")."
+.TP
+.B logfile_leaveopen
+Normally the logfiles are opened for every log message and closed
+after writing. When this option is set to
+.I yes
+the logfile is opened only once, and then left open til the end
+of the programme execution. Leaving it open results in a slightly
+better performance, but you cannot delete the log file without
+restarting the application.
+(default is
+.IR no ")."
+.TP
+.BR log_exec_cmd ", " loc_cmd_exec
+This specifies a command that is executed when the logmessage is
+less or equal to log_exec_level. The command may contain the
+following % directives:
+.IP
+.nf
+%p - is substituted by the programme name
+.fi
+.IP
+.nf
+%P - the process id of the application
+.fi
+.IP
+.nf
+%l - the log level as number
+.fi
+.IP
+.nf
+%L - the log level as string
+.fi
+.IP
+.nf
+%M - the module name
+.fi
+.IP
+.nf
+%m - the log message
+.fi
+.IP
+.nf
+%% - results in a single %
+.fi
+By default this option is not set.
+.TP
+.B log_exec_level
+Specifies the minimum log level for executing the programme specified as
+log_exec_cmd. (default is 
+.IR LOG_ALERT ")."
+.TP
+.B log_cmd_timeout
+The timeout in seconds after which the executed programme is killed.
+(default are
+.IR "2 seconds" ")."
+.TP
+.B log_throw
+is of type boolean. If set to yes, a C++ exception is thrown, whenever
+a message with a level of at most log_throw_level is written. This
+option effects only the C++ binding, not the C binding. (default is
+.IR no ")."
+The exception is of type 
+.I SlogExcept 
+which inherits
+.IR "std::runtime_error" .
+.TP
+.B log_throw_level
+The level at which the exception is thrown.
+.TP
+.B logmatch
+gives a regular expression which is matched against each log message written
+to logfile. If it matches the message is treated as if it would be created
+by the module specified by the second index. E.g.: 
+.nf
+logmatch [myprog, mymod] = "myfunc.*(.*)" 
+.fi
+would treat all messages
+that start with myfunc as if it would be send by mymod. Thus all configuration
+variables for mymod would apply. The regular expression always match from the
+beginning of the message. If you want to match a string in the middle use
+the prefix 
+.I ".*"
+to match any string at the beginning.
+The standard posix extended regular expression are applied.
+.br
+There is no default value.
+.br
+.B Note:
+The usage of logmatch does cost a lot of performance, but comes quite handy
+during debugging.
+.TP
+.B logfmatch
+is like logmatch, but matches strings not regular expressions, which is somewhat
+faster.
+.br
+There is no default value.
+
+.SS Paths and Programmes:
+.TP
+.B all_progs
+is a comma separated list of programme names that are started or stopped
+by the start script when no name is given to the command line.
+This is used by the
+.IR "<programme>_start" and "<programme>_starter"
+tools included in the frlib.
+.TP
+.B allow_any_prog
+if set to yes <programme>_start and "<programme>_starter" tries to start 
+any programme passed to it. Otherwise
+only programmes set in all_progs are exepted. (Default is
+.IR no ")."
+.TP
+.B prog
+this variable is an array and specifies the path to the given programme.
+Hence prog[pippo]=/usr/local/myprog/bin/pippo gives the path to the programme 
+pippo. When a programme needs to be started first this variable is consulted.
+If set the configured programme is started. Otherwise it is searched in the
+PATH environment variable.
+.br
+The following programmes are used by the frlib or its tools.
+.IP
+spoold - path to the spooler daemon (<programme>_spoold) eventually started
+by the starter application (see the start_spoold option).
+.IP
+gzip - the path to the gzip programme, used by the gzip function.
+.IP
+bzip2 - the path to the bzip2 programme, used by the bzip2 function.
+.IP
+compress - the path to the compress programme, used by the compress function.
+
+.SS Environment Options
+The following variables are arrays with the programme name as index.
+These variables are honored by the start_prog function used e.g. by the 
+starter programmes included in the frlib. Programmes might however
+use the set_environment functions themself.
+.TP
+.B setenv_file
+The path to a file of variables, that are set as ervironment variables. The
+format of that file is:
+.br
+Empty lines, and those beginning with a # are ignored.
+Other lines are of form:
+.nf
+VAR = value
+or
+export VAR = value
+.fi
+The keyword export will be ignored if present. Thus you can include
+the same file in a bash-script.
+.TP
+.B user
+The user under which the programme shall run. If the programme is run
+as a different user and has permissions to change user, it is changed.
+.TP
+.B pwd
+(path working dir) Is the path to change to before executing the programme.
+
+.SS Startprog Options
+The following are arrays, that take the programme name as argument.
+The environment and IOPipe Options take effect with the startprog 
+function as well.
+.TP
+.B prog_watch_errors
+If set to yes, the error output is continously logged. This might cause
+te be launched another process, which performe the logging. (Default is
+.IR no ")."
+.TP
+.B prog_daemonize
+If set to yes, it causes the programme to be daemonized, before it is 
+executed. (Default is
+.IR no ")."
+.TP
+.B start_spoold
+If set to yes, it causes to start spoold with -p <programme_name> instead
+of calling the programme itself.
+
+.SS IOPipe Options
+.TP
+.B iopipe_log_output
+If this option is set, the output (stdout) of the called programme is
+written to the log file, too. Otherwise only the error output (stderr)
+is logged. This option is an array with the programme name (of the
+calling programme) as index. (Default is 
+.IR no ")."
+
+.SS Random Options
+.TP
+.B use_randfile
+If this option is set, the initialization for random numbers are taken from
+a file, which in turn is updated, for the next time. By default the 
+initialization is done by the /dev/urandom device. This option is usefull
+on systems that don't have a urandom-device.
+.TP
+.B randfile
+The random file to use if use_randfile is set. (There is no default).
+
+.SS Spooling Options
+.TP
+.B spooldir
+The spooling directory for given spool (array variable). (The default is
+.IR "<spool_basedir>/<spool_name>" ")."
+.TP
+.B spool_basedir
+The base directory where spools are found if spooldir is not given. (Default
+is
+.IR "/var/spool" ")."
+.TP
+.B spool_default
+The default spool to work on. (Default is
+.IR frspool ")."
+.TP
+All following options are array variables, taking the spool name as index.
+.TP
+.B spool_to_subdir
+If set to yes, the spooling directory contains subdirectories to spool to.
+This enhances performance if a lot of file are spooled. (Default is
+.IR "yes" ")."
+.TP
+.B spool_num_files_per_subdir
+The number of files spooled to each sub directory. (Default is
+.IR 1000 ")."
+.TP
+.B spool_use_fast_spooler
+If set to yes, the spooling number is incoprated into the name. Such sorting
+can be done by examining the files name instead of opening each file. This
+is much faster. Setting it to no, doesn't have any advantage. It is supported
+for historical reasons only. (Default is
+.IR yes ")."
+If spooling to subdir is activated this option is set to yes automatically.
+.TP
+.B spool_cache_maxtime
+For not reading the spooling directory every time a new file is to be elaborated,
+the file list is kept in cache. After <spool_cache_maxtime> seconds the cache
+is deleted an the directory newly read. So longer the spool_cache_maxtime is,
+so fewer reads on the filesystem are performed, which enhances the speed of
+elaboration. However, changes in the directory meanwhile the cache is active,
+are not recognized, which might change the order in which files are elaborated.
+If spool_cache_maxtime is
+.IR 0 ","
+the directory is reread every time a file is to be elaborated. If it has a
+negative value, the cache is hold infinitive time (till all files in the
+spool are elaborated. (Default is
+.IR 600 "(10 minutes))."
+.TP
+.B spool_max_elabtime
+The maximum time in seconds for elaborating a single file. The best time
+depends on the kind of project you have. (Default is
+.IR 604801 "(one week and one second))."
+.TP
+.B spool_reinsert_ontimeout
+If set to yes, file
+If the elaboration is interupted after a timeout, file are reelaborated in 
+the next round, if spool_reinsert_ontimeout is set to yes, and marked as 
+errors, if set to no. (Default is
+.IR yes ")."
+.TP
+.B spool_nfs_workaround
+For avoiding conflicts, certain operation needs locking. Normally
+file locks are used. But this does not work on nfs file systems. If this
+option is set to yes, an algorithm is used that works without filelocks.
+This is somewhat slower, but safe for filesystems that does not support
+locking. (Default is
+.IR no ")."
+.TP
+.B spool_lock_maxwait
+When creating a lock file maximum <spool_lock_maxwait> seconds are waited
+for getting the lock file. After that the function fails with an 
+ERR_TIMEDOUT. (Default is
+.IR 60 ")."
+.TP
+.B spool_lockfile_timeout
+If a lock file is older than <spool_lockfile_timeout> seconds, it is considerated
+orphane and deleted. (Default is
+.IR 120 ")."
+
+.SS Shared Memory Options
+.TP
+.B sm_page_size
+The size of a shared memory segment. (Default is
+.IR 64kB ")."
+This variable is an array, that takes the name (as known to the programme)
+of the shared memory page system.
+.TP
+.B sm_page_name
+Name of the basic shared memory segment, under which it is known to
+the operating system. 
+This variable is an array, that takes the name (as known to the programme)
+of the shared memory page system. (Default is the name known to
+the programme).
+.TP
+.B sm_max_wait
+The maximum time to wait for the opening of the basic shared memory 
+segment. (Default is
+.IR 3000 "(50 minutes))."
+
+.SS Connection Options
+.TP
+.B connection_timeout
+Default timeout in seconds for the connection (conn_) routines. (Default is
+.IR 5 ")."
+.TP
+.B getdoc_url
+Default url for the getdoc function.
+There is no default value.
+.TP
+.B getdoc_host
+Default host for the getdoc function, if getdoc_url is not set.
+There is no default value.
+.TP
+.B getdoc_path
+Default path for the getdoc function, if getdoc_url is not set.
+There is no default value.
+.TP
+.B getdoc_port
+Defalut port for the getdoc function, if getdoc_url is not set.
+There is no default value.
+.TP
+.B getdoc_user
+Default user for the getdoc function, to authenticate at server.
+There is no default value.
+.TP
+.B getdoc_pass
+Default password for the getdoc function, to authenticate at server.
+There is no default value.
+.TP
+.B getdoc_timeout
+Timeout for the getdoc funtion in seconds. (Default is
+.IR 90 ")."
+.TP
+.BR url_default_prot ", " url_default_protocoll
+The default protocoll when not specified in url. (Default is 
+.IR http ")."
+.TP
+.B url_default_port
+Default port, when not specified in url. (The default depends on
+the protocoll).
+.TP
+.B readln_timeout
+Timeout for the readln function in seconds. (Default is
+.IR 5 ")."
+
+.SS sendmail options
+.TP
+.B sendmail_default_from
+The default from address, if none is given. (There is no default value).
+.TP
+.B sendmail_timeout
+The timeout the sendmail programme might run. (Default is
+.IR 120 ")."
+.TP
+.B prog[sendmail]
+The path to the sendmail programme to use. (Default is
+.IR "/usr/bin/sendmail" ")."
+
+.SS smime options
+The following options are passed to the 
+.I openssl smime
+programme.
+.TP
+.BR smim_root_ca_cert_file ", " smim_ca_cert_file
+The path to the CA certification file. (There is no default).
+.TP
+.BR smim_ca_cert_dir ", " smim_ca_cert_path
+This is an alternative to smim_ca_cert_file. You can put the trusted
+certificates of the root CA's in here.
+When the certificates used for email communication are certified by
+different root CA's, then you need to use smim_ca_cert_dir instead
+of smim_ca_cert_file.
+.br
+When using this directory the name of the certificates inside this
+directory must be
+the hash value of the certificate (8 hex-ciphers) appended by 
+.BR ".0" "(e.g."
+8a196b90.0).
+It is wise to safe the certificate under a human readable name, and then
+create a symbolic link using the requested name.
+.br
+The hash value can be extracted using the command:
+.nf
+.nl
+openssl x509 -noout -hash -in <certificate_file>
+.fi
+.TP
+.B smim_use_hsm
+If set to yes, encryption is done via an hsm (hardware encryption engine
+by Baltimore). This needs a patched version of openssl. (Default is
+.IR no ")."
+.TP
+.B smim_hsm_pin
+The pin (password) used to authenticate to the hsm.
+.TP
+.B smim_key_pass
+A password with which the private key is encrypted. If using different
+private keys, all need to be encrypted using the same password.
+.TP
+.B smim_cipher
+is the cipher used when encrypting mails. Possible values are:
+.IR rc2-128 "(default), " rc2-40 ", " des ", " 
+.IR tripple-des ", "
+.IR aes128 ", " aes192 ", " aes256 "."
+.TP
+.B smim_timeout
+The timeout for the openssl programme. (Default is
+.IR 0 "(infinity))."
+.TP
+.B smim_egd_path
+If no /dev/urandom exists on your machine, then the openssl programme
+might use the egd daemon.
+This variable indicates the path of the named pipe used by egd to
+write random numbers to. You however have to set up egd as well.
+See the openssl and egd documentation for how to do that.
+.br
+.B Note:
+The egd programme is not used by the internal pseudo random number
+generator. The randfile however is not used by openssl. So if 
+the device /dev/urandom does not exist on your machine (which is
+definatly depricated), then you have to use both!
+.TP
+.B smim_sslout_ondecrypt
+If set to yes, error messages are logged when decrypting. This however
+causes a lot of error messages even if everything is fine. (Default
+is
+.IR no ")."
+.TP
+.B smim_default_signfor
+The default settings when signing.
+.TP
+.B smim_default_encryptfor
+The default settings when encrypting.
+.TP
+The following options are array variables, that takes a setting name (even
+refered to as signfor) as index.
+.TP
+.B smim_dn
+The destinguished name.
+.TP
+.B smim_signfor
+An indirection signfor.
+.TP
+.B smim_cert_file
+The path to the certificate to use.
+.TP
+.B smim_key_file
+The path to the private key to use.
+.TP
+.B smim_email
+The email address for that settings, generally used to search the
+correct setting.
+.TP
+.B smim_from_email
+The email address used as from header field.
+.TP
+.B smim_docrypt
+If set to yes, the mails are encrypted. (Default is
+.IR yes ")."
+.TP
+.B smim_dosign
+If set to yes, the mail is signed. (Default is
+.IR yes ")."
+.TP
+.B smim_clearsign
+If set to yes, the signing is done in sime/multipart format. If set to
+no, it is enveloped. (Default is
+.IR no ")."
+.TP
+.B smim_sign_certs
+A comma separated list of certificates to include into the signature.
+.TP
+.B prog[openssl]
+The path to the openssl programme.
+
+.SS Registry Options
+.TP
+.B repository
+The path to the berkley db, used as registry (for non windows systems only).
+
+.SS spoold options
+.TP
+.BR spool_sock ", " sock
+This variable is an array and specifies the path to the unix socket on which
+spoold receives files to spool. (Default is
+.IR "/var/spool/<spoolname>.sock" ")."
+.TP
+.B spool_do_sock
+If set to no, no socket is created, thus spoolw has to write the files
+directly to the spool. (Default is
+.IR no ")."
+.TP
+.B spoold_scale
+The maximum number of programmes to run in parrallel when elaborating
+spooled files. A negative number means infinity (hence all files are
+elaborated in parrallel). A value of 
+.I 0
+or 
+.I 1
+elaborates the files sequentiallay.
+.TP
+.B spoold_trap
+Specifies a command to execute when an elaboration of a file fails.
+The programmes must expect the name of the file (cf - file) that failed
+to elaborate and the error code as second parameter.
+.TP
+.B spool_stream
+If set to yes, the file to elaborate is not written to pipe, but the
+path is passed to the programme that elaborates the file. This is
+faster (especially for large files). But, the programme might
+modify the file, even if it fails, thus the data cannot be recovered.
+For spoolw, this means, that when given a filename, it is relinked
+into the spool (if resides on the same filesystem), instead of copied.
+.TP
+.B spoold_timeout
+The timeout the programme might execute, after which it is killed.
+The difference to spool_max_elabtime is, that after spool_max_elabtime,
+a file that is in state "in elab" are considered to be an error, while
+spoold_timeout is an option of spoold, after which the elaboration is
+interupted, and considered to be failed. If however, spoold is
+killed the file remains in state "in elab" and then spool_max_elabtime
+becomes working. (Default is
+.IR -1 "(infinity))."
+
+.SS Character tables.
+There is a configuration file function that can parse character tables,
+that later on can be used to verify again. The frlib itself does not
+use any config file variable as character table, but a programme using
+the lib might do. In the following the pseudo variable tab_valid_chars
+is used to demonstrate this behaviour.
+.TP
+.B tab_valid_chars
+The value of
+tab_valid_chars is a comma separated list of characters, character ranges
+or strings. Characters can be represented in its ASCII-version enclosed in
+single quotes (e.g. 'A') or as a hexadecimal number prefixed by 
+.I 0x
+(e.g. 0xc0). The hex number can be any between 0x0 and 0xffff and refers to
+the corresponding 16 bit unicode character (unicode characters beyond 65535
+can not be specified).
+.nf
+.nl
+.fi
+.B Note:
+To define a single quote (') or a backslash (\\) you must quote them using
+a backslash. However the tab_valid_chars value generally is enclosed in
+braces, to let it span several lines. This causes, that the backslash and
+close brace (}) is interpreted special. Thus to obtain the single quote char
+you need to write:
+.I "'\\\\\\\\''" 
+to get the backslash character:
+.I "'\\\\\\\\\\\\\\\\'" 
+and the close brace:
+.I "'\\\\}'" .
+Using other quotings than braces for this variable makes the internal quoting
+even more complicated (I leave it to the reader to find out how.)
+.nf
+.nl
+.fi
+Character ranges are two characters separated by a minus sign. (e.g. 'A' - 'Z' 
+define all upper case characters).
+Strings are enclosed in double quote and define a collection of characters to
+be accepted. The intepretation is equal to double quoted variables in the 
+config file. I.e. backslash sequences are interpreted special (e.g. \\n
+results in a newline).
+Note to quote the backslash as described in the note above.
+An example could be:
+.nf
+.nl
+tab_valid_chars = { " \\\\"'`,-.@", 'A' - 'Z', 'a' - 'z',
+                    '0' - '9', 0xc0 - 0xd6, 0xd8 - 0xf6,
+                    0xf8 - 0xff, 0x100 - 0x17e }
+.fi
+
+
+
+.SH EXAMPLE
+An example configuration file:
+.PP
+.nf
+### ------------ start config file -----------------------
+
+###
+### include other config files
+###
+
+## uncomment if you want to use a secure config file
+
+#secure_cf = "/etc/pec.d/pec.scf"
+
+
+###
+### Logging Options
+###
+
+log_file = "/opt/myprog/log/myprog.log"
+log_file[mymod] = "/opt/myprog/log/mymod.log"
+logfile_leaveopen=no
+log_syslog=no
+log_console=no
+logstderr=no
+loglevel[myprog]=debug
+loglevel="error"
+logstacktrace=crit
+
+logthrow=yes
+log_exec_cmd = "/opt/myprog/sbin/mytrap.sh -p %p -P %P -l %l -L %L -M %M -m %m"
+log_exec_level = crit
+log_cmd_timeout = 2
+logmatch[mymod] = "myfunc()"
+#logfmatch[mymod] = "myfunc[ ]*(.*):"
+
+## if you want the whole output for each iopipe call, set this to yes
+iopipe_log_output = no
+
+
+
+## the decrypt creates a lot of error messages even if it,
+## goes right, thus by default it is supressed. Set
+## smim_sslout_ondecrypt to ye to see this messages.
+smim_sslout_ondecrypt = no
+
+
+
+###
+### HSM and Crypto Options
+###
+
+## set to yes if you want to use the hsm
+smim_use_hsm = no
+
+## better put this variable in the secure config file
+smim_hsm_pin = "1234"
+
+## the password for encryption keys
+## better put this variable in the secure config file
+smim_key_pass = "secret"
+
+## this is the certificate of the root ca (it must be equal for all
+## certificates used in the communication proccess)
+#smim_ca_cert_file = "/etc/myrog.d/certs/root_ca.cert"
+
+## if you have more then one certificate, you might use
+## ca_cert_dir and put all certificates in here
+smim_ca_cert_dir = "/etc/myprog.d/ca"
+
+## allowed values for cipher are: rc2-40 rc2-128 aes-128 aes-196 aes-256
+smim_cipher = "rc2-128"
+
+
+## this is the timeout used when calling the external programm openssl
+smim_timeout = 1800	# in seconds - 0 means no timeout
+
+## if no /dev/urandom device exists you can use the egd daemon and use
+## this as path to socket (you must configure egd as well!)
+## uncomment if needed
+#smim_egd_path = "/opt/myprog/var/egd.sock"
+
+## the default configuration for signing and encrypting
+smim_default_signfor    = default
+smim_default_encryptfor = default
+
+## repeat the following settings for all encryption configurations
+
+## the destinguished name
+smim_dn [default]         = 'C=DE, St=Hessen, L=Oberursel, O=ZES, OU=Entwicklung, CN=default'
+## cross link to other config - uncomment if needed
+#smim_signfor [default]    = "other-config"
+## the certificate file to use
+smim_cert_file [default]  = "/etc/myprog.d/certs/default.cer"
+## the private key file to use
+smim_key_file [default]   = "/etc/myprog.d/certs/default.key"
+## destination email to use
+smim_email [default]      = "default@zes.com"
+## from email to use
+smim_from_email [default] = "default@zes.com"
+## we want encrypt the mail
+smim_docrypt [default]    = yes
+## we want sign the mail
+smim_dosign [default]     = yes
+## use clear signing
+smim_clearsign [default]  = yes
+## other certs to include into signature
+smim_sign_certs [default] = "/etc/myprog.d/certs/cert1.cer,/etc/myrpog.d/certs/cert2.cer"
+
+
+
+
+
+###
+### Paths and Programmes
+###
+
+
+## what programmes to handle by the start script
+all_progs="myprog1, myprog2, fetchmail"
+allow_any_prog=no
+
+## path to the various programmes
+prog[sendmail]  = "/usr/local/bin/sendmail"
+prog[fetchmail] = "/usr/local/bin/fetchmail -f /etc/myprog.d/fetchmail.rc -d 30"
+prog[openssl]   = "/usr/local/bin/openssl"
+
+prog[spoold]    = "/opt/myprog/sbin/myprog_spoold"
+prog[starter]   = "/opt/myprog/sbin/myprog_starter"
+
+prog[myprog1]   = "/opt/myprog/bin/myprog1"
+prog[myprog2]   = "/opt/myprog/bin/myprog2"
+
+
+## sockets used by pecd for the various programmes
+spool_sock[myprog2] = "/opt/myprog/var/myprog2.sock"
+
+
+## the programmes called by spoold
+start_spoold[myprog1] = no
+start_spoold[myprog2] = yes
+
+## daemonize myprog1
+prog_daemonize[myprog1] = yes
+prog_watch_errors[myrpog1] = yes
+prog_watch_errors = no
+
+## environment for programmes
+## put into this file all environment variables
+setenv_file = "/etc/myprog.d/setenv"
+## the system user under which running the programmes
+user[myprog1] = root
+user = myprog
+## the working directory
+pwd = "/opt/myprog/home"
+
+
+###
+### Spooling Options
+###
+
+## base dir for spooling subdirs
+spool_basedir = "/opt/myprog/spool"
+
+## spooling dir for single spools
+#spooldir[myprog2] = "/opt/myrpog/other_spool"
+
+## default spool if none given
+spool_default = myprog2
+
+## we want subdirs for spooling - should be set to yes
+spool_to_subdir = yes
+
+## the max. number of files per subdir
+spool_num_files_per_subdir = 1000
+
+## yes - definetely we want fast spooling
+spool_use_fast_spooler = yes
+
+## the cache to spoold is valid for max. 20 seconds
+spool_cache_maxtime = 20
+
+## the max. elaboration time is 1 day
+spool_max_elabtime = 86400
+
+## timeout after which elaboration is stopped (1 minute)
+spoold_timeout = 60
+
+## after mai_elabtime the files are automatically reinserted
+spool_reinsert_ontimeout = yes
+
+## if  you put the spool on a nfs set this to yes
+spool_nfs_workaround = no
+
+## lock file timeouts
+spool_lock_maxwait = 60
+spool_lockfile_timeout = 2
+
+## use sockets
+spool_do_sock = yes
+
+## if you have big files to spool set this to yes
+spool_stream = no
+
+## the number of programmes spoold might launch in parallel
+spoold_scale[myprog2] = 2
+
+## if you want to sent a trap in case of error during elaboration, 
+## uncomment the following
+#spoold_trap[myprog2] = "/opt/myprog/sbin/trap.sh -s"
+
+
+
+
+###
+### Random Options
+###
+
+## use a file con random numbers to initialize the pseudo random number
+## generator, in case there is no /dev/urandom
+## however - it's better to install the /dev/urandom device
+use_randfile = no
+randfile = "/etc/myprog.d/randfile"
+
+
+###
+### Shared Memory Options
+###
+
+## initial page name
+sm_page_name = myprog
+
+## set page size to 64k
+sm_page_size = 65536
+
+## timeout for creating
+sm_max_wait = 5
+
+
+###
+### Connection Options
+###
+
+## timeouts
+connection_timeout = 10
+getdoc_timeout = 10
+readln_timeout = 10
+
+## default values for getdoc
+getdoc_url = "http://myserver.de:8080/mypath"
+## if url is set the following are not needed
+getdoc_host = myserver.de
+getdoc_path = mypath
+getdoc_port = 8080
+
+## authentication information
+getdoc_user = myuser
+getdoc_pass = secret
+
+## url parsing options
+url_default_protocoll = http
+url_default_port = 80
+
+
+###
+### Sendmail Options
+###
+sendmail_default_from = default@zes.com
+sendmail_timeout = 30
+
+
+###
+### Repository Options
+###
+
+## the fake repository file for linux
+repository = "/opt/myprog/var/fake_rep"
+
+
+
+### ------------ end config file -----------------------
+.fi
+
+
+
+
+
+.SH "SEE ALSO"
+.BR scf "(1fr)."
+
+
+
+

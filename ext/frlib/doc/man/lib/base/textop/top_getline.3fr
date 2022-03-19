@@ -1,0 +1,145 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "top_getline" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+top_getline,
+top_getfield
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "#define TOP_F_NONE          " 0x00
+.BI "#define TOP_F_DQUOTE        " 0x01
+.BI "#define TOP_F_SQUOTE        " 0x02
+.BI "#define TOP_F_STRIPMIDDLE   " 0x04
+.BI "#define TOP_F_NOSKIPWHITE   " 0x08
+.BI "#define TOP_F_NOSTRIPWHITE  " 0x10
+.BI "#define TOP_F_NOCR          " 0x20
+.BI "#define TOP_F_NOSKIPBLANK   " 0x40
+.BI "#define TOP_F_NOSKIPCOMMENT " 0x80
+.sp
+.BI "char *top_getline (char **" ptr ", int " flags ");"
+.BI "char *top_getfield (char **" ptr ", char *" sep ", int " flags ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B top_getline
+returns the actual line, while the
+.I ptr
+is updated to point to the next line.
+The line-terminating character is substituted by a NUL-character.
+Either carrage return (0x0d) and linefeed character (0x0a) are treated
+as line-terminating characters. If the flag TOP_F_NOCR is given only
+linefeed characters are treated as line-terminating character.
+whitespaces at the begin or end of the string are stripped away.
+line-comments (from # to end of line) are stripped away as well.
+line-comments inside of single or double quotes are not stripped away.
+Empty lines are skipped.
+.br
+If there are no lines any more a NULL-pointer is returned.
+Mostly one will use this function in a loop:
+.nf
+char *ptr = my_buffer;
+char *line;
+while ((line=top_getline (&ptr, 0))) {
+   do_something (line);
+}
+.fi
+.br
+.B Note:
+The original buffer is modified.
+.TP
+.B top_getfield
+splits a given string into fields. This function works similar then
+top_getline, but the field-delimiter-character(s) can be specified.
+If more then one character is given as separator, then each of them
+works as field-delimiter-character.
+Mostly one will use this function together with top_getline(), e.g:
+.nf
+char *ptr = my_buffer;
+char *line, *field;
+while ((line=top_getline (&ptr, 0))) {
+   while ((field=top_getfield (&line, ":", 0))) {
+      do_something (field);
+   }
+}
+.fi
+.br
+.B Note:
+The original buffer is modified.
+
+
+.SH FLAGS
+.TP
+.B TOP_F_DQUOTE
+if this flag is given, line comments and field separators are ignored 
+when inside double quotes. 
+When combined with TOP_F_SQUOTE, single
+quotes inside double quotes are ignored as well.
+.TP
+.B TOP_F_SQUOTE
+if this flag is given, line comments and field separators are ignored 
+when inside single quotes.
+When combined with TOP_F_DQUOTE, double
+quotes inside single quotes are ignored as well.
+.TP
+.B TOP_F_STRIPMIDDLE
+If this flag is given, white spaces are converted to spaces and
+sequences of white spaces in the middle of a 
+line are reduced to a single space.
+.br
+.B Note:
+When combined with TOP_F_DQUOTE and/or TOP_F_SQUOTE, whitespaces
+inside quotes are converted, too.
+.TP
+.B TOP_F_NOSKIPWHITE
+If this flag is given, white spaces at beginning of line are not
+skipped.
+.TP
+.B TOP_F_NOSTRIPWHITE
+If this flag is given, white spaces at end of line are not stripped
+away.
+.TP
+.B TOP_F_NOCR
+with this flag, carrage returns are not treated as line-terminating
+character (getline only).
+.TP
+.B TOP_F_NOSKIPBLANK
+with this flag blank line are returned. Normally they are skipped.
+.br
+.B Note:
+when your line is terminated by a carrage return / linefeed sequence,
+and TOP_F_NOCR is not given, then after each line a blank line
+is returned, because getline treats carrage returns equal to linefeed,
+and thus sees a blank line between the carrage return and the line feed
+character.
+.TP
+.B TOP_F_NOSKIPCOMMENT
+with this flag line comments are not stripped away.
+
+
+.SH "SEE ALSO"
+.BR top_skipwhite "(3fr), "
+.BR top_findchar "(3fr), "
+.BR errors "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

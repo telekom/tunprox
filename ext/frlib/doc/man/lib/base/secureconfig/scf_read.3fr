@@ -1,0 +1,90 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "scf_read" 3fr "15 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+scf_read,
+scf_fdread,
+scf_readpass,
+scf_askread,
+scf_reread,
+scf_free
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/secureconfig.h>
+.sp
+.BI "int scf_read (char *" passwd ");"
+.BI "int scf_fdread (int " fd ");"
+.BI "int scf_readpass (int " fd ", char *" passwd ", int *" len ");"
+.BI "int scf_askread ();"
+.BI "int scf_reread ();"
+.BI "int scf_free ();"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B scf_read
+reads the secure config file, decrypts it using the password provided as
+parameter and parses the config file using the cf_parse(3fr) and 
+cf_register_cv_list(3fr) functions.
+.br
+After that the config variables are available by the usual cf_get... 
+functions.
+.br
+If there is no secure_cf config file variable nothing is done. If you
+want to use an explicit secure config file, you must use scf_decrypt(3fr)
+directly.
+.TP
+.B scf_fdread
+if the file descriptor is greater or equal zero the password is read
+from that file descriptor using scf_readpass(3fr) and passed it 
+to scf_read(3fr). If the file descriptor is less than zero, the function
+scf_askread(3fr) is called.
+.TP
+.B scf_readpass
+reads the password from a given file descriptor.
+.TP
+.B scf_askread
+asks for the passphrase using scf_askverifypass(3fr) and if successfull it
+is passed to scf_read().
+.br
+If there is no 
+.I secure_cf
+variable in the ordinary config file, no password is queried.
+.br
+.B Note:
+The password is read from terminal. When writing graphical programmes this
+function (as well as scf_fdread) shall not be used.
+.TP
+.B scf_reread
+rereads the secure config file. This function is rarely called manually.
+But it is registered as callback function using cf_register_reread_callback(3fr).
+Hence when using the cf_reread(3fr) even the secure config file is reread.
+.TP
+.B scf_free
+frees all buffers, variables and callback functions set by scf_read(3fr).
+
+
+
+.SH "SEE ALSO"
+.BR secureconfig "(3fr), "
+.BR config "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

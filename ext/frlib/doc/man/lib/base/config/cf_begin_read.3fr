@@ -1,0 +1,153 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_begin_read" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_begin_read,
+cf_end_read,
+cf_end_read_cb,
+cf_register_reread_callback,
+cf_deregister_reread_callback
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.B typedef int (*cf_reread_t) ();
+.sp
+.BI "int cf_begin_read ();"
+.BI "int cf_end_read ();"
+.BI "int cf_end_read_cb (cf_reread_t " func ");"
+.BI "int cf_register_reread_callback (cf_reread_t " func ");"
+.BI "int cf_deregister_reread_callback (cf_reread_t " func ");"
+.fi
+
+.SH DESCRIPTION
+When rereading the config file inside a signal handler function it might
+happen that some variables are already read from the old config file
+and some are read from the new config file, which causes inconsistency.
+To avoid this problem encapsulate the cf_getval- and cf_getarr- functions
+inside a
+.I cf_begin_read()
+and 
+.IR cf_end_read() .
+In this case a reread is scheduled until the cf_end_read() function.
+Thus all read variables are either from the new or from the old config
+file, and thus consistent.
+.sp
+In general it is wise to put all cf_getval- and cf_getarr- calls inside
+a function read_config(), which is read only once. This however would
+cause that a reread does have no effect. For that you can register
+the read_config function as a callback function using 
+.IR cf_register_reread_callback() .
+All callback functions are called after a reread of the
+config file.
+.br
+The function
+.I cf_end_read_cb()
+is short hand for
+.nf
+cf_register_reread_callback();
+cf_end_read();
+.fi
+.sp
+The 
+.I cf_deregister_reread_callback()
+function is to remove a callback function. It is rarely needed.
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+.SH EXAMPLE
+.nf
+static char *foo = NULL;
+static char *bar = NULL;
+static int config_read = 0;
+
+static
+int
+read_config ()
+{
+   cf_begin_read ();
+   foo = cf_getval2 ("foo", "foo");
+   bar = cf_getval2 ("bar", "bar");
+   config_read = 1;
+   cf_end_read_cb (&read_config);
+   return 1;
+}
+.fi
+
+Functions, that needs these config variables, should put a
+.I CF_MAYREAD
+at the beginning of the function, which would cause that read_config()
+is called whenever neccessary.
+.br
+In C++ read_config and the config variables should be static members
+of the class.
+
+.SH ATTENTION
+Note that cf_getval and co. do return references to internal strings, that are
+not valid after a reread. Using the callback mechanism as described above the
+references are updated as soon as the reread occured. However passing this
+variables as parameters to other functions hanging references might still
+occur. If the called function does not read config variables, the reference
+remain valid during the call (this is the case for functions from the standard
+libs). 
+.sp
+When hanging refernces could be a problem (e.g. in multithreading programmes),
+do strdup and schedule the call to read_config as shown in the following
+example:
+
+.SH EXAMPLE 2
+.nf
+static char *foo = NULL;
+static char *bar = NULL;
+static int config_read = 0;
+
+static
+int
+reread_config ()
+{
+   config_read = 0;
+}
+
+static
+int
+read_config ()
+{
+   cf_begin_read ();
+   if (foo) free (foo);
+   foo = strdup (cf_getval2 ("foo", "foo"));
+   if (bar) free (bar);
+   bar = strdup (cf_getval2 ("bar", "bar"));
+   config_read = 1;
+   cf_end_read_cb (&reread_config);
+   return 1;
+}
+.fi
+
+
+
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr), "
+.BR cf_getval "(3fr), "
+.BR cf_reread "(3fr)."
+
+
+
+

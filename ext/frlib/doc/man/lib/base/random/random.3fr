@@ -1,0 +1,118 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "random" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+frnd_init,
+frnd_get32,
+frnd_get32limit,
+frnd_get32range,
+frnd_getbytes,
+frnd_getchar,
+frnd_getupper,
+frnd_getlower,
+frnd_getdigit,
+frnd_getletter,
+frnd_getalnum
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/random.h>
+.sp
+.BI "int frnd_init ();"
+.sp
+.BI "u_int32_t frnd_get32 ();"
+.BI "u_int32_t frnd_get32limit (u_int32_t " limit ");"
+.BI "u_int32_t frnd_get32range (u_int32_t " min ", u_int32_t " max ");"
+.BI "void frnd_getbytes (unsigned char *" buf ", size_t " len ");"
+.sp
+.BI "#define frnd_getchar(" min "," max ")"
+.BI "#define frnd_getupper()"
+.BI "#define frnd_getlower()"
+.BI "#define frnd_getdigit()"
+.BI "char frnd_getletter ();"
+.BI "char frnd_getalnum ();"
+.fi
+
+
+
+.SH DESCRIPTION
+These functions produce cryptographically safe pseudo random numbers.
+.TP
+.B frnd_init
+initializes the pseudo random number generator. The call is not neccessary,
+because it is called implicitely when calling one of the other functions
+below for the first time. However, when using for a long time it is wise
+to eventually call frnd_init() every now and then to get a higher
+entropy. If randfile is set, this is used for initialization, otherwise
+/dev/urandom is used. If randfile is set to something else then
+/dev/urandom or /dev/random, it is assumed a file containing random
+numbers. Those are used to initialize the RNG, then new random numbers
+are generated and written to this file, so that the next time a different
+sequence is produced. In this case, however it is not wise to call
+frnd_init() every now and then.
+.TP
+.B frnd_get32
+returns a 32 bit random number.
+.TP
+.B frnd_get32limit
+returns a 32 bit random number less then limit (e.g. if limit is 5, a
+number between 0 and 4 is produced).
+.TP
+.B frnd_get32range
+returns a 32 bit random number between min and max (inclusive). This
+is identical to min + frnd_get32limit (max-min);
+.TP
+.B frnd_getbytes
+fills out the buffer
+.I buf
+with
+.I len
+bytes of random numbers.
+.TP
+.B frnd_getchar
+returns a char between
+.I min
+and 
+.I max.
+frnd_getchar is a macro, that calls frnd_get32range with some 
+additional casts.
+.TP
+.B frnd_getupper
+returns a random upper case letter (US-ASCII only).
+This function is implemented as macro.
+.TP
+.B frnd_getlower
+returns a random lower case letter (US-ASCII only).
+This function is implemented as macro.
+.TP
+.B frnd_getdigit
+returns a random digit.
+This function is implemented as macro.
+.TP
+.B frnd_getletter
+returns a random letter (upper or lower case) (US-ASCII only).
+.TP
+.B frnd_getalnum
+returns a random letter or digit (US-ASCII only).
+
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

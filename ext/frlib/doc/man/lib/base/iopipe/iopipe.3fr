@@ -1,0 +1,215 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "iopipe" 3fr "9 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+iopipe, iopipef,
+iopipe_parsecmd
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/iopipe.h>
+.sp
+.BI "#define IOPIPE_F_NONE             0x00"
+.BI "#define IOPIPE_F_NODEBUG          0x01"
+.BI "#define IOPIPE_F_RET_EXIT_CODE    0x02"
+.BI "#define IOPIPE_F_NOFMT            0x04"
+.BI "#define IOPIPE_F_ONLY_Y           0x08"
+.BI "#define IOPIPE_F_USE_SH           0x10"
+.BI "#define IOPIPE_F_TIMEOUT_IS_ABS   0x20"
+.BI "#define IOPIPE_F_RETURN_IMMEDIATE 0x40"
+.BI "#define IOPIPE_F_WATCH_ERROR      0x80"
+.sp
+.BI "int iopipe (char *" script ", char *" in ", int " inlen ", char **" out ", "
+.BI "            int *" outlen ", int " timeout ", int " flags ");"
+.BI "int iopipef (char *" in ", int " inlen ", char **" out ", int *" outlen ", "
+.BI "             int " timeout ", int " flags ", const char *" script ", ...);"
+.sp
+.BI "int iopipe_parsecmd (char ***" argl ", char *" cmd ");"
+.fi
+
+
+
+
+.SH DESCRIPTION
+.TP
+.B iopipe
+starts the programme given as
+.IR script ", "
+which might contain parameters (e.g.: gzip -9 -c).
+If 
+.I in
+is not NULL a pipe will be created to which the content of the buffer
+.I in
+is written to, while the reading part is connected with stdin of
+the started programme.
+If
+.I out
+is not NULL
+a second pipe will be created to which the stdout of the called programme
+is redirected. iopipe then will read from that pipe and write the
+output to out. 
+.B Note:
+that the out buffer will be malloc'ed and need to be freed. The buffer will
+be NUL-terminated.
+If 
+.I outlen
+is given, the number of bytes read from pipe is written to it.
+.br
+.I inlen
+specifies the number of bytes written to stdin of the programme. If inlen
+is negative the length will be determined by strlen (in), which might result
+in a truncated write when the in buffer contains binary data, and a crash if
+the in-buffer is not NUL-terminated.
+.br
+.I timeout
+gives the timeout in seconds after which the programme is killed and iopipe
+returns.
+.TP
+.B iopipef
+works like iopipe, but accepts a formated string, which is composed in a
+printf like manner, to achieve the programme to execute. The formated
+string is passed on to vsprintf, thus the syntax is identical to that
+of printf. In addition the 
+.I %y 
+formatter is accepted which expects a string
+as input. This string is then passed to the programme via a pipe. The
+file decriptor for reading is passed to the programme in substitution of
+the %y formatter. E.g.: 
+.nf
+iopipef (..., "myprog -y %y", mypass)
+.fi
+would cause iopipe to create a pipe to which mypass is written.
+The file descriptor for reading (e.g. 5) is passed to myprog (e.g.:
+myprog -y 5). 
+.br
+This is a secure method to pass secrets to a child process. Passing
+it directly on command line could be spied out, because command line
+parameters are not secret in most operating systems.
+.br
+The %y formatter might occur more than once to pass several secrets.
+For each one a new pipe is opened.
+.sp
+.B Note:
+The formated string is parsed twice. First only the %y formatters
+are parsed, and the rest then is passed to printf. This results, that
+the parameters to %y must occur first. E.g:
+.nf
+iopipe (..., "myprog %s %y", mypass, "-y");
+.fi
+In this example you can see, that mypass must be given first, and
+then "-y", even thu the formatter %s (corresponding at "-y")
+appears first and %y (which corresponds to mypass) appears second.
+.TP
+.B iopipe_parsecmd
+splits a command (
+.IR "cmd" ")"
+at whitespaces putting into a NULL-terminated list (
+.IR argl "), "
+which then can be passed to the exec system call. This function
+is used internally to iopipe to split the command, but might
+be usefull in other contextes as well.
+.br
+.B Note 1:
+the original string is modified.
+.br
+.B Note 2:
+the argl pointer must be freed, while the elements argl[i] must
+.B NOT
+be freed.
+.br
+.B Note 3:
+The elements of argl do point into the original string. Thus freeing
+that string invalidates the argl list.
+
+
+.SH FLAGS
+The following flags are honored:
+.TP
+.B IOPIPE_F_NODEBUG
+iopipe does write debugging messages to the log file when starting
+programmes. Furthermore the stderr output of the called programme
+is written to the log file. This flag inhibits writing this information.
+Thus only error conditions to iopipe are logged.
+.TP
+.B IOPIPE_F_RET_EXIT_CODE
+Normally iopipe does return RERR_OK (0) or an error code if the
+programme can not be executed. With this flag, the return value of
+the programme is returned by iopipe. In case iopipe cannot execute
+the programme it still returns an error code. Thus it is not
+always possibile to say wether an error code is caused by iopipe
+or the executed programme.
+.br
+This flag is not honered when IOPIPE_F_RETURN_IMMEDIATE is given
+as well.
+.TP
+.B IOPIPE_F_NOFMT
+With this flag iopipef behaves like iopipe - hence it does not
+parse the formatted string.
+.TP
+.B IOPIPE_F_ONLY_Y
+Like IOPIPE_F_NOFMT, but %y formatter are still interpreted.
+.TP
+.B IOPIPE_F_USE_SH
+Using this flag, iopipe passes the command to /bin/sh (or whatever
+is specified in the SHELL environment variable), instead of splitting
+the command using iopipe_parsecmd. This gives more flexibility (e.g.
+one can use pipes inside the commands "gunzip -c | grep ^pippo").
+.br
+.B Note:
+Using this flag might cause security risks when the user
+can modify the IFS environment variable. 
+.TP
+.B IOPIPE_F_TIMEOUT_IS_ABS
+Normally the timeout is resetted each time the programme writes anything
+to stdout. Thus only if the programme doesn't produce output for timeout
+seconds it is considered dead and killed. Using this flag the timeout is
+not resetted, thus it is ensured that the programme does not run longer
+then timeout seconds. 
+.br
+.B Note:
+The programme still might run longer depending on the scheduler, but this
+normally lies in the range of some milliseconds.
+.TP
+.B IOPIPE_F_RETURN_IMMEDIATE
+With this flag iopipe does not wait for termination of the programme. As soon
+as the programme is started iopipe returns. 
+.br
+.B Note 1: 
+This flag invalidates the flag IOPIPE_F_RET_EXIT_CODE. 
+.br
+.B Note 2:
+It is not possible to obtain the output of the programme using this flag.
+.br
+.B Note 3:
+Timeouts are not honored if not used together with IOPIPE_F_WATCH_ERROR.
+.TP
+.B IOPIPE_F_WATCH_ERROR
+Together with IOPIPE_F_RETURN_IMMEDIATE an extra process is forked, which
+logs the stderr of the executed programme. This extra programme does
+controll the timeout as well. Thus it even makes sense to combine it
+with IOPIPE_F_NODEBUG.
+
+
+
+
+.SH "SEE ALSO"
+.BR startprog "(3fr), "
+.BR frlib.rc "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

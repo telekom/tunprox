@@ -1,0 +1,76 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "frassert" 3fr "29 apr 2011" "Frank Reker" "frlib"
+.SH NAME
+frassert,
+frassert_rerr -
+assertion with logging functionality.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/frassert.h>
+.sp
+.BI "#define frassert(" expr ")"
+.nl
+.BI "#define frassert_rerr(" err ")"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B frassert(expr)
+When in debug mode (NDEBUG is not defined)
+.I expr
+is evaluated, and if it fails a message is written to log file (with 
+level 
+.BR PANIC ")"
+and to stderr. Then the programme aborts with a core dump.
+.sp
+When not in debug mode (NDEBUG is defined)
+.I expr
+is evaluated, and if it fails a
+.B warning
+is written to the log file. Nothing is written to stderr. The programme
+does not abort.
+.sp
+.B Note:
+The difference to assert(3) is, that with frassert the expression is
+evaluated always. This has advantages and disadvantages.
+
+.TP
+.B frassert_rerr(err)
+This assertion fails if err is less then 0. In debug mode a PANIC message
+is written to the log file and stderr, and the programme aborts with
+a core dump.
+.sp
+When not in debug mode a warning message is written to the log file.
+Nothing is written to stderr. The programme does not abort.
+.sp
+In either case a messag is written to the log file. The message does
+contain the error code and the corresponding error string.
+
+.SH EXAMPLE
+.nf
+frassert (a<100);
+.nl
+frassert_rerr (ret);
+.fi
+
+.SH "SEE ALSO"
+.BR assert "(3), "
+.BR frlib "(3fr)."
+
+
+
+

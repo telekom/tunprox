@@ -1,0 +1,66 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_isyes" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_isyes,
+cf_atoi,
+cf_atotm
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.BI "int cf_isyes (char * " val ");"
+.BI "int cf_atoi (char *" str ");"
+.BI "int cf_atotm (char *" str ");"
+.fi
+
+.SH DESCRIPTION
+The function 
+.I cf_isyes
+returns 
+.I 1
+if the given value is interpreted as true and 
+.I 0
+otherwise.
+The following values (case insensitive) are interpreted as true:
+.IR yes ", " y ", " true ", " 1 ", " ja ", " si " and " oui
+.sp
+The function
+.I cf_atoi
+converts the given string to an integer. This function behaves the
+same as atoi(3), but returns
+.I 0
+if a 
+.I NULL
+pointer is given.
+.sp
+The function
+.I cf_atotm
+converts the given string to an integer of type tmo_t. This function behaves the
+same as tmo_gettimestr64(3fr), but does not modify the buffer.
+
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr), "
+.BR cf_getvar "(3fr), "
+.BR tmo_gettimestr64 "(3fr). "
+
+
+
+

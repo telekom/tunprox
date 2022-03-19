@@ -1,0 +1,51 @@
+.\" Copyright (c) 1999 by Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.TH BUFPUTC 3fr  "July 28, 1999" "Frank Reker" "frlib"
+.SH NAME
+bufputc, bufputunic
+\- write one character to the buffer
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI int\ bufputc\ (BUFFER\ buf,\ const\ char\ c);
+.sp
+.BI int\ bufputunic\ (BUFFER\ buf,\ u_int32_t\ c);
+.sp
+.SH DESCRIPTION
+.B bufputc\ ()
+takes a character as input and appends it to the given buffer.
+.PP
+.B bufputunic\ ()
+takes a unicode character as input, converts it to utf8 and appends
+it to the given buffer.
+.SH "RETURN VALUES"
+The functions do return an frlib error code (RERR_OK on success).
+.SH "BUGS"
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are
+welcome, too.
+.SH "SEE ALSO"
+.BR buffer "(3fr), " bufsetflags "(3fr), " bufprint "(3fr), "bufprintf (3fr)

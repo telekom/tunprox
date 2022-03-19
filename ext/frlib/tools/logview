@@ -1,0 +1,49 @@
+#!/bin/sh
+
+conffile=""
+
+me="$0"
+bme="`basename $me`"
+pref2="`echo "$bme" | cut -f1 -d_`"
+pref=""
+test "$pref2" && pref="${pref2}_"
+
+if test "$pref2"; then
+	PATH=$PATH:/usr/local/$pref2/bin:/usr/local/$pref2/sbin
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/$pref2/lib
+	export PATH LD_LIBRARY_PATH
+fi
+
+logfile="`${pref}rdconfig -v logfile`"
+test "$logfile" || logfile="`${pref}rdconfig -v log_file`"
+test "$logfile" || logfile="/usr/local/$pref2/log/${pref2}.log"
+
+
+tail -100f "$logfile"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# Overrides for XEmacs and vim so that we get a uniform tabbing style.
+# XEmacs/vim will notice this stuff at the end of the file and automatically
+# adjust the settings for this buffer only.  This must remain at the end
+# of the file.
+# ---------------------------------------------------------------------------
+# Local variables:
+# c-indent-level: 3
+# c-basic-offset: 3
+# tab-width: 3
+# End:
+# vim:tw=0:ts=3:wm=0:
+#

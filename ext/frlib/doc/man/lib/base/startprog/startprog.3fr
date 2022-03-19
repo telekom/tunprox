@@ -1,0 +1,152 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "startprog" 3fr "9 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+startprog, startprog2
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/startprog.h>
+.sp
+.BI "#define STPRG_F_NONE             0x00"
+.BI "#define STPRG_F_WATCH_ERRORS     0x01"
+.BI "#define STPRG_F_NO_WATCH_ERRORS  0x02"
+.BI "#define STPRG_F_DAEMONIZE        0x04"
+.BI "#define STPRG_F_NO_DAEMONIZE     0x08"
+.BI "#define STPRG_F_NO_SCF           0x10"
+.BI "#define STPRG_F_NO_CFG           0x20"
+.BI "#define STPRG_F_NO_SPOOLD        0x40"
+.BI "#define STPRG_F_NOWAIT           0x80"
+.sp
+.BI "int startprog (char *" prog ", int " flags ");"
+.BI "int startprog2 (char *" prog ", int " flags ", char *" cfgopt ", char *" scfopt ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.I startprog
+starts a given programme, which can be defined with its path and arguments or
+only by its name. In the latter case the name is resolved by the config
+file variable prog[name]. User, environment variables and workind directory
+are set for the programme according to the config file (see 
+.BR setenv "(3fr) for more details)."
+.TP
+.I startprog2
+is identical to startprog, but you can specify alternative parameters used
+to pass the config file and the secure config file password. By default
+.B -c
+is used for config files, and
+.B -y
+for secure config file passwords.
+
+
+.SH FLAGS
+The function honors the following flags:
+.TP
+.B STPRG_F_WATCH_ERRORS
+causes startprog to log stderr to the logfile. When daemonized or the nowait
+flag is set this causes to fork an extra process for logging. This option
+is default behaviour for non daemonized processes. For daemonized processes
+the flag is off by default. The default behaviour can be overwritten by
+the config file.
+.TP
+.B STPRG_F_NO_WATCH_ERRORS
+is the contrary to STPRG_F_WATCH_ERRORS. 
+.TP
+.B STPRG_F_DAEMONIZE 
+causes the programme to be daemonized. By default this flag is off, but this
+default behaviour can be overwritten by the config file.
+.TP
+.B STPRG_F_NO_DAEMONIZE
+is the contrary to STPRG_F_DAEMONIZE and does overwrite config file settings.
+.TP
+.B STPRG_F_NO_SCF
+does not pass any password for secure config files. By default it is passed
+when it is available.
+.TP
+.B STPRG_F_NO_CFG
+does not pass any config file settings. By default it is passed only if an
+explicit config file was set.
+.TP
+.B STPRG_F_NO_SPOOLD
+If start_spoold is set to yes for that programme, the programme is started
+vi spoold. This flag disables the spoold settings and calls the programme
+directly. (This option is used by the spoold daemon itself).
+.TP
+.B STPRG_F_NOWAIT
+causes startprog not to wait for the programme to finish, but returns 
+immediately.
+
+
+.SH Config File
+The following config file variables are honored:
+.TP
+.B prog
+this variable is an array and specifies the path to the given programme.
+Hence prog[pippo]=/usr/local/myprog/bin/pippo gives the path to the programme 
+pippo. When a programme needs to be started first this variable is consulted.
+If set the configured programme is started. Otherwise it is searched in the
+PATH environment variable.
+.TP
+.B prog_watch_errors
+If set to yes, the error output is continously logged. This might cause
+te be launched another process, which performe the logging. (Default is
+.IR no ")."
+.TP
+.B prog_daemonize
+If set to yes, it causes the programme to be daemonized, before it is 
+executed. (Default is
+.IR no ")."
+.TP
+.B start_spoold
+If set to yes, it causes to start spoold with -p <programme_name> instead
+of calling the programme itself.
+.TP
+.B setenv_file
+The path to a file of variables, that are set as ervironment variables. The
+format of that file is:
+.br
+Empty lines, and those beginning with a # are ignored.
+Other lines are of form:
+.nf
+VAR = value
+or
+export VAR = value
+.fi
+The keyword export will be ignored if present. Thus you can include
+the same file in a bash-script.
+.TP
+.B user
+The user under which the programme shall run. If the programme is run
+as a different user and has permissions to change user, it is changed.
+.TP
+.B pwd
+(path working dir) Is the path to change to before executing the programme.
+
+
+
+.SH "SEE ALSO"
+.BR setenv "(3fr), "
+.BR frdaemonize "(3fr), "
+.BR scf "(3fr), "
+.BR frinit "(3fr), "
+.BR frlib.rc "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

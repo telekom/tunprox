@@ -1,0 +1,122 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "shm" 3fr "22 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_startpage_getinfo,
+sm_startpage_base,
+sm_startpage_size,
+sm_page_getinfo,
+sm_page_base,
+sm_page_size,
+sm_fpage_getinfo,
+sm_fpage_base,
+sm_fpage_size -
+functions to get informations on shared memory pages
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+.BI "sm_fpage_t *sm_startpage_getinfo ();"
+.BI "void * sm_startpage_base ();"
+.BI "int sm_startpage_size ();"
+.sp
+.BI "sm_page_t *sm_page_getinfo (int " id ");"
+.BI "void *sm_page_base (int " id ");"
+.BI "int sm_page_size (int " id ");"
+.sp
+.BI "sm_fpage_t *sm_fpage_getinfo (char *" name ");"
+.BI "void *sm_fpage_base (char *" name ");"
+.BI "int sm_fpage_size (char *" name ");"
+.fi
+
+.SH Structures
+.nf
+typedef union sm_pageflags_t {
+   u_int32_t        cp;
+   struct {
+   	u_int32_t   type:2,
+                    valid:1,
+                    deleted:1,
+                    reserved:28;
+   };
+} sm_pageflags_t;
+.sp
+typedef struct sm_page_t {
+   u_int32_t        magic;
+   int32_t          id;
+   u_int32_t        size,
+                    offset,
+                    cpid;
+   time_t           ctime;
+   sm_pageflags_t   flags;
+} sm_page_t;
+.sp
+typedef struct sm_fpage_t {
+   u_int32_t        magic;
+   char             name[64];
+   int32_t          id;
+   u_int32_t        size,
+                    offset,
+                    cpid;
+   time_t           ctime;
+   sm_pageflags_t   flags;
+} sm_fpage_t;
+.fi
+
+
+.SH DESCRIPTION
+.SS Startpage Info Functions
+.TP
+.BR sm_page_getinfo ", " sm_fpage_getinfo ", " sm_startpage_getinfo
+Each shared memory page created with these functions contains a structure 
+with meta informations at its beginning:
+.br
+The page starts with a 32 bit magic number (
+.IR 0x6ad083bf " and " 0x6ad083c0 " for named shared memory pages)."
+This is followed by its id (or its name in case of named shared memory pages),
+followed by the size (without the meta information), the offset to where the
+real data may begin, the process id of the creater, the creation time in
+seconds till 1970 and some flags.
+The flags contain a 2 bit type information (named shared memory pages only),
+which indicate there location (SM_T_SHMOPEN, SM_T_VOLATILE or SM_T_PERMANENT),
+a valid flag and a deleted flag. The valid flag is used during creation, and
+the deleted flag is set when the page has been deleted by its owner.
+The deleted flag makes little sense for named shared memory pages, because
+its handling is differently.
+.sp
+The functions sm_*_getinfo do return a pointer to this informational structure
+(hence to the beginning of the page, casted to the apropriate structure).
+.TP
+.BR sm_page_base ", " sm_fpage_base ", " sm_startpage_base
+These functions do return the base pointer of the shared memory page, hence
+the address behind the information structure.
+.TP
+.BR sm_page_size ", " sm_fpage_size ", " sm_startpage_size
+These functions do return the size of the shared memory page (without the
+information structure, hence the usable space).
+
+
+.SH "SEE ALSO"
+.BR shm "(3fr), "
+.BR sm_fopen "(3fr), "
+.BR sm_new "(3fr), "
+.BR sm_fpage_getpage "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

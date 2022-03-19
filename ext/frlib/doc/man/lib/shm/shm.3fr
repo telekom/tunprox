@@ -1,0 +1,271 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "shm" 3fr "19 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_fopen,
+sm_fclose,
+sm_getpname,
+sm_fpage_exist,
+sm_start,
+sm_delstart,
+sm_stop,
+sm_maydel,
+sm_new,
+sm_del,
+sm_delall,
+sm_ptmap,
+sm_ptmap2,
+sm_ptrev,
+sm_ptcp,
+sm_ptset,
+sm_startpage_getinfo,
+sm_startpage_base,
+sm_startpage_size,
+sm_page_getinfo,
+sm_page_base,
+sm_page_size,
+sm_fpage_getinfo,
+sm_fpage_base,
+sm_fpage_size,
+sm_fpage_getpage - 
+functions to handle shared memory pages
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+.BI "int sm_fopen (char *" name ", int " size ", int " flags ");"
+.BI "int sm_fclose (char *" name ", int " flags ");"
+.BI "int sm_getpname (char **" outname ", char *" pname ");"
+.BI "int sm_fpage_exist (int *" otype ", char *" pname ");"
+.sp
+.BI "int sm_start (char *" name ", int " size ", int " flags ");"
+.BI "int sm_delstart ();"
+.BI "int sm_stop ();"
+.BI "int sm_maydel ();"
+.sp 
+.BI "int sm_new (int *" id ", int " size ");"
+.BI "int sm_del (int " id ");"
+.BI "int sm_delall ();"
+.sp
+.BI "void *sm_ptmap (sm_pt " smptr ");"
+.BI "void *sm_ptmap2 (sm_pt *" smptr ");"
+.BI "sm_pt sm_ptrev (void * " ptr ");"
+.BI "void sm_ptcp (sm_pt *" dest ", sm_pt " src ");"
+.BI "void sm_ptset (sm_pt *" dest ", void *" src ");"
+.sp
+.BI "sm_fpage_t *sm_startpage_getinfo ();"
+.BI "void * sm_startpage_base ();"
+.BI "int sm_startpage_size ();"
+.sp
+.BI "sm_page_t *sm_page_getinfo (int " id ");"
+.BI "void *sm_page_base (int " id ");"
+.BI "int sm_page_size (int " id ");"
+.sp
+.BI "sm_fpage_t *sm_fpage_getinfo (char *" name ");"
+.BI "void *sm_fpage_base (char *" name ");"
+.BI "int sm_fpage_size (char *" name ");"
+.BI "char *sm_fpage_getpage (void *" addr ");"
+.fi
+
+.SH DESCRIPTION
+These functions are for handling shared memory pages. On posix systems there
+are two different ways of handling shared memory.
+.sp
+One is using the functions shmat(2) and shmdt(2). The pages are identified
+with an integer number.
+The frlib functions sm_new(3fr) and sm_del(3fr) do handle this kind of pages. 
+The functions sm_ptmap(3fr), ... can convert 
+.I id/offset
+pairs to addresses and vice versa.
+.sp
+The second way are named pages, using the functions shm_open(2) and 
+shm_unlink(2). These functions open/create and unlink virtual files,
+that then can be memory mapped. On linux (and some other unixes) there
+is a shmfs file system (on newer linuxes tempfs is used instead). If
+this is mounted to /dev/shm shared memory files created with shm_open
+do apear in this file system. It is then equivalent to open(2) files
+under /dev/shm. Naturally /tmp or any other location where tempfs
+is mounted to can be used in the same manner. And further one can
+use even ordinary files as shared memory (memory mapping them), with
+the only difference that data written to the pages are written down
+to disk as well.
+.br
+The frlib functions sm_fopen(3fr) and sm_fclose(3fr) can be used to
+handle this kind of named shared memory pages. sm_fopen can use the
+function shm_open(2) to create the file or can create a page on
+the local filesystem (tempfs or normal fs) according to the flags
+given to sm_fopen.
+.sp
+In the following all functions are shortly explained. A more detailed
+description can be found in the individual man pages.
+
+.SS Named Shared Memory Page Functions
+.TP
+.B sm_fopen
+opens a named shared memory page. When using the SM_F_CREAT flag,
+the page is created first. 
+.TP
+.B sm_fclose
+closes (unmaps) a named shared memory page. With the option SM_F_DESTROY
+the shared memory file is unlinked (deleted) as well.
+.TP
+.B sm_getpname
+checks wether the name is according to the naming convention and corrects
+the name if possible. If the name starts with an at symbol (@), the name 
+is mapped according to the configuration file to the real name. If the
+name is missing the configured default name is returned.
+.TP
+.B sm_fpage_exist
+checks wether the page physically does already exists and returns its
+location.
+
+.SS Startpage Functions
+The startpage is one dedicated named shared memory page.
+.TP
+.B sm_start
+creates the startpage.
+.TP
+.B sm_delstart
+destroys the startpage.
+.TP
+.B sm_stop
+destroys the startpage and deletes all pages created with sm_new(3fr).
+No other named shared memory pages are destroyed.
+.TP
+.B sm_maydel
+is identical to sm_stop, only that it does nothing if the pages are already
+marked as to be deleted.
+
+.SS Shared Memory Page Functions
+.TP
+.B sm_new
+creates a new shared memory page using shmat(2). The id is returned.
+.TP
+.B sm_del
+deletes a shared memory page created with sm_new(3fr).
+.TP
+.B sm_delall
+deletes all shared memory pages created with sm_new(3fr).
+
+.SS Share Memory Pointer Handling
+.TP
+.B sm_ptmap
+maps an id/offset pair to a address.
+.TP
+.B sm_ptmap2
+maps an id/offset pair to a address. The difference to sm_ptmap is, that
+it doesn't take an id/offset pair, but a memory location to an id/offset
+pair. This function is garanteed to be atomically.
+.TP
+.B sm_ptrev
+makes the reverse mapping. Hence it takes a pointer and returns an id/offset
+pair.
+.TP
+.B sm_ptcp
+copies an id/offset pair atomically.
+.TP
+.B sm_ptset
+converts an address to an id/offset pair and copies it into the given location.
+This function is garanteed to be atomically.
+
+.SS Startpage Info Functions
+.TP
+.B sm_startpage_getinfo
+returns the shared memory information structure of type
+.I sm_fpage_t
+of the startpage.
+.TP
+.B sm_startpage_base
+returns the base pointer of the startpage. (Behind the information structure).
+.TP
+.B sm_startpage_size
+returns the size of the startpage. (Without the information structure).
+
+.SS Shared Memory Info Functions
+.TP
+.B sm_page_getinfo
+returns the shared memory information structure of type
+.I sm_page_t
+of the shared memory page identified by given id.
+.TP
+.B sm_page_base
+returns the base pointer of the reqested shared memory page. 
+(Behind the information structure).
+.TP
+.B sm_page_size
+returns the size of the reqested shared memory page. 
+(Without the information structure).
+
+.SS Named Shared Memory Info Functions
+.TP
+.B sm_fpage_getinfo
+returns the shared memory information structure of type
+.I sm_fpage_t
+of the named shared memory page identified by given name.
+.TP
+.B sm_fpage_base
+returns the base pointer of the named shared memory page. 
+(Behind the information structure).
+.TP
+.B sm_fpage_size
+returns the size of the named shared memory page. 
+(Without the information structure).
+.TP
+.B sm_fpage_getpage
+searches a named shared memory page according to its
+address and returns its name. It does return NULL if the
+address does not lie in any mapped shared memory.
+
+
+.SH BUGS
+The atomicity of sm_ptcp yet is implemented only on 64bit machines, where
+it is trivial. On 32bit machines the atomicity is not garanteed yet.
+This effects the functions sm_ptmap2 and sm_ptset, which do use sm_ptcp, too.
+
+
+.SH "SEE ALSO"
+.BR sm_fopen "(3fr), "
+.BR sm_fclose "(3fr), "
+.BR sm_getpname "(3fr), "
+.BR sm_fpage_exist "(3fr), "
+.BR sm_start "(3fr), "
+.BR sm_delstart "(3fr), "
+.BR sm_stop "(3fr), "
+.BR sm_maydel "(3fr), "
+.BR sm_new "(3fr), "
+.BR sm_del "(3fr), "
+.BR sm_delall "(3fr), "
+.BR sm_ptmap "(3fr), "
+.BR sm_ptmap2 "(3fr), "
+.BR sm_ptrev "(3fr), "
+.BR sm_ptcp "(3fr), "
+.BR sm_ptset "(3fr), "
+.BR sm_startpage_getinfo "(3fr), "
+.BR sm_startpage_base "(3fr), "
+.BR sm_startpage_size "(3fr), "
+.BR sm_page_getinfo "(3fr), "
+.BR sm_page_base "(3fr), "
+.BR sm_page_size "(3fr), "
+.BR sm_fpage_getinfo "(3fr), "
+.BR sm_fpage_base "(3fr), "
+.BR sm_fpage_size "(3fr), "
+.BR sm_fpage_getpage "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

@@ -1,0 +1,70 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "scf_decrypt" 3fr "15 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+scf_decrypt,
+scf_encrypt,
+scf_writeout,
+scf_list,
+scf_encryptfile
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/secureconfig.h>
+.sp
+.BI "#define SCF_FLAG_NONE      " 0x00
+.BI "#define SCF_FLAG_STRICT    " 0x01
+.BI "#define SCF_FLAG_VSTRICT2  " 0x02
+.BI "#define SCF_FLAG_VSTRICT   " "(SCF_FLAG_STRICT|SCF_FLAG_VSTRICT2)"
+.sp
+.BI "int scf_decrypt (char *" cf ", size_t " cf_len ", char **" out ", char *" passwd ", int " flags ");"
+.BI "int scf_encrypt (char *" cf ", char **" out ", int *" out_len ", char *" passwd ");"
+.BI "int scf_writeout (char *" filename ", char *" cf ", int " len ");"
+.BI "int scf_list (char *" infile ", char *" outfile ");"
+.BI "int scf_encryptfile (char *" infile ", char *" outfile ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B scf_decrypt
+.TP
+.B scf_encrypt
+.TP
+.B scf_writeout
+.TP
+.B scf_list
+.TP
+.B scf_encryptfile
+
+
+.SH FLAGS
+.TP
+.B SCF_FLAG_STRICT
+.TP
+.B SCF_FLAG_VSTRICT2
+.TP
+.B SCF_FLAG_VSTRICT
+
+
+.SH "SEE ALSO"
+.BR secureconfig "(3fr), "
+.BR config "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

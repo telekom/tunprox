@@ -1,0 +1,348 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_strftime" 3fr "03 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_strftime,
+cjg_astrftime,
+cjg_strftime2,
+cjg_astrftime2,
+cjg_strftime3,
+cjg_astrftime3 -
+prints a formated timestring.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "int cjg_strftime (char *" tstr ", int " tlen ", char *" fmt ", struct cjg_bd_t *" tbd ", int " flags ");"
+.BI "int cjg_astrftime (char **" tstr ", char *" fmt ", struct cjg_bd_t *" tbd ", int " flags ");"
+.BI "int cjg_strftime2 (char *" tstr ", int " tlen ", char *" fmt ", tmo_t " tstamp ", int " flags);"
+.BI "int cjg_astrftime2 (char **" tstr ", char *" fmt ", tmo_t " tstamp ", int " flags ");"
+.BI "int cjg_strftime3 (char *" tstr ", int " tlen ", char *" fmt ", tmo_t " tstamp ");"
+.BI "int cjg_astrftime3 (char **" tstr ", char *" fmt ", tmo_t " tstamp ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B cjg_strftime
+This function takes a formated string and a broken down time as input, and writes
+the timestring to the given buffer
+.IR tstr .
+(For the formats accepted see below).
+At most 
+.I tlen
+bytes are written (inclusive the terminating 0-byte). If tlen is 0 nothing is written.
+The function returns the number of bytes written (without the terminating 0-byte), or
+in case of truncation the number of bytes that would be written, if the buffer were big
+enough (still without the terminating 0-byte). Even in case of truncation the resulting
+string is nul-terminated. The output is truncated if the return value is greater or
+equal to tlen. It is legal to call the function with a NULL buffer and a length of 0,
+to determine the buffer size. In case of error the function returns a negative value
+(errors(5fr)).
+.TP
+.B cjg_astrftime
+This function calls cjg_strftime twice, once for determining the length, then the
+neccessary buffer is allocated. Finally cjg_strftime is called a second time to fill
+the buffer. The allocated buffer is returned. It needs to be free'ed.
+.TP
+.B cjg_strftime2
+Like cjg_strftime, but uses a timestamp, that is broken down using the standard
+calendar rule CRUL_T_CJG.
+.TP
+.B cjg_astrftime2
+Like cjg_astrftime, but uses a timestamp, that is broken down using the standard
+calendar rule CRUL_T_CJG.
+.TP
+.B cjg_strftime3
+Like cjg_strftime2 with a flag of 0.
+.TP
+.B cjg_astrftime3
+Like cjg_astrftime2 with a flag of 0.
+
+.SH FORMAT
+The format 
+.IR "" "(" fmt ")"
+specification is a nul-terminated string and may contain special character sequences
+called 
+.I conversion specifications, 
+each of which is introduced by a percent ('%') character 
+and terminated by some other character known as a 
+.I conversion specifier character.
+The '%' sign might be followed by one or more 
+.I modifier characters, 
+a 
+.I field width
+and a 
+.I precision, 
+before terminated by the conversion specifier character.
+All other character sequences are ordinary character sequences.
+The characters of ordinary character sequences (including the nul byte) are copied
+verbatim from format to the output string.
+.sp
+.SS Modifier Characters
+The following modifier characters are accepted:
+.TP
+.B E
+Numbers are printed in an alternative form specified by the locals.
+.B Note:
+This modifier is not yet implemented. It is parsed but ignored.
+.TP
+.B O (letter O)
+For all number conversions the numbers are
+printed as roman numbers. The numbers are upper case using the subtractive
+format (e.g. IV for 4) and for numbers greater than 3999 the multiply
+rule is applied (e.g. V*M for 5000). (see roman(3fr) for more details).
+This modifier can be combined with the # modifier to obtain lower case.
+.TP
+.B +
+this is parsed but ignored.
+.TP
+.B -
+Some conversion specifiers implies
+a zero padding to a certain length (e.g. %d is padded to the length of 2 by
+default). This modifier prevents this padding.
+.TP
+.B _
+This causes a space padding for those conversions, that default to zero padding.
+.TP
+.B 0 (zero)
+This causes a zero padding for those conversions, that default to space padding.
+Those specifiers, that defaults to a certain length (such as %d) by default are
+zero padded. Those, that doesn't default to a certian length (e.g. %Y) by default
+are space padded. String conversions can only be space padded.
+.TP
+.B ^
+For string conversions (and roman numbers) this forces upper case.
+.TP
+.B #
+For string conversions (and roman numbers) this forces lower case.
+
+.SS Field Width
+Any conversion can have a minimum field width to which the conversion
+is right aligned.
+
+.SS Precision
+The field width might be followed by a dot ('.') and a precision. The precision
+is honoured only for the %q conversion, and all that uses it implicitely, that
+are %Q, %D, %f. For those it specified the number of digits to print (see %q below).
+
+.SS Conversion Specifiers
+The following conversion specifiers are accepted:
+.TP
+.B %%
+a literal '%' character.
+.TP
+.B %a
+The abbreviated weekday name according to the current locale.
+.TP
+.B %A
+The full weekday name according to the current locale.
+.TP
+.B %b
+The abbreviated month name according to the current locale.
+.TP
+.B %B
+The full month name according to the current locale.
+.TP
+.B %c
+The preferred date and time representation for the current locale.
+If no local is present it default to '%a %d %b %Y %T %Z'.
+.TP
+.B %C
+The century number (year/100), by default as a 2-digit integer.
+.TP
+.B %d
+The day of the month as a decimal number (range 01 to 31). Default 
+to a 2-digit integer.
+.TP
+.B %D
+Equivalent to '%Y:%m:%dD%H:%M:%Q'.
+.TP
+.B %e
+Equivalent to '%Y%m%dT%H%M%S'.
+.TP
+.B %f
+Equivalent to '%Y%m%dT%H%M%Q'.
+.TP
+.B %F
+Equivalent to '%Y-%m-%d'.
+.TP
+.B %g
+Like %G, but without century, that is, with a 2-digit year (default
+to 2 digits).
+.TP
+.B %G
+The ISO 8601 week-based year with century as a decimal number. The year 
+corresponding to the ISO week number (see %W). This has the same format
+and value as %Y, except that if the ISO week number belongs to the 
+previous or next year, that year is used instead.
+.TP
+.B %H
+The hour as a decimal number using a 24-hour clock (default to 2 digits).
+.TP
+.B %I
+The hour as a decimal number using a 12-hour clock (default to 2 digits).
+.TP
+.B %j
+The day of the year as a decimal number (between 1 and 366). By default it is
+not padded.
+.TP
+.B %J
+The days since 1st january 1970.
+.TP
+.B %k
+The milliseconds as a decimal number.
+.TP
+.B %K
+The milliseconds since 1st january 1970 0:0 GMT.
+.TP
+.B %l (ell)
+This specifier is substituted by 1 if year is a leap year and 0 if not.
+For Sweden 1712 a 2 is printed (see cjg_breakdown for detail).
+.TP
+.B %m
+The month as a decimal number (range 01 to 12) (default to 2 digits).
+.TP
+.B %M
+The minute as a decimal number (range 00 to 59) (default to 2 digits).
+.TP
+.B %n
+A newline character.
+.TP
+.B %N
+The date as a latin in abbreviate form. (See romkal(3fr) for detail).
+.TP
+.B %o
+The nanosecond part of a second as a decimal number (0 to 999999999).
+.TP
+.B %p
+Either "AM" or "PM" according to the given time value, or the corresponding 
+strings for the current locale. Noon is treated as "PM" and midnight as "AM".
+This conversion default to upper case.
+.TP
+.B %P
+Either "AD" for years after the supposed birth of christ, or "BC" for
+dates before christ.
+This conversion default to upper case.
+.TP
+.B %q
+The fraction part of a second. That is the part after the decimal point.
+If no precesion field is given 6 digits are printed. This can be overwritten
+with the precision field (E.g. %.3q) will result in 3 digits. E.g. if the
+microsecond part is 231421 the result would be "231". More than 9 digits
+cannot be printed.
+If the field isnano is set (normally when breaking down using the flag
+CJG_F_NANO), than the default precision is 9 digits, rather than 6 digits.
+.B Note:
+The %q does not honour the field width. This is wanted and not a bug!
+.TP
+.B %Q
+Equivalent to %02S.%q hence the seconds (default to two digits) followed
+by a decimal point and the fractional part (default to six digits).
+E.g. %.2Q would result to "12.345".
+.TP
+.B %r
+Equivalent to '%a, %d %b %Y %H:%M:%S %z'. This is the timeformat as specified
+in RFC 822 (i.e. in emails).
+.TP
+.B %R
+The date as a latin in full. (See romkal(3fr) for detail).
+.TP
+.B %s
+The number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+.TP
+.B %S
+The second as a decimal number (range 00 to 61). (default to 2 digits).
+In case of leap seconds the second can be 60 or 61. (61 never yet occured, and
+most probably never will).
+.TP
+.B %t
+A tab character.
+.TP
+.B %T
+Equivalent to '%H:%M:%S'.
+.TP
+.B %u
+The microseconds as a decimal number (range 0 to 999999).
+.TP
+.B %U
+The microseconds since the Epoc, 1970-01-01 00:00:00 +0000 (UTC).
+.TP
+.B %v
+The century number (year/100) like %C, but always positive.
+%C can become negative for dates before christ (defaults to 2 digits).
+.TP
+.B %V
+The year (like %Y), but always positive.
+%Y can become negative for dates before christ.
+.TP
+.B %w
+The day of the week as a decimal, range 1 to 7, Monday being 1.
+.TP
+.B %W
+The  ISO 8601 week number of the current year as a decimal number, range 01 to
+53, where week 1 is the week that contains the first thursday.
+.TP
+.B %x
+The preferred date representation for the current locale without the time.
+If no local is present it default to '%Y-%m-%d'.
+.TP
+.B %X
+The preferred time representation for the current locale without the date.
+If no local is present it default to '%H:%M:%S'.
+.TP
+.B %y
+The year as a decimal number without a century (range 00 to 99). (default to
+2 digits).
+.TP
+.B %Y
+The year since the supposed birth of christ. The year is negative for
+dates before christ.
+.B Note:
+The year 0 (zero) does not exist. The year jumps from -1 (1 BC) to 1 (1 AD).
+.TP
+.B %z
+The +hhmm or -hhmm numeric timezone (that is, the hour and minute offset 
+from UTC). (east is positive and west is negative).
+.TP
+.B %Z
+The timezone or name or abbreviation.
+
+
+.SH BUGS
+The Locals are not honoured yet. This results in %c, %x and %X using the default
+values only. And %a, %A, %b, %B, %p, %P using the englisch names.
+.sp
+All compound conversions don't honour the field width yet. That are: %c, %D, %e,
+%f, %F, %Q, %r, %T. 
+The same valids for the latin date representation %N and %R.
+.B Note:
+The %q conversion 
+.B MUST NOT
+make use of the field width - hence this is NOT a bug.
+
+
+.SH "SEE ALSO"
+.BR strftime "(3), "
+.BR cjg_breakdown "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR cjg_prttimestr "(3fr), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

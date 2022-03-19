@@ -1,0 +1,36 @@
+does use the lisa format:
+starts with liev and ends on leev
+the following blocks does exist:
+en - event name
+tn - target name
+the following list does exist:
+ep - event parameter
+tp - target parameters
+at - attributes
+
+the attribute list is a list of lists of type:
+as - single attribute
+the single attribute is a list of two blocks:
+vn - variable name
+and one of the value blocks
+
+the parameter lists are lists of value blocks
+the order define the order of the arguments
+
+the following value blocks are defined:
+vs - string value: utf8 encoded nul-terminated string
+vi - 64bit signed integer (big endian)
+vf - 64bit float value (big endian)
+vv - void - empty (especially for arguments)
+
+
+the resulting frame can be send in binary or base64 encoded 
+(currently only the latter form is supported)
+
+in either case it is prefixed with a $ sign and an optional space.
+if the data do start with 'l' it is in binary form if it starts
+with a 'b' it is base64 encoded and needs to be decoded before
+parsing.
+
+
+

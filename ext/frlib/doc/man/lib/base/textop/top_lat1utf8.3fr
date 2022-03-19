@@ -1,0 +1,63 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "latin1 to utf8" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+top_lat1utf8,
+top_utf8lat1
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "int top_lat1utf8 (char *" dest ", char *" src ", int " max ");"
+.BI "int top_utf8lat1 (char *" dest ", char *" src ", int " max ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B top_lat1utf8
+converts a string in latin1 (iso8859-1) into an utf8 string. If 
+.I max
+is a positive number at most max bytes are written to
+.IR dest " (including "
+the terminating NUL-character).
+.br
+.B Note:
+The dest-buffer must be allocated. The size will be at most 2*strlen(src)+1.
+In most cases however the real size is much smaller, generally only a few
+bytes larger than strlen(src).
+.TP
+.B top_utf8lat1
+converts a string in utf8 encoding into a latin1 string. Characters,
+than are not convertable, are converted to 0xFF. If
+.I max
+is a positive number at most max bytes are written to
+.IR dest " (including "
+the terminating NUL-character).
+.br
+.B Note:
+The dest-buffer must be allocated. The size will be at most strlen(src)+1,
+and in most case won't be much smaller.
+
+.SH "SEE ALSO"
+.BR errors "(5fr), "
+.BR utf8ucs2 "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

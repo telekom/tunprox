@@ -1,0 +1,59 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "slog" 5fr "26 sep 2009" "Frank Reker" "frlib"
+.SH NAME
+slog_gethandle,
+slog_releasehandle.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "int slog_gethandle (char *" module ");"
+.BI "void slog_releasehandle (int " handle ");"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B slog_gethandle
+takes a module name as argument and returns a handle to the configuration
+settings for that module. Working with handles is somewhat faster then
+working directly with the module name, thu the difference is not big.
+.TP
+.B slog_releasehandle
+releases a handle prior returned by slog_gethandle, so that it can
+be deleted by a reread of the configuration file. In case it is not
+released, the handle remains valid even thu an individual configuration
+for that module does not exist anymore. The programme still behaves
+correctly, only that some memory remains allocated unneccessarily,
+which however is not critical.
+
+
+.SH RETURN VALUE
+slog_gethandle do return a handle which is greater or equal zero.
+On failure an error code is returned.
+.br
+slog_releasehandle
+doesn't return anything.
+
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slog "(3fr), "
+.BR shlogf "(3fr)."
+
+
+
+

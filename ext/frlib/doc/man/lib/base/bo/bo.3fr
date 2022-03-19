@@ -1,0 +1,59 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "byte order" 3fr "11 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+bo_cv_32,
+bo_cv_16
+\- converts byte order
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/bo.h>
+.sp
+#if BYTE_ORDER == BIG_ENDIAN
+.B #define BO_HAS_BE
+#elif BYTE_ORDER == LITTLE_ENDIAN
+.B #define BO_HAS_LE
+#endif
+.sp
+.BI "#define BO_USE_BE  0"
+.BI "#define BO_USE_LE  1"
+.sp
+.BI "int bo_cv_32 (u_int32_t *" out ", u_int32_t " in ", int " bo ");"
+.BI "int bo_cv_16 (u_int16_t *" out ", u_int16_t " in ", int " bo ");"
+.fi
+
+
+.SH DESCRIPTION
+These functions do convert 16 or 32 bit integer in its byteorder.
+The third parameter 
+.I bo
+can be either
+.I BO_USE_BE
+to convert to big endian, or
+.I BO_USE_LE
+to convert to little endian.
+Furthermore either the macro 
+.I BO_HAS_BE 
+or the macro 
+.I BO_HAS_LE 
+is defined depending wether the machine is big or little endian.
+
+.SH "SEE ALSO"
+.BR frlib "(3fr)."
+
+
+
+

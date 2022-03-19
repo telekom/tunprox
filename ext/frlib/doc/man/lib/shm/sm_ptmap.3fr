@@ -1,0 +1,104 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "shm" 3fr "22 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_ptmap,
+sm_ptmap2,
+sm_ptrev,
+sm_ptcp,
+sm_ptset -
+functions to handle/map shared memory pointers.
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+typedef union sm_pt {
+   u_int64_t     cp;
+   struct {
+      u_int64_t  sms:32,
+                 off:32;
+	};
+} sm_pt;
+#define SM_PT_NULL	((sm_pt){0})
+.sp
+.BI "void *sm_ptmap (sm_pt " smptr ");"
+.BI "void *sm_ptmap2 (sm_pt *" smptr ");"
+.BI "sm_pt sm_ptrev (void * " ptr ");"
+.BI "void sm_ptcp (sm_pt *" dest ", sm_pt " src ");"
+.BI "void sm_ptset (sm_pt *" dest ", void *" src ");"
+.fi
+
+.SH DESCRIPTION
+Shared memory pages have the effect, that they are mapped to different addresses
+in each process it maps it. To share pointers, this implementation uses
+.I shared memory pointers (sm_pt)
+which is a structure of two 32 bit integers. The first (
+.IR sms " = shared memory segment) "
+is the id to identify the page. The second (
+.IR off " = offset) "
+is an offset in bytes from the base pointer of this page.
+The type sm_pt is defined as a union of one 64 bit integer 
+.I cp
+and a structure containing the fields sms and off.
+The member cp can be used to easily handle the pointer as an integer value,
+which makes some things easier.
+
+.TP
+.B sm_ptmap
+This function
+maps a shared memory pointer (id/offset pair) to a local address.
+.TP
+.B sm_ptmap2
+This function, too,
+maps a shared memory pointer (id/offset pair) to a local address.
+The difference to sm_ptmap is, that
+it doesn't take a shared memory pointer, but a pointer to that pointer.
+When the pointer is situated in a shared memory segment, this function 
+garantees to copy the pointer atomically, before converting. See BUGS
+section.
+.TP
+.B sm_ptrev
+makes the reverse mapping. Hence it takes a local address and returns 
+a shared memory pointer (id/offset pair).
+.TP
+.B sm_ptcp
+copies a shared memory pointer atomically. See BUGS section.
+.TP
+.B sm_ptset
+converts a local address into a shared memory pointer (id/offset pair)
+and copies it into the given location.
+This function is garanteed to be atomically. See BUGS section.
+
+
+
+.SH BUGS
+The atomicity of sm_ptcp yet is implemented only on 64bit machines, where
+it is trivial. On 32bit machines the atomicity is not garanteed yet.
+This effects the functions sm_ptmap2 and sm_ptset, which do use sm_ptcp, too.
+
+
+.SH "SEE ALSO"
+.BR shm "(3fr), "
+.BR sm_start "(3fr), "
+.BR sm_new "(3fr), "
+.BR sm_page_base "(3fr), "
+.BR sm_page_size "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

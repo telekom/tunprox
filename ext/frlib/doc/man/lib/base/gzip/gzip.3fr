@@ -1,0 +1,110 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "gzip" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+gzip,
+gunzip,
+bzip2,
+bunzip2,
+compress,
+uncompress,
+isgzip
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/gzip.h>
+.sp
+.BI "int gzip (char *" in ", int " inlen ", char **" out ", int *" outlen ", int " level ");"
+.BI "int gunzip (char *" in ", int " inlen ", char **" out ", int *" outlen ");"
+.sp
+.BI "int bzip2 (char *" in ", int " inlen ", char **" out ", int *" outlen ", int " level ");"
+.BI "int bunzip2 (char *" in ", int " inlen ", char **" out ", int *" outlen ");"
+.sp
+.BI "int compress (char *" in ", int " inlen ", char **" out ", int *" outlen ");"
+.BI "int uncompress (char *" in ", int " inlen ", char **" out ", int *" outlen ");"
+.sp
+.BI "int isgzip (char *" in ", int " ilen ");"
+.fi
+
+
+
+
+.SH DESCRIPTION
+.TP
+.B gzip
+compresses the 
+.I in
+buffer using the programme gzip. The result is written to
+.IR out .
+.I level
+is a number between 0 (no compression) and 9 (maximum compression). 
+See gzip(1) for more details.
+.TP
+.B gunzip
+uncompresses the 
+.I in
+buffer using the programme gzip. The result is written to
+.IR out .
+.TP
+.B bzip2
+compresses the 
+.I in
+buffer using the programme bzip2. The result is written to
+.IR out .
+.I level
+is a number between 0 (no compression) and 9 (maximum compression). 
+See gzip(1) for more details.
+.TP
+.B bunzip2
+uncompresses the 
+.I in
+buffer using the programme bzip2. The result is written to
+.IR out .
+.TP
+.B compress
+compresses the 
+.I in
+buffer using the programme compress. The result is written to
+.IR out .
+.TP
+.B uncompress
+uncompresses the 
+.I in
+buffer using the programme compress. The result is written to
+.IR out .
+.TP
+.B isgzip
+checks wether the 
+.I in
+buffer contains a valid gzip - magic number.
+
+.SH Note:
+For compressing / decompressing the programme gzip / bzip2 or compress
+is called using the function iopipe. The path to the single programmes
+can be configured using prog[gzip]=... in the config file.
+
+
+.SH "SEE ALSO"
+.BR gzip "(1), "
+.BR bzip2 "(1), "
+.BR compress "(1), "
+.BR iopipe "(3fr), "
+.BR frlib.rc "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

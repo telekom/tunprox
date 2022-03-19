@@ -1,0 +1,83 @@
+#!/bin/bash
+cd out
+test -d html && rm -Rf html
+mkdir html
+echo copying man pages...
+cp man*/* html/
+cd html
+bunzip2 *.bz2
+
+# make list
+echo creating link list...
+for i in *.?fr; do
+	echo -n \# >&2
+	l=$(echo $i | tr -d \\n | wc -c | tr -d " \t")
+	l=$((l-4))
+	j="$(echo $i | cut -c1-$l)"
+	grep -w "$j" ../../nogen.man 2>/dev/null >/dev/null
+	if test "$?" -eq 0; then
+		echo '1,$s@\(^\|[^a-zA-Z0-9_]\)\('"$j"'\)\( *</b> *\)\?\( *(.fr)\)\([^a-zA-Z0-9_]\|$\)@\1<a href="./'"${i}.html"'">\2</a>\3\4\5@g'
+	else
+		echo '1,$s@\(^\|[^a-zA-Z0-9_]\)\('"$j"'\)\( *</b> *\)\?\( *(.fr)\)\?\([^a-zA-Z0-9_]\|$\)@\1<a href="./'"${i}.html"'">\2</a>\3\4\5@g'
+	fi
+done > cmd.list
+echo >&2
+
+
+echo generating html...
+for i in *.?fr; do
+	if test "$(cat $i | head -n 1 | grep "^.so ")"; then
+		echo -n \> >&2
+		j="$(cat $i | head -n 1 | cut -f2 -d/)"
+		ln -sf ${j}.html ${i}.html
+	else
+		echo -n \# >&2
+		groff -mandoc -T html "$i" | sed -f cmd.list > "${i}."html
+	fi
+done
+echo >&2
+
+echo clean up...
+rm -f *.?fr
+rm -f cmd.list
+
+echo done\!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# Overrides for XEmacs and vim so that we get a uniform tabbing style.
+# XEmacs/vim will notice this stuff at the end of the file and automatically
+# adjust the settings for this buffer only.  This must remain at the end
+# of the file.
+# ---------------------------------------------------------------------------
+# Local variables:
+# c-indent-level: 3
+# c-basic-offset: 3
+# tab-width: 3
+# End:
+# vim:tw=0:ts=3:wm=0:
+#

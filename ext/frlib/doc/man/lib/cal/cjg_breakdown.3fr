@@ -1,0 +1,310 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_breakdown" 3fr "02 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_breakdown,
+cjg_compose,
+cjg_breakdown2,
+cjg_compose2,
+cjg_breakdown3,
+cjg_compose3 -
+functions to breakdown timestamps and compose broken down information
+to a timestamp
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "int cjg_breakdown (struct cjg_bd_t *" tbd ", tmo_t " tstamp ", int " rule ", int " flags ");"
+.BI "int cjg_compose (tmo_t *" tstamp ", struct cjg_bd_t *" tbd ", int " rule ", int " flags ");"
+.BI "int cjg_breakdown2 (struct cjg_bd_t *" tbd ", tmo_t " tstamp ", int " flags ");"
+.BI "int cjg_compose2 (tmo_t *" tstamp ", struct cjg_bd_t *" tbd ", int " flags ");"
+.BI "int cjg_breakdown3 (struct cjg_bd_t *" tbd ", tmo_t " tstamp ");"
+.BI "int cjg_compose3 (tmo_t *" tstamp ", struct cjg_bd_t *" tbd ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B cjg_breakdown
+This function takes a timestamp (microseconds since 1970) and a rule (see
+.I crule(3fr)
+for more details) and produces a 
+.I cjg_bd_t
+structure of broken down information.
+.TP
+.B cjg_compose
+This function takes a cjg_bd_t structure of broken down information and a
+calendar rule and produces a timestamp.
+.TP
+.B cjg_breakdown2
+Like cjg_breakdown, but uses the default rule
+.IR CRUL_TZ_CJG .
+.TP
+.B cjg_compose2
+Like cjg_compose, but uses the default rule
+.IR CRUL_TZ_CJG .
+.TP
+.B cjg_breakdown3
+Like cjg_breakdown2 with flags=0.
+.TP
+.B cjg_compose3
+Like cjg_compose2 with flags=0.
+
+.SH FLAGS
+.TP
+.B CJG_F_ISDELTA
+For breakdown specifies, that timestamp is a delta time (hence a
+time difference and not an absolute time). For compose it overwrites
+the field 
+.I isdelta
+in the cjg_bd_t structure.
+.TP
+.B CJG_F_NODELTA
+For compose only, it forces the date to be absolute, whatever is
+written in the
+.I isdelta
+field in the cjg_bd_t structure.
+.TP
+.B CJG_F_NOZERO
+For breakdown only, it prohibits, that the structure is zero'd before
+breaking down (of little use).
+.TP
+.B CJG_F_DAYTIME
+For breakdown only, it stops after have broken down to time and days
+since 1970. The date is not broken down. This speeds up the function
+if one is interested only in the time of day or the days since 1970.
+.TP
+.B CJG_F_FORCERULE
+For compose only, it forces to use the timezone in the calendar rule,
+even if timezone information are available in the cjg_bd_t structure.
+Normally those would be used if available.
+.TP
+.B CJG_F_NANO
+The timestamp is in nano seconds (since 1970) rather than micro seconds.
+
+
+.SH CJG_BD_T STRUCTURE
+.nf
+struct cjg_bd_t {
+   tmo_t year;
+   int   mon;
+   int   day;
+   int   hour;
+   int   min;
+   int   sec;
+   int   micro;
+   int   nano;
+   tmo_t tstamp;
+   tmo_t micro1970;
+   tmo_t nano1970;
+   tmo_t days1970;
+   int   yday;
+   int   wday;
+   int   weeknum;
+   tmo_t wyear;
+   union {
+      struct {
+         uint32_t isleap:2,
+                  isdst:1,
+                  isjul:1,
+                  isdelta:1,
+                  isnano:1,
+                  reserved:11,
+                  hasyear:1,
+                  hasmon:1,
+                  hasday:1,
+                  hashour:1,
+                  hasmin:1,
+                  hassec:1,
+                  hasmicro:1,
+                  hasnano:1,
+                  hasmicro1970:1,
+                  hasdays1970:1,
+                  hasyday:1,
+                  haswday:1,
+                  hasweeknum:1,
+                  haswyear:1,
+                  hasgmtoff:1;
+      };
+      struct {
+         uint32_t reserved2:18,
+                  hasinfo:14;
+      };
+      uint32_t    info;
+   };
+   int   numleapsec;
+   tmo_t gmtoff;
+   char  *tzname;
+   int   tz;
+   int   rul;
+   int   flags;
+};
+.fi
+.TP
+.B year
+is the year since the supposed birth of christ. For years bevore
+christ, the year is negative.
+.B Note:
+The year 0 does 
+.B NOT
+exist. The years jump from -1 (1 BC) to 1 (1 AD).
+.TP
+.B mon
+the month between 1 (January) and 12 (December)
+.TP
+.B day
+the day of month. Between 1 and 31.
+.TP
+.B hour
+the hour of day (0 to 23).
+.TP
+.B min
+the minute (0 to 59).
+.TP
+.B sec
+the second (0 to 61).
+The second 60 and 61 can occur in case of leap seconds. 
+.TP
+.B micro
+the microsecond part of o second (0 to 999999).
+.TP
+.B nano
+the nanosecond part of o second (0 to 999999999).
+.TP
+.B tstamp
+This is the non broken down timestamp. Normally it's the same as micro1970.
+However, if the flag CJG_F_NANO is given, it is identical to nano1970.
+.TP
+.B micro1970
+the microseconds since 1970.
+.TP
+.B nano1970
+the nanoseconds since 1970.
+.TP
+.B days1970
+the days since 1970.
+.TP
+.B yday
+the day of year. Between 1 (1st january) to 365 (in leap years 366).
+.TP
+.B wday
+weekday. Between 0 (monday) to 6 (sunday).
+.B Note:
+The week starts with monday not sunday!
+.TP
+.B weeknum
+The iso weeknumber. The first week of year is the week, wich contains
+the first thursday.
+.B Note:
+In the USA weeks are counted differently, which will to lead to different
+results if and only if the year starts on thursday.
+.TP
+.B wyear
+Year to which the week belongs. E.g. if the 1st january is a friday
+it belongs to the year before.
+.TP
+.B isleap
+is one if the year is a leap year and 0 if not.
+.B Note:
+for Sweden 1712 isleap takes the value 2, because this year in sweden
+had been 2 leap days (29th and 30th of februrary).
+.TP
+.B isdst
+1 if daylight saving time is in effect. 0 otherwise.
+.B Note:
+In a future version of this function it is planed, that this field
+can be 2 as well, if there are more then two times in one year.
+E.g. in Germany in 1945 there had been a third timespan (July and
+August) when the hour was 2 hours ahead, while in the rest from
+march to october it was 1 hour ahead of standard time.
+.TP
+.B isjul
+1 if the date was before the gregorian reform and 0 if it is after
+the reform.
+.TP
+.B isdelta
+1 if the date was broken down as delta time, 0 otherwise.
+.TP
+.BR hasyear ", " ...
+1 if the structure was contains year information. The same for
+hasmon, ...
+These information is used for compose (see below).
+.TP
+.BR isnano
+1 if the CJG_F_NANO flag was given during breakdown. This is used by
+the cjg_strftime(3fr) functions.
+.TP
+.B hasinfo
+just a compound of all the hasyear, ... used by compose to see
+wether the hasxxx field are set. If hasinfo is 0 compose does use
+heuristics to determine which information to use for composing.
+.TP
+.B info
+a compound of all flags, for easy handling.
+.TP
+.B numleapsec
+The number of leap seconds passed so far. (Filled in only if
+timezone information contains leap second information).
+.TP
+.B gmtoff
+the difference to GMT in microseconds. East of GMT is positive
+and west is negative.
+.TP
+.B tzname
+the name of the timezone (e.g. CET for Central European Time).
+.TP
+.B tz
+the timezone used for breakdown.
+.TP
+.B rul
+the calendar rule used for breakdown.
+.TP
+.B flags
+the flags used for breakdown.
+
+.SS COMPOSE
+The compose functions don't need all the data above.
+If tstamp is available, this is returned. If days1970 is
+present it is used together with hour, min, sec and micro
+to compose the timestamp. If year, month and day is
+present that is used together with the time information.
+If year and yday is present that is used, and when
+wyear, weeknum and wday is present that is used.
+Otherwise nothing can be composed. Which of the information
+is present is determined by the hasxxx field of the structure.
+If none of the hasxxx is set (hence hasinfo is 0) heuristics
+are used to determine what we have.
+If the flag CJG_F_NANO is given, the composed time is in
+nanoseconds (since 1970) rather than microseconds, in which
+case the nano field is used, too.
+
+
+.SH "SEE ALSO"
+.BR cjg "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR cjg_getyear "(3fr), "
+.BR cjg_prttimestr "(3fr), "
+.BR cjg_isleap "(3fr), "
+.BR cjg_rulesetreform "(3fr), "
+.BR crule "(3fr), "
+.BR tz "(3fr), "
+.BR tzcorrect "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

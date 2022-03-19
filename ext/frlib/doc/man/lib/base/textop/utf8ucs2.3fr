@@ -1,0 +1,169 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "unicode conversion" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+utf2wchar_char,
+utf2wchar_str,
+utf8ucs2_char,
+utf8ucs2,
+utf8ucs4_char,
+utf8ucs4,
+wchar2utf_str,
+wchar2utf_char,
+wchar2utf_len,
+wchar2utf_charlen,
+ucs2utf8,
+ucs2utf8_char,
+ucs2utf8_len,
+ucs2utf8_charlen,
+ucs4utf8,
+ucs4utf8_char,
+ucs4utf8_len,
+ucs4utf8_charlen
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "int utf8ucs2_char (u_int16_t *" ucs ", char **" utf ");"
+.BI "int utf8ucs2 (u_int16_t **" ucs ", char *" utf ");"
+.sp
+.BI "int utf2wchar_char (wchar_t *" ucs ", char **" utf ");"
+.BI "int utf2wchar_str (wchar_t **" ucs ", char *" utf ");"
+.sp
+.BI "int utf8ucs4_char (u_int32_t *" ucs ", char **" utf ");"
+.BI "int utf8ucs4 (u_int32_t **" ucs ", char *" utf ");"
+.sp
+.BI "int ucs2utf8 (char **" utf ", u_int16_t *" ucs ");"
+.BI "int ucs2utf8_char (char **" utf ", u_int16_t " ucs ");"
+.BI "int ucs2utf8_len (u_int16_t *" ucs ");"
+.BI "int ucs2utf8_charlen (u_int16_t " ucs ");"
+.sp
+.BI "int wchar2utf_str (char **" ustr ", wchar_t *" wstr ");"
+.BI "int wchar2utf_char (char **" ustr ", wchar_t " wch ");"
+.BI "int wchar2utf_len (wchar_t *" wstr ");"
+.BI "int wchar2utf_charlen (wchar_t " wch ");"
+.sp
+.BI "int ucs4utf8 (char **" utf ", u_int32_t *" ucs ");"
+.BI "int ucs4utf8_char (char **" utf ", u_int32_t " ucs ");"
+.BI "int ucs4utf8_len (u_int32_t *" ucs ");"
+.BI "int ucs4utf8_charlen (u_int32_t " ucs ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B utf8ucs2_char
+converts a single unicode character in utf8 format into utf16 (ucs2)
+format. The pointer to the utf8-string is updated pointing behind the
+converted character.
+.TP
+.B utf8ucs2
+converts a utf8-string into utf16 format. The output buffer is allocated
+and must be freed.
+.TP
+.B utf2wchar_char
+identical to utf8ucs2_char. Only that the type wchar_t is used instead of
+u_int16_t.
+.TP
+.B utf2wchar_str
+identical to utf8ucs2. Only that the type wchar_t is used instead of
+u_int16_t.
+.TP
+.B utf8ucs4_char
+converts a single unicode character in utf8 format into utf32 (ucs4)
+format. The pointer to the utf8-string is updated pointing behind the
+converted character.
+.TP
+.B utf8ucs4
+converts a utf8-string into utf32 (ucs4) format. 
+The output buffer is allocated and must be freed.
+.TP
+.B ucs2utf8
+converts a utf16 (ucs2) string into utf8 format.
+The output buffer is allocated and must be freed.
+.TP
+.B ucs2utf8_char
+converts a single unicode character in utf16 (ucs2) format into utf8
+format. The pointer to the utf8-string is updated pointing behind the
+converted character.
+.br
+.B Note:
+The buffer to hold the utf-string must be allocated, and big enough
+to hold the result.
+.TP
+.B ucs2utf8_len
+returns the number of bytes needed (without the terminating NUL
+character) when converting a utf16 (ucs2) string into utf8 format.
+.TP
+.B ucs2utf8_charlen
+returns the number of bytes needed to hold a single character
+when converted from utf16 (ucs2) into utf8 format.
+.TP
+.B wchar2utf_str
+identical to ucs2utf8. Only that the type wchar_t is used instead of
+u_int16_t.
+.TP
+.B wchar2utf_char
+identical to ucs2utf8_char. Only that the type wchar_t is used instead of
+u_int16_t.
+.TP
+.B wchar2utf_len
+identical to ucs2utf8_len. Only that the type wchar_t is used instead of
+u_int16_t.
+.TP
+.B wchar2utf_charlen
+identical to ucs2utf8_charlen. Only that the type wchar_t is used instead of
+u_int16_t.
+.TP
+.B ucs4utf8
+converts a utf16 (ucs2) string into utf8 format.
+The output buffer is allocated and must be freed.
+.TP
+.B ucs4utf8_char
+converts a single unicode character in utf16 (ucs2) format into utf8
+format. The pointer to the utf8-string is updated pointing behind the
+converted character.
+.br
+.B Note:
+The buffer to hold the utf-string must be allocated, and big enough
+to hold the result.
+.TP
+.B ucs4utf8_len
+returns the number of bytes needed (without the terminating NUL
+character) when converting a utf16 (ucs2) string into utf8 format.
+.TP
+.B ucs4utf8_charlen
+returns the number of bytes needed to hold a single character
+when converted from utf16 (ucs2) into utf8 format.
+
+.SH BUG
+The functions that convert from / to utf16 does not handle correctly 
+characters above the 64k - limit (outside the BMP). When converting
+to utf16 all characters abave this limit are converted to the
+illegal character 0xffff. When converted from utf16, the result will
+be in cesu8 (i.e. surrogates are not translated, but treated as
+ordinary unicode chars).
+
+.SH "SEE ALSO"
+.BR errors "(5fr), "
+.BR utf8clen "(3fr), "
+.BR utf8bcmp "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

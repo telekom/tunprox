@@ -1,0 +1,146 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "keymap" 3fr "25 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+map_insert,
+map_cpyinsert,
+map_setval,
+map_setorinsert,
+map_copy,
+map_remove,
+map_removeall,
+map_getval,
+map_getkeyval,
+map_haskey,
+map_setflags,
+map_unsetflags,
+map_allsetflags,
+map_allunsetflags,
+map_getflags,
+map_isro - 
+functions to map key/value pairs.
+
+
+.SH SYNOPSIS
+.nf
+.BI "int map_insert (struct keymap *" keymap ", char *" key ", char *" val ", int " flags ");"
+.BI "int map_cpyinsert (struct keymap *" keymap ", char *" key ", char *" val ", int " flags ");"
+.BI "int map_setval (struct keymap *" keymap ", char *" key ", char " *val ", int " flags ");"
+.BI "int map_setorinsert (struct keymap *" keymap ", char *" key ", char *" val ", int " flags ");"
+.BI "int map_copy (struct keymap *" dest ", struct keymap *" src ", int " flags ");"
+.BI "int map_remove (struct keymap *" keymap ", char *" key ", int " flags ");"
+.BI "int map_removeall (struct keymap *" keymap ");"
+.BI "int map_getval (char **" val ", struct keymap *" keymap ", char *" key ", int " flags ");"
+.BI "int map_getkeyval (struct keyval **" keyval ", struct keymap *" keymap ", char *" key ", int " flags ");"
+.BI "int map_haskey (struct keymap *" keymap ", char *" key ", int " flags ");"
+.BI "int map_setflags (struct keymap *" keymap ", char *" key ", int " iflags ", int " flags ");"
+.BI "int map_unsetflags (struct keymap *" keymap ", char *" key ", int " iflags ", int " flags ");"
+.BI "int map_allsetflags (struct keymap *" keymap ", int " flags ");"
+.BI "int map_allunsetflags (struct keymap *" keymap ", int " flags ");"
+.BI "int map_getflags (int *" oflags ", struct keymap *" keymap ", char *" key ", int " flags ");"
+.BI "int map_isro (int *" isro ", struct keymap *" keymap ", char *" key ", int " flags ");"
+.fi
+
+
+.SH FLAGS
+.nf
+.BI "#define KEYMAP_F_NONE         " 0x00
+.BI "#define KEYMAP_F_CPY          " 0x01
+.BI "#define KEYMAP_F_DEL          " 0x02
+.BI "#define KEYMAP_F_DELKEY       " 0x04
+.BI "#define KEYMAP_F_RO           " 0x08
+.BI "#define KEYMAP_F_READONLY     " 0x08
+.BI "#define KEYMAP_F_IGNORE_CASE  " 0x10
+.BI "#define KEYMAP_F_TOLOWER      " 0x20
+.BI "#define KEYMAP_F_TOUPPER      " 0x40
+.fi
+
+
+.SH STRUCTURES
+.nf
+.B "struct keyval {"
+.B "   char  *key,"
+.B "         *val;"
+.B "   int   flags;"
+.B "};"
+.fi
+
+.nf
+.B "struct keymap {"
+.B "   struct keyval  *list;"
+.B "   int            listlen;"
+.B "};"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B map_insert
+.TP
+.B map_cpyinsert
+.TP
+.B map_setval
+.TP
+.B map_setorinsert
+.TP
+.B map_copy
+.TP
+.B map_remove
+.TP
+.B map_removeall
+.TP
+.B map_getval
+.TP
+.B map_getkeyval
+.TP
+.B map_haskey
+.TP
+.B map_setflags
+.TP
+.B map_unsetflags
+.TP
+.B map_allsetflags
+.TP
+.B map_allunsetflags
+.TP
+.B map_getflags
+.TP
+.B map_isro
+
+
+.SH "SEE ALSO"
+.BR cfmap "(3fr), "
+.BR map_insert "(3fr), "
+.BR map_cpyinsert "(3fr), "
+.BR map_setval "(3fr), "
+.BR map_setorinsert "(3fr), "
+.BR map_copy "(3fr), "
+.BR map_remove "(3fr), "
+.BR map_removeall "(3fr), "
+.BR map_getval "(3fr), "
+.BR map_getkeyval "(3fr), "
+.BR map_haskey "(3fr), "
+.BR map_setflags "(3fr), "
+.BR map_unsetflags "(3fr), "
+.BR map_allsetflags "(3fr), "
+.BR map_allunsetflags "(3fr), "
+.BR map_getflags "(3fr), "
+.BR map_isro "(3fr), "
+.BR frlib_base "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

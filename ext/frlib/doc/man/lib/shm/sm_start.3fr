@@ -1,0 +1,78 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "shm" 3fr "22 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_start,
+sm_delstart,
+sm_stop,
+sm_maydel -
+functions to handle the startpage
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+.BI "int sm_start (char *" name ", int " size ", int " flags ");"
+.BI "int sm_delstart ();"
+.BI "int sm_stop ();"
+.BI "int sm_maydel ();"
+.fi
+
+.SH DESCRIPTION
+The startpage is a dedicated named shared page created by sm_fopen(3fr).
+Non-named shared pages are identified by numerical ids. These are created
+by sm_new(3fr). To access a "foreign" shared page one need to know the
+id, these can be passed in shared pointers (see sm_ptmap(3fr)) which can
+be used inside shared pages. However at one point you must start, and
+this implementation does not make use of the key feature of shmat.
+Therefore does exist a named shared page, where to find the first pointers
+to the rest of the information.
+.br
+Naturally any named shared page can be used for that. There is no need for
+a dedicated page. In older implementations however there had been only
+one named shared page called startpage. These functions here do remain
+for backward compatibility only.
+.TP
+.B sm_start
+This function do create the startpage. It just calls sm_fopen() assuring
+that the flag SM_F_STARTPAGE is set.
+.TP
+.B sm_delstart
+destroys the startpage. This is identical to sm_fclose() passing the name
+of the startpage and the flag SM_F_DESTROY.
+.TP
+.B sm_stop
+is a combination of sm_delstart and sm_delall, hence it
+destroys the startpage and deletes all pages created with sm_new(3fr).
+No other named shared memory pages are destroyed.
+.TP
+.B sm_maydel
+is identical to sm_stop, only that before deleting a page, it checks
+wether the page is already marked as deleted.
+
+
+.SH "SEE ALSO"
+.BR shm "(3fr), "
+.BR sm_fopen "(3fr), "
+.BR sm_new "(3fr), "
+.BR sm_delall "(3fr), "
+.BR sm_ptmap "(3fr), "
+.BR sm_startpage_getinfo "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

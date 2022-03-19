@@ -1,0 +1,101 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_set_cfname" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_default_cfname,
+cf_set_cfname,
+cf_get_cfname
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.B #define CF_FLAG_DEF_NONE	0x00
+.B #define CF_FLAG_DEF_USCORE	0x01
+.B #define CF_FLAG_NOLOCAL_CF	0x02
+.B #define CF_FLAG_NOHOME_CF	0x04
+.B #define CF_FLAG_NOGLOBAL_CF	0x08
+.sp
+.BI "int cf_default_cfname (char*" cfname ", int " flags ");"
+.BI "int cf_set_cfname (char*" cfname ");"
+.BI "char *cf_get_cfname ();"
+.fi
+
+.SH DESCRIPTION
+The function 
+.I cf_default_cfname
+does set the base name of the default config file to use. If the given
+.I cfname
+contains slashes, the basename is used (the string after the last slash).
+If the flag 
+.I CF_FLAG_DEF_USCORE
+is set, the basename of cfname is split at the first underscore, and the
+string before that underscore is used as basename of the default config
+file. This is usefull if several programms do use the same config file.
+All that programmes might start with the basename of the config file,
+and the programmes pass argv[0] to cf_default_cfname.
+.br
+The config file is then searched as
+.I ./<basename>.rc
+(hence in the current working directory)
+then
+.I $HOME/.<basename>rc
+and finally
+.I /etc/<basename>.rc
+The first of that files that does exist is used as config file.
+.br
+If the 
+.I CF_FLAG_NOLOCAL_CF 
+flag is set, the config file is 
+.B not
+searched in the current working directory.
+If the flag
+.I CF_FLAG_NOHOME_CF
+is set, the config file is 
+.B not
+searched in the home directory of the user.
+If the flag
+.I CF_FLAG_NOGLOBAL_CF
+is set, the config file is
+.B not
+searched in /etc.
+.sp
+The function
+.I cf_set_cfname
+sets the config file (with complete path). This setting overwrites the
+setting of cf_default_cfname.
+.sp
+The function
+.I cf_get_cfname
+does return the name of the config file set by cf_set_cfname. This function
+does 
+.B not
+return the name of the default config file used.
+This function is usefull, if you want to pass the config file name to another
+programme.
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr), "
+.BR cf_read "(3fr)."
+
+
+
+

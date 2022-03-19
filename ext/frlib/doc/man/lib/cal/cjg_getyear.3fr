@@ -1,0 +1,70 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_getyear" 3fr "03 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_getweekday,
+cjg_getdayofyear,
+cjg_getdaysince1970,
+cjg_getyear -
+convenient function to get just one information from a timestamp.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "int cjg_getweekday (tmo_t " tstamp ");"
+.BI "int cjg_getdayofyear (tmo_t " tstamp ");"
+.BI "int cjg_getdaysince1970 (tmo_t " tstamp ");"
+.BI "tmo_t cjg_getyear (tmo_t " tstamp ");"
+.fi
+
+
+.SH DESCRIPTION
+These function call
+.I cjg_breakdown
+with rule set to
+.I CRUL_TZ_CJG
+and flags to 0 (only cjg_getdaysince1970 uses the flag 
+.IR CJG_F_DAYTIME ).
+Then the functions do return the requested information.
+.TP
+.B cjg_getweekday
+returns the weekday between 0 = monday and 6 = sunday.
+.TP
+.B cjg_getdayofyear
+returns the day of year (between 1 and 366).
+.TP
+.B cjg_getdaysince1970
+returns the days since 1970. Day 0 is the 1st january 1970.
+.TP
+.B cjg_getyear
+returns the year since the supposed birth of christ. Years before
+christ are negative.
+.B Note: 
+There is no year 0. Years jump from -1 (1 BC) to 1 (1 AD).
+
+
+.SH "SEE ALSO"
+.BR cjg_breakdown "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR cjg_prttimestr "(3fr), "
+.BR cjg_isleap "(3fr), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

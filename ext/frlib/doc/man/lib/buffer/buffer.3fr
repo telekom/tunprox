@@ -1,0 +1,222 @@
+.\" Copyright 1999 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH BUFFER 3fr  "July 16, 1999" "Frank Reker" "frlib"
+.SH NAME
+bufopen, bufclose, bufcloseall, bufsetfilename, bufsetflags, bufunsetflags, 
+bufsetmaxsize, bufsetmaxmemsize, bufresetoverflow, bufgetfilename,
+bufgetflags, bufgetmaxsize, bufgetmaxmemsize, bufgettype, bufgetorigtype,
+bufoverflow, bufcount, buflen, 
+bufprint, bufnprint, bufputstr, bufnputstr, bufputc, bufputunic,
+bufprintf, bufvprintf, bufnprintf, bufvnprintf, buftprintf, bufvtprintf,
+bufgetstr, bufgetstr2, bupfprints, bufprintout, bufnprintout,
+bufcp, bufmv, bufconvert, bufdup, buftrunc, bufclean, bufevallen, bufsetlen,
+bufgetref, buffileopen, buffileclose
+\- string buffer operations
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI BUFFER\ bufopen\ (int buffer_type,\ u_int32_t\ flags);
+.sp
+.BI int\ bufclose\ (BUFFER\ buf);
+.sp
+.BI int\ bufcloseall\ ();
+.sp
+.nl
+.BI int\ bufsetfilename\ (BUFFER\ buf, char\ *filename);
+.sp
+.BI int\ bufsetflags\ (BUFFER\ buf,\ u_int32_t\ _flags);
+.sp
+.BI int\ bufunsetflags\ (BUFFER\ buf,\ u_int32_t\ _flags);
+.sp
+.BI int\ bufsetmaxsize\ (BUFFER\ buf,\ u_int32_t\ _max_size);
+.sp
+.BI int\ bufsetmaxmemsize\ (BUFFER\ buf,\ u_int32_t\ _max_mem_size);
+.sp
+.BI int\ bufresetoverflow\ (BUFFER\ buf);
+.sp
+.nl
+.BI char*\ bufgetfilename\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufgetflags\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufgetmaxsize\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufgetmaxmemsize\ (BUFFER\ buf);
+.sp
+.BI int\ bufgettype\ (BUFFER\ buf);
+.sp
+.BI int\ bufgetorigtype\ (BUFFER\ buf);
+.sp
+.BI int\ bufoverflow\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufcount\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ buflen\ (BUFFER\ buf);
+.sp
+.nl
+.BI int\ bufprint\ (BUFFER\ buf,\ const\ char\ *\ str);
+.sp
+.BI int\ bufnprint\ (BUFFER\ buf,\ const\ char\ *\ str,\ u_int32_t\ len);
+.sp
+.BI int\ bufputstr\ (BUFFER\ buf,\ char\ *\ s);
+.sp
+.BI int\ bufnputstr\ (BUFFER\ buf,\ char\ *\ s,\ u_int32_t\ len);
+.sp
+.BI int\ bufputc\ (BUFFER\ buf,\ const\ char\ c);
+.sp
+.BI int\ bufputunic\ (BUFFER\ buf,\ u_int32_t\ c);
+.sp
+.nl
+.BI int\ bufprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ ...);
+.sp
+.BI int\ bufvprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ va_list\ ap);
+.sp
+.BI int\ bufnprintf\ (BUFFER\ buf,\ u_int32_t\ num,\ const\ char\ *\ fmt,\ ...);
+.sp
+.BI int\ bufvnprintf\ (BUFFER\ buf,\ u_int32_t\ num,\ const\ char\ *\ fmt,\ va_list\ ap);
+.sp
+.BI int\ buftprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ ...);
+.sp
+.BI int\ bufvtprintf\ (BUFFER\ buf,\ const\ char\ *\ fmt,\ va_list\ ap);
+.sp
+.nl
+.BI char\ *\ bufgetstr\ (BUFFER\ buf);
+.sp
+.BI int\ bufgetstr2\ (BUFFER\ buf,\ char\ **dest);
+.sp
+.BI int\ bufprints\ (BUFFER\ buf,\ char\ *\ dest);
+.sp
+.BI int\ bufprintout\ (BUFFER\ buf,\ FILE\ *\ f);
+.sp
+.BI int\ bufnprintout\ (BUFFER\ buf,\ FILE\ *\ f,\ u_int32_t\ len);
+.sp
+.nl
+.BI int\ bufcp\ (BUFFER\ dest,\ BUFFER\ src);
+.sp
+.BI int\ bufmv\ (BUFFER\ dest,\ BUFFER\ src);
+.sp
+.BI int\ bufconvert\ (BUFFER\ buf,\ int\ newtype);
+.sp
+.BI int\ bufdup\ (BUFFER\ *dest,\ BUFFER\ src);
+.sp
+.nl
+.BI int\ buftrunc\ (BUFFER\ buf,\ u_int32_t\ len);
+.sp
+.BI int\ bufclean\ (BUFFER\ buf);
+.sp
+.nl
+.BI int\ bufevallen\ (BUFFER\ buf);
+.sp
+.BI int\ bufsetlen\ (BUFFER\ buf,\ u_int32_t\ len);
+.sp
+.BI void\ *\ bufgetref\ (BUFFER\ buf);
+.sp
+.BI int\ buffileopen\ (BUFFER\ buf);
+.sp
+.BI int\ buffileclose\ (BUFFER\ buf);
+.fi
+.SH DESCRIPTION
+These buffer functions perform operations on string buffers.
+Every buffer is of type BUFFER. With bufopen()
+a new buffer is created and a pointer to it is returned. This is to be used
+with the other functions.
+Currently there are five buffer types: null buffers (doesn't buffer anything,
+only a dummy buffer), mem buffers (uses a linked list of strings as buffer),
+cont buffers (uses one string as buffer, if it becomes too small, it is
+reallocated), block buffers (a linked list of constant length strings)
+and file buffers (uses temporary files to buffer).
+Which one is the best, depends on the type of application. Non underestimate
+the time needed for dynamic memory allocation. I once encountered, that
+file buffers had been 40 times faster than mem or cont buffers. The block
+buffers there are a good compromise considering performance. However, there
+are applications, too, where mem or cont buffers are faster. 
+If you don't use the bufgetref functions, it is transparent which buffer
+type you use. So you can easily change it, if you encounter bad performance.
+.nf
+.nl
+.fi
+The buffer operations are part of the 
+.B frlib,
+that is available as shared and static library.
+To use this lib you have to use the compiler option
+.BI -lfr
+.nf
+.nl
+.fi
+See the individual man pages for descriptions of each
+function.
+.SH "BUGS"
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are 
+welcome, too.
+
+.SH "SEE ALSO"
+.BR bufopen "(3fr), " 
+.BR bufclose "(3fr), " 
+.BR bufcloseall "(3fr), " 
+.BR bufsetfilename "(3fr), "
+.BR bufsetflags "(3fr), " 
+.BR bufunsetflags "(3fr), " 
+.BR bufsetmaxsize "(3fr), "
+.BR bufsetmaxmemsize "(3fr), " 
+.BR bufresetoverflow "(3fr), " 
+.BR bufgetfilename "(3fr), "
+.BR bufgetflags "(3fr), " 
+.BR bufgetmaxsize "(3fr), " 
+.BR bufgetmaxmemsize "(3fr), "
+.BR bufgettype "(3fr), " 
+.BR bufgetorigtype "(3fr), " 
+.BR bufoverflow "(3fr), "
+.BR bufcount "(3fr), " 
+.BR buflen "(3fr), " 
+.BR bufprint "(3fr), " 
+.BR bufnprint "(3fr), "
+.BR bufputstr "(3fr), " 
+.BR bufnputstr "(3fr), " 
+.BR bufputc "(3fr), " 
+.BR bufputunic "(3fr), "
+.BR bufprintf "(3fr), " 
+.BR bufvprintf "(3fr), " 
+.BR bufnprintf "(3fr), " 
+.BR bufvnprintf "(3fr), "
+.BR buftprintf "(3fr), " 
+.BR bufvtprintf "(3fr), " 
+.BR bufgetstr "(3fr), " 
+.BR bufgetstr2 "(3fr), "
+.BR bupfprints "(3fr), " 
+.BR bufprintout "(3fr), " 
+.BR bufnprintout "(3fr), " 
+.BR bufcp "(3fr), "
+.BR bufmv "(3fr), " 
+.BR bufconvert "(3fr), " 
+.BR bufdup "(3fr), " 
+.BR buftrunc "(3fr), "
+.BR bufclean "(3fr), " 
+.BR bufevallen "(3fr), " 
+.BR bufsetlen "(3fr), " 
+.BR bufgetref "(3fr), "
+.BR buffileopen "(3fr), " 
+.BR buffileclose "(3fr)."

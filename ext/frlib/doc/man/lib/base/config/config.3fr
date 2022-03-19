@@ -1,0 +1,198 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "config" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_getvar,
+cf_getvar2,
+cf_getvarf,
+cf_vgetvarf,
+cf_getvarf2,
+cf_vgetvarf2,
+cf_getval,
+cf_getval2,
+cf_getnumarr,
+cf_getarr,
+cf_getarr2,
+cf_getarrnodef,
+cf_getarri,
+cf_getarri2,
+cf_getarrx,
+cf_getarrxwi,
+cf_getmarr,
+cf_getmarr2,
+cf_vgetmarr,
+cf_vgetmarr2,
+cf_get2arr,
+cf_get2arr2,
+cf_isyes,
+cf_atoi,
+cf_atotm,
+cf_default_cfname,
+cf_set_cfname,
+cf_get_cfname,
+cf_read,
+cf_mayread,
+cf_reread,
+cf_hup_reread,
+cf_parse,
+cf_register_cv_list,
+cf_deregister_cv_list,
+cf_hfree_cvlist,
+cf_free_config,
+cf_begin_read,
+cf_end_read,
+cf_end_read_cb,
+cf_register_reread_callback,
+cf_deregister_reread_callback,
+cf_parse_string,
+cf_parse_table,
+cf_print_table,
+cf_print_config
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.BI "char * cf_getvar (char *" var ");"
+.BI "char * cf_getvar2 (char *" var ", char *" defvalue ");"
+.BI "char * cf_getvarf (const char *" fmt ", ...);"
+.BI "char * cf_vgetvarf (const char *" fmt ", va_list " ap ");"
+.BI "char * cf_getvarf2 (const char *" defval ", const char *" fmt ", ...);"
+.BI "char * cf_vgetvarf2 (const char *" defval ", const char *" fmt ", va_list " ap ");"
+.sp
+.BI "char * cf_getval (char *" var ");"
+.BI "char * cf_getval2 (char *" var ", char *" defvalue ");"
+.sp
+.BI "int cf_getnumarr (char *" var ");"
+.BI "char * cf_getarr (char *" var ", char *" idx ");"
+.BI "char * cf_getarr2 (char *" var ", char *" idx ", char *" defvalue ");"
+.BI "char * cf_getarrnodef (char *" var ", char *" idx ");"
+.sp
+.BI "char * cf_getarri (char *" var ", int " idx ");"
+.BI "char * cf_getarri2 (char *" var ", int " idx ", char *" defvalue ");"
+.sp
+.BI "char * cf_getarrx (char *" var ", int " x ");"
+.BI "char * cf_getarrxwi (char *" var ", int " x ", char **" idx ");"
+.BI "char * cf_getmarr (char *" var ", int " numidx ", ...);"
+.BI "char * cf_getmarr2 (char *" var ", char *" defval ", int " numidx ", ...);"
+.BI "char * cf_vgetmarr (char *" var ", int " numidx ", va_list " ap ");"
+.BI "char * cf_vgetmarr2 (char *" var ", char *" defval ", int " numidx ", va_list " ap ");"
+.BI "char * cf_get2arr (char *" var ", char *" idx1 ", char *" idx2 ");"
+.BI "char * cf_get2arr2 (char *" var ", char *" idx1 ", char *" idx2 ", char * "defval ");"
+.sp
+.BI "int cf_isyes (char * " val ");"
+.BI "int cf_atoi (char *" str ");"
+.BI "int cf_atotm (char *" str ");"
+.sp
+.B #define CF_F_NONE       0x00
+.B #define CF_F_USCORE     0x01
+.B #define CF_F_NOLOCAL    0x02
+.B #define CF_F_NOHOME     0x04
+.B #define CF_F_NOGLOBAL   0x08
+.B #define CF_F_NOENV      0x10
+.sp
+.BI "int cf_default_cfname (char*" cfname ", int " flags ");"
+.BI "int cf_set_cfname (char*" cfname ");"
+.BI "char *cf_get_cfname ();"
+.BI "int cf_read ();"
+.BI "int cf_mayread ();"
+.B #define CF_MAY_READ	{ if (!config_read) read_config(); cf_mayread (); }
+.B #define CF_MAYREAD CF_MAY_READ
+.BI "int cf_reread ();"
+.BI "int cf_hup_reread ();"
+.BI "int cf_parse (char *" buf ", struct cf_cvlist*" list ");"
+.BI "int cf_register_cv_list (struct cf_cvlist *" list ");"
+.BI "int cf_deregister_cv_list (struct cf_cvlist *" list ");"
+.BI "int cf_hfree_cvlist (struct cf_cvlist *" list ", int " freebufs ");"
+.BI "int cf_free_config ();"
+.sp
+.B typedef int (*cf_reread_t) ();
+.sp
+.BI "int cf_begin_read ();"
+.BI "int cf_end_read ();"
+.BI "int cf_end_read_cb (cf_reread_t " func ");"
+.BI "int cf_register_reread_callback (cf_reread_t " func ");"
+.BI "int cf_deregister_reread_callback (cf_reread_t " func ");"
+.sp
+.BI "int cf_parse_string (char *" str ", int " type ");"
+.BI "int cf_parse_table (char *" str ", int32_t **" table ");"
+.sp
+.BI "int cf_print_table (int32_t **" tab ");"
+.BI "int cf_print_config ();"
+.fi
+
+.SH DESCRIPTION
+Functions for parsing and accessing the config file. The most important,
+and often only needed functions are the cf_getvar- and cf_getarr- functions as
+well as cf_isyes. The other functions are needed only for special cases.
+See the documentation of the single functions.
+See 
+.BR frlib.rc "(5fr) "
+for an explanation of the config file format.
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR cf_getvar "(3fr), "
+.BR cf_getvar2 "(3fr), "
+.BR cf_getvarf "(3fr), "
+.BR cf_vgetvarf "(3fr), "
+.BR cf_getvarf2 "(3fr), "
+.BR cf_vgetvarf2 "(3fr), "
+.BR cf_getval "(3fr), "
+.BR cf_getval2 "(3fr), "
+.BR cf_getnumarr "(3fr), "
+.BR cf_getarr "(3fr), "
+.BR cf_getarr2 "(3fr), "
+.BR cf_getarrnodef "(3fr), "
+.BR cf_getarri "(3fr), "
+.BR cf_getarri2 "(3fr), "
+.BR cf_getarrx "(3fr), "
+.BR cf_getarrxwi "(3fr), "
+.BR cf_getmarr "(3fr), "
+.BR cf_getmarr2 "(3fr), "
+.BR cf_vgetmarr "(3fr), "
+.BR cf_vgetmarr2 "(3fr), "
+.BR cf_get2arr "(3fr), "
+.BR cf_get2arr2 "(3fr), "
+.BR cf_isyes "(3fr), "
+.BR cf_atoi "(3fr), "
+.BR cf_atotm "(3fr), "
+.BR cf_default_cfname "(3fr), "
+.BR cf_set_cfname "(3fr), "
+.BR cf_get_cfname "(3fr), "
+.BR cf_read "(3fr), "
+.BR cf_mayread "(3fr), "
+.BR cf_reread "(3fr), "
+.BR cf_hup_reread "(3fr), "
+.BR cf_parse "(3fr), "
+.BR cf_register_cv_list "(3fr), "
+.BR cf_deregister_cv_list "(3fr), "
+.BR cf_hfree_cvlist "(3fr), "
+.BR cf_free_config "(3fr), "
+.BR cf_begin_read "(3fr), "
+.BR cf_end_read "(3fr), "
+.BR cf_end_read_cb "(3fr), "
+.BR cf_register_reread_callback "(3fr), "
+.BR cf_deregister_reread_callback "(3fr), "
+.BR cf_parse_string "(3fr), "
+.BR cf_parse_table "(3fr), "
+.BR cf_print_table "(3fr), "
+.BR cf_print_config "(3fr)."
+
+
+
+

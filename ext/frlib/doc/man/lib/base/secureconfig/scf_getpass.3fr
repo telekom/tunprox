@@ -1,0 +1,52 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "scf_getpass" 3fr "15 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+scf_getfile,
+scf_getpass,
+scf_havefile,
+scf_forgetpass
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/secureconfig.h>
+.sp
+.BI "int scf_getfile (char *" filename ", char **" buf ", int *" len ");"
+.BI "char * scf_getpass();"
+.BI "int scf_havefile ();"
+.BI "void scf_forgetpass();"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B scf_getfile
+.TP
+.B scf_getpass
+.TP
+.B scf_havefile
+.TP
+.B scf_forgetpass
+
+
+.SH "SEE ALSO"
+.BR secureconfig "(3fr), "
+.BR config "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

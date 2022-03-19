@@ -1,0 +1,41 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "sm_fpage_getpage" 3fr "22 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+sm_fpage_getpage
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/shm.h>
+.sp
+.BI "char *sm_fpage_getpage (void *" addr ");"
+.fi
+
+.SH DESCRIPTION
+This function searches the named shared memory page in which the
+given address lies and return its name. In case the address
+do not belong to a named shared memory page a NULL pointer is 
+returned.
+
+
+.SH "SEE ALSO"
+.BR shm "(3fr), "
+.BR sm_fopen "(3fr), "
+.BR sm_ptrev "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

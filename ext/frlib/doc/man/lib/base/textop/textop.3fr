@@ -1,0 +1,193 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "text operations" 3fr "24 feb 2010" "Frank Reker" "frlib"
+.SH NAME
+iswhite,
+isnum,
+range,
+ishex,
+isoctal,
+ISB64CHAR,
+top_gethexnum,
+top_base64decode,
+top_base64encode,
+top_base64encode_short,
+top_base32encode_short,
+top_dos2unix,
+top_unix2dos,
+top_getline,
+top_getfield,
+top_findchar,
+top_findstr,
+top_striplncomment,
+top_skipwhite,
+top_skipwhiteplus,
+top_stripwhite,
+top_delcr,
+top_atoi64,
+top_atou64,
+top_isnum,
+utf2wchar_char,
+utf2wchar_str,
+utf8ucs2_char,
+utf8ucs2,
+utf8ucs4_char,
+utf8ucs4,
+wchar2utf_str,
+wchar2utf_char,
+wchar2utf_len,
+wchar2utf_charlen,
+ucs2utf8,
+ucs2utf8_char,
+ucs2utf8_len,
+ucs2utf8_charlen,,
+ucs4utf8,
+ucs4utf8_char,
+ucs4utf8_len,
+ucs4utf8_charlen,
+utf8blen,
+utf8clen,
+utf8tlen,
+utf8bcmp,
+utf8ccmp,
+utf8tcmp,
+utf8lcmp,
+top_lat1utf8,
+top_utf8lat1
+
+
+.SH DESCRIPTION
+.TP
+.BR iswhite ", " isnum ", " range ", " ishex ", " isoctal ", " ISB64CHAR
+Macros for character checking like isalnum(3).
+.TP
+.B top_gethexnum
+Function for converting hex numbers from string to integer.
+.TP
+.BR top_base64decode ", " top_base64encode ", " top_base64encode_short ", " top_base32encode_short
+Functions for base 64/32 (en/de)-coding
+.TP
+.BR top_dos2unix ", " top_unix2dos
+Converts text from to dos line termination.
+.TP
+.BR top_getline ", " top_getfield
+Splits text in lines / fields.
+.TP
+.BR top_findchar ", " top_findstr
+Finding characters or strings in strings.
+.TP
+.BR top_striplncomment ", " top_skipwhite ", " top_skipwhiteplus ", " top_stripwhite
+Strips away white spaces or line comments (e.g. everything from # to line end) in strings.
+.TP
+.B top_delcr
+Deletes carrage return characters in texts.
+.TP
+.BR top_atoi64 ", " top_atou64
+String to integer convertion for 64 bit integers.
+.TP
+.B top_isnum
+checks wether a string is a number.
+.TP
+.B Unicode conversion functions.
+The frlib contains a couple of functions for converting between utf8, 
+utf16 and utf32.
+These functions are:
+.BR utf2wchar_char ", "
+.BR utf2wchar_str ", "
+.BR utf8ucs2_char ", "
+.BR utf8ucs2 ", "
+.BR utf8ucs4_char ", "
+.BR utf8ucs4 ", "
+.BR wchar2utf_str ", "
+.BR wchar2utf_char ", "
+.BR wchar2utf_len ", "
+.BR wchar2utf_charlen ", "
+.BR ucs2utf8 ", "
+.BR ucs2utf8_char ", "
+.BR ucs2utf8_len ", "
+.BR ucs2utf8_charlen ", "
+.BR ucs4utf8 ", "
+.BR ucs4utf8_char ", "
+.BR ucs4utf8_len ", "
+.BR ucs4utf8_charlen
+.TP
+.BR utf8blen ", " utf8clen ", " utf8tlen
+Functions for calculating the string length in utf8 encoded strings.
+.TP
+.BR utf8bcmp ", " utf8ccmp ", " utf8tcmp ", " utf8lcmp
+Functions for comparing two utf8 strings.
+.TP
+.BR top_lat1utf8 ", " top_utf8lat1
+Converts strings between latin1 and utf8.
+
+.SH "SEE ALSO"
+.BR iswhite "(3fr), "
+.BR isnum "(3fr), "
+.BR range "(3fr), "
+.BR ishex "(3fr), "
+.BR isoctal "(3fr), "
+.BR ISB64CHAR "(3fr), "
+.BR top_gethexnum "(3fr), "
+.BR top_base64decode "(3fr), "
+.BR top_base64encode "(3fr), "
+.BR top_base64encode_short "(3fr), "
+.BR top_base32encode_short "(3fr), "
+.BR top_dos2unix "(3fr), "
+.BR top_unix2dos "(3fr), "
+.BR top_getline "(3fr), "
+.BR top_getfield "(3fr), "
+.BR top_findchar "(3fr), "
+.BR top_findstr "(3fr), "
+.BR top_striplncomment "(3fr), "
+.BR top_skipwhite "(3fr), "
+.BR top_skipwhiteplus "(3fr), "
+.BR top_stripwhite "(3fr), "
+.BR top_delcr "(3fr), "
+.BR top_atoi64 "(3fr), "
+.BR top_atou64 "(3fr), "
+.BR top_isnum "(3fr), "
+.BR utf2wchar_char "(3fr), "
+.BR utf2wchar_str "(3fr), "
+.BR utf8ucs2_char "(3fr), "
+.BR utf8ucs2 "(3fr), "
+.BR utf8ucs4_char "(3fr), "
+.BR utf8ucs4 "(3fr), "
+.BR wchar2utf_str "(3fr), "
+.BR wchar2utf_char "(3fr), "
+.BR wchar2utf_len "(3fr), "
+.BR wchar2utf_charlen "(3fr), "
+.BR ucs2utf8 "(3fr), "
+.BR ucs2utf8_char "(3fr), "
+.BR ucs2utf8_len "(3fr), "
+.BR ucs2utf8_charlen "(3fr), ",
+.BR ucs4utf8 "(3fr), "
+.BR ucs4utf8_char "(3fr), "
+.BR ucs4utf8_len "(3fr), "
+.BR ucs4utf8_charlen "(3fr), "
+.BR utf8blen "(3fr), "
+.BR utf8clen "(3fr), "
+.BR utf8tlen "(3fr), "
+.BR utf8bcmp "(3fr), "
+.BR utf8ccmp "(3fr), "
+.BR utf8tcmp "(3fr), "
+.BR utf8lcmp "(3fr), "
+.BR top_lat1utf8 "(3fr), "
+.BR top_utf8lat1 "(3fr), "
+.BR frlib_base "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

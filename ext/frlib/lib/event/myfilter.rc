@@ -1,0 +1,20 @@
+
+RULEPATH="/etc/mdmd.d/rules"
+
+
+evfilter[mdmd] {
+   inrules = {
+	name == "foo/bar" => #foobar
+        var{pippo.1[17]} >= 42 => accept
+        => drop
+   }
+   out = "${RULEPATH}/mdmd.out"
+}
+
+
+evfilter/anyrules = {
+	name #= "pippo.*" => #pippo
+	=> accept
+}
+
+

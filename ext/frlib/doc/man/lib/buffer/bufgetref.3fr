@@ -1,0 +1,76 @@
+.\" Copyright (c) 1999 by Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.TH BUFGETREF 3fr  "July 16, 1999" "Frank Reker" "frlib"
+.SH NAME
+bufgetref, bufcount 
+\- gets direct access to the buffer
+.SH SYNOPSIS
+.nf
+.B #include\ <fr/buffer.h>
+.sp
+.BI void\ *\ bufgetref\ (BUFFER\ buf);
+.sp
+.BI u_int32_t\ bufcount\ (BUFFER\ buf);
+.sp
+.SH DESCRIPTION
+On null and mem buffers as well as block buffers
+.B bufgetref\ ()
+returns a NULL pointer. On file buffers it returns the file pointer
+(of type FILE *) of the temporary file used as buffer casted to a
+.B void
+pointer. On cont buffers a pointer to the internal variable 
+.I buffer 
+is returned. Hence the returned pointer is of type
+.B char\ **
+casted to a void pointer. This is necessary, cause the pointer 
+.I buffer 
+may change after a realloc ().
+To get access to the string you might use an expression such as:
+.nf
+.nl
+.fi
+.B *(char\ **)\ bufgetref\ (buf);
+.PP
+.B bufcount\ ()
+returns one for file and null buffers. For cont buffers it returns the
+amount of the allocated memory of the buffer string.
+For mem and block buffers it returns the number of used structures in the 
+linked list.
+.SH "RETURN VALUES"
+On error bufgetref returns a NULL pointer and bufcount returns zero.
+Otherwise see above.
+.SH "BUGS"
+You may not realloc () the buffer string in a cont buffer, cause
+you cannot change the internal variable bufferlen, which stores
+the amount of the allocated memory for that buffer string.
+.nf
+.nl
+.fi
+Bugreport to Frank Reker <frank@reker.net>.
+Please describe the problem as detailed as possible, and assure that
+it is not a bug in your application. If possible append an example
+program that shows the bug to your mail. Corrections in the library are
+welcome, too.
+.SH "SEE ALSO"
+.BR buffer "(3fr), " bufevallen (3fr),
+.BR bufgetstr (3fr)

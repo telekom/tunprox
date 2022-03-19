@@ -1,0 +1,31 @@
+# vim:tw=0:ts=3:wm=0:
+
+# set USE_DEBUG to yes if you want a debug version of frlib.
+# set it to no, to get a production version
+USE_DEBUG=yes
+
+# set USE_EFENCE to yes if you want the tools to be linked with
+# efence/duma. This does effect only the tools, not the lib itself
+USE_EFENCE=no
+
+# set INCLUDE_FAKE_REGISTRY to yes if you want to include the registry
+# part on a non windows system. the registry is then faked using the
+# berkley db, which then must be installed and included into your
+# binary that links against the frlib
+INCLUDE_FAKE_REGISTRY=yes
+
+# set STATIC_ONLY to yes, if you don't want a shared library. This
+# results in a non position independent compilation, and hence
+# enhance the performance a little bit.
+STATIC_ONLY=no
+
+# set to no if not interested in tool making
+MAKE_TOOLS=yes
+
+# set to no if c++ stuff shall not be made
+MK_CPLUSPLUS=yes
+
+# disable stacktrace function
+NO_STACKTRACE=no
+
+

@@ -1,0 +1,172 @@
+.\" Copyright 2003-2014 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "frlib" 3fr "22 feb 2010" "Frank Reker" "frlib"
+
+.SH NAME
+frlib - a collection of usefull functions and tool written by Frank Reker
+
+.SH HISTORY
+During the last years I have written a lot of C and C++ code. A lot
+of the functions I have written doess serve a general purpose, hence are
+usable outside the scope of the project they were written for. 
+Furthermore I had several versions of the same code in different
+projects.
+I have now collocted these functions and put into a single library, that
+I called frlib.
+In addition the frlib contains a couple of tools that are correlated to
+the library.
+
+
+.SH LICENSE
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for more details governing rights and limitations under the License.
+
+ The Original Code is part of the frlib.
+
+ The Initial Developer of the Original Code is
+ Frank Reker <frank@reker.net>.
+ Portions created by the Initial Developer are Copyright (C) 2003-2014
+ by the Initial Developer. All Rights Reserved.
+
+
+.SH USING THE LIBRARY IN YOUR PROJECT
+Both the static and the shared library
+can be used by opensource and by commercial products.
+See the license for more detail. The frlib is licensed under
+the MPL version 2.0 wich is compatible to (L)GPL.
+
+
+.SH OPERATING SYSTEMS
+The frlib is written and tested under Linux(tr) (32 and 64bit Intel
+plattforms). Most functions are tested under SunOS(tr) and Cygwin(tr)
+as well. The library in whole has not been tested on these plattforms.
+
+
+.SH DESCRIPTION
+The library is devided into several subsections which are described
+separately. These are:
+.TP
+.B base
+A collection of general purpose functions. Functions in other sections
+do make use of base functions. See:
+.B frlib_base(3fr)
+.TP
+.B shm
+Functions for handling shared memory. See:
+.B shm(3fr)
+.TP
+.B buffer
+A collection of buffer handling functions. See:
+.B buffer(3fr)
+.TP
+.B xml
+Contains an xml parser. See:
+.B xml(3fr)
+.TP
+.B connect
+Functions for handling inter process communications in the form of
+tcp/ip, unix sockets, pipes, serial port communication, a.s.o.
+See:
+.B connect(3fr)
+.TP
+.B mail
+Functions for parsing and generating emails. See
+.B mail(3fr)
+.TP
+.B spool
+Contains functions for spooling files to disk for later elaboration. These
+functions are rarely used directly. But there are a lot of tools included
+in the frlib, that do handle spooling. See:
+.B spool(3fr)
+.TP
+.B registry
+Contains functions for accessing the windows registry. These functions are
+only available when compiled under MS-Windows(tr). When compiled with 
+.I INCLUDE_FAKE_REGISTRY
+set to yes, these functions are available on Non-Windows systems as well,
+implemented on top of berkley-db. The only purpose is, that you can develope
+your software under linux and later compile it on windows(tr). Outside
+of this scope these functions are of little use on Non-Windows systems.
+Therefore they are disabled by default.
+See:
+.B registry(3fr)
+.TP
+.B cal
+Contains calendar and time based functions. See:
+.B cal(3fr)
+.TP
+.B cc
+A collection of C++ classes. Most of them are C++ bindings for the corresponding
+C functions.
+See:
+.B frlib_cc(3fr)
+.TP
+.B tools
+As mentioned earlier the frlib contains a collection of tools as well. See:
+.B frlib_tools(1fr)
+.TP
+.B config
+Even thu part of the base section, it is worth to mention it here. The frlib contains
+a very powerfull config file parser (See:
+.BR config "(3fr))."
+A couple of frlib functions do make use of that and request variables from the 
+config files, to make its behaviour configurable. See 
+.BR frlib.rc "(5fr) "
+for the format of the config file and for a set of config variables used by
+the frlib.
+
+.SH MULTITHREADING
+Not all functions in the frlib are thread safe. This does not mean, that the 
+library is unusable in multithreading environments, but only, that special
+care has to be taken. See the individual man pages for more information.
+
+.SH INSTALLING
+See 
+.B INSTALL(5fr)
+for more details.
+
+.SH BUGS
+Please send bugreports to (Frank Reker) frank (at) reker (dot) net.
+Explain the problem as detailed as possible and give code examples that
+demonstrate the bug as far as possible.
+
+Not everything is documented yet. Some of the man pages mentioned above
+do not exist yet.
+
+
+.SH "SEE ALSO"
+.BR frlib_base "(3fr), "
+.BR shm "(3fr), "
+.BR buffer "(3fr), "
+.BR connect "(3fr), "
+.BR xml "(3fr), "
+.BR mail "(3fr), "
+.BR registry "(3fr), "
+.BR spool "(3fr), "
+.BR frlib_cc "(3fr), "
+.BR frlib_tools "(1fr), "
+.BR config "(3fr), "
+.BR INSTALL "(5fr), "
+.BR frlib.log "(5fr), "
+.BR frlib.rc "(5fr)."
+
+
+
+

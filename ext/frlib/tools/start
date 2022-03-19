@@ -1,0 +1,214 @@
+#!/bin/sh
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 2.0
+#
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for more details governing rights and limitations under the License.
+#
+# The Original Code is part of the frlib.
+#
+# The Initial Developer of the Original Code is
+# Frank Reker <frank@reker.net>.
+# Portions created by the Initial Developer are Copyright (C) 2003-2014
+# by the Initial Developer. All Rights Reserved.
+#
+# ***** END LICENSE BLOCK *****
+
+
+
+conffile=""
+
+me="$0"
+bme="`basename $me`"
+pref2="`echo "$bme" | cut -f1 -d_`"
+pref=""
+test "$pref2" && pref="${pref2}_"
+
+if test "$pref2"; then
+	PATH=$PATH:/usr/local/$pref2/bin:/usr/local/$pref2/sbin
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/$pref2/lib
+	export PATH LD_LIBRARY_PATH
+fi
+
+ap2="<prog> ..."
+aa="start|stop|restart|status"
+helpstr="$bme: usage: $bme [-c <config file>] $aa [$ap2]"
+psfmt="-o pid=ppppppp  -o comm=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+psfmt2="-o pid=ppppppp -o args=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+psfmt3="-o pid=ppppppppp -o etime=eeeeeeeeeeeeeeeeeeeeeeeee"
+
+spoold="`${pref}rdconfig -v prog spoold`"
+if test "$spoold"; then
+	spoold="`basename "$spoold"`"
+else
+	spoold="${pref}spoold"
+fi
+
+
+set -- `getopt "c:hq" $*`;
+quiet=no;
+while test -n "$1"; do
+	case "$1" in
+	-h) 
+		echo "$helpstr" >&2
+		exit 0;
+		;;
+	-c)
+		conffile="-c $2";
+		shift 2;
+		;;
+	-q)
+		quiet=yes;
+		shift;
+		;;
+	--)
+		shift;
+		break;
+		;;
+	*)
+		echo "$helpstr" >&2
+		exit 1;
+		;;
+	esac
+done
+
+all_progs=`${pref}rdconfig -v $conffile all_progs | tr ',' ' '`
+
+
+action="$1"
+test "$action" && shift
+progs="$@"
+test "$progs" || progs="$all_progs"
+
+test "$action" || action="status"
+
+case "$action" in 
+start)
+	progs2=""
+	ret=0
+	for i in $progs; do
+		# test wether $i is already running
+		$me status $i >/dev/null || progs2="$progs2 $i"
+	done
+	if test "$progs2"; then
+		# start the requested programs
+		${pref}starter $conffile $progs2
+		ret="$?"
+	fi
+	test "$quiet" = yes || $0 status
+	exit $ret
+	;;
+stop)
+	for i in $progs; do 
+		#pid=`ps -e $psfmt | grep -w $i | awk '{ print $1; }'`
+		start_spoold=`${pref}rdconfig -v $conffile start_spoold $i 2>/dev/null`
+		if test "$start_spoold" = "yes"; then
+			pid=`ps -e $psfmt | grep -w "$spoold" | awk '{ print $1; }' | tr "\n" "|"`
+			pid="${pid}xxx"
+			pid=`ps -e $psfmt2 | egrep "^ *($pid)" | grep -w "p $i" | \
+					awk '{ print $1; }' | tr "\n" " "`
+		else
+			pid=`ps -e $psfmt | grep -w $i | awk '{ print $1; }' | tr "\n" " "`
+		fi
+		for j in $pid; do
+			kill $j
+		done
+	done
+	sleep 1
+	for i in $progs; do 
+		#pid=`ps -e $psfmt | grep -w $i | awk '{ print $1; }'`
+		start_spoold=`${pref}rdconfig $conffile start_spoold $i 2>/dev/null`
+		if test "$start_spoold" = "yes"; then
+			pid=`ps -e $psfmt | grep -w "$spoold" | awk '{ print $1; }' | tr "\n" "|"`
+			pid="${pid}xxx"
+			pid=`ps -e $psfmt2 | egrep "^ *($pid)" | grep -w "p $i" | \
+					awk '{ print $1; }' | tr "\n" " "`
+		else
+			pid=`ps -e $psfmt | grep -w $i | awk '{ print $1; }' | tr "\n" " "`
+		fi
+		for j in $pid; do
+			kill -9 $j 2>/dev/null
+		done
+	done
+	exit 0
+	;;
+status)
+	ret=0;
+	for i in $progs; do 
+		#pid=`ps -e | grep $i | awk '{ print $1; }' | tr "\n" " "`
+		start_spoold=`${pref}rdconfig -v $conffile start_spoold $i 2>/dev/null`
+		if test "$start_spoold" = "yes"; then
+			pid=`ps -e $psfmt | grep -w "$spoold" | awk '{ print $1; }' | tr "\n" "|"`
+			pid="${pid}xxx"
+			pid=`ps -e $psfmt2 | egrep "^ *($pid) " | grep -w "p $i" | \
+					awk '{ print $1; }' | tr "\n" "|"`
+		else
+			pid=`ps -e $psfmt | grep -w $i | awk '{ print $1; }' | tr "\n" "|"`
+		fi
+		pid="${pid}xxx"
+		pid=`ps -e $psfmt3 | egrep "^ *($pid) " | \
+				awk '{ print $1 " ("$2")"; }' | tr "\n" " "`
+		if test "$pid"; then	
+			test "$quiet" = yes || echo "$i running: $pid"
+		else
+			test "$quiet" = yes || echo "$i NOT running"
+			ret=1;
+		fi
+	done
+	exit $ret
+	;;
+restart)
+	$me stop $progs
+	$me $conffile start $progs
+	exit $?
+	;;
+*)
+	echo "$helpstr" >&2
+	exit 1;
+	;;
+esac
+
+
+exit 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# Overrides for XEmacs and vim so that we get a uniform tabbing style.
+# XEmacs/vim will notice this stuff at the end of the file and automatically
+# adjust the settings for this buffer only.  This must remain at the end
+# of the file.
+# ---------------------------------------------------------------------------
+# Local variables:
+# c-indent-level: 3
+# c-basic-offset: 3
+# tab-width: 3
+# End:
+# vim:tw=0:ts=3:wm=0:
+#

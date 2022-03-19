@@ -1,0 +1,59 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "slog_getlevel" 5fr "26 sep 2009" "Frank Reker" "frlib"
+.SH NAME
+slog_getlevel
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/slog.h>
+.sp
+.BI "int slog_getlevel (char *" level ");"
+.fi
+
+.SH DESCRIPTION
+.I slog_getlevel ()
+converts a string representation of a log level to the corresponding 
+number (e.g. slog_getlevel ("debug") returns 7).
+Valid strings are (case insensitive):
+.nf
+.IR " 0" " - LOG_EMERG, LOG_PANIC, panic, emerg, emergency"
+.IR " 1" " - LOG_ALERT, alert" 
+.IR " 2" " - LOG_CRIT, critical, crit"
+.IR " 3" " - LOG_ERR, LOG_ERROR, error, err"
+.IR " 4" " - LOG_WARNING, LOG_WARN, warning, warn"
+.IR " 5" " - LOG_NOTICE, notice"
+.IR " 6" " - LOG_INFO, info"
+.IR " 7" " - LOG_DEBUG, debug"
+.IR " 8" " - LOG_VERBOSE, LOG_VERB, verbose, verb, debug2"
+.IR " 9" " - LOG_VVERBOSE, LOG_VVERB, vverbose, vverb, LOG_ALL, all"
+.IR "10" " - LOG_NONE, none"
+.fi
+If the string represents a number it is converted by atoi(3).
+
+.SH RETURN VALUE
+The functions do return the requested level. The returned value lies always 
+between 0 and 10. If the string contain nonsense or is a number not in the
+range from 0 to 10, the result is LOG_NONE (10).
+
+
+.SH "SEE ALSO"
+.BR frlib.log "(5fr), " errors "(5fr), " syslog "(3), "
+.BR slog "(3fr), "
+.BR slogf "(3fr)."
+
+
+
+

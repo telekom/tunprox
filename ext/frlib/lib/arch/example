@@ -1,0 +1,44 @@
+:SAR:82a0fc0101
+:DESC:      133
+fmagic: 0da407aa
+fver: 1.0
+fdesc: mdm-modem-firmware
+date: Thu, 18 Mar 2021 00:35:30 +0100
+x-revision: EC25EFAR06A10M4G
+creator: 
+ca: 
+##
+:CAT:        99 
+fn=hello,sz=123456789,z=xz,ht=z-md5,h=abe128,f=xr
+fn=foo,sz=12345689,z=xz,ht=z-md5,h=feabe128,f=xr
+####
+:SIG:         0
+:BEGIN:
+:ENTRY:
+abcd###
+:ENTRY:
+efgh###
+:END:
+
+0666  f=
+0777  f=x
+0444  f=r
+0555  f=xr
+& ^UMASK
+
+z=none,xz,lzma,gzip,gz,libz,bzip2
+aa=none,base64,b64,base32,b32,hex,pquote,quoted-printable,utf7,utf-7
+ht=none,md5,z-md5,aa-md5,sha1,z-sha1,aa-sha1,sha3,z-sha3,aa-sha3
+
+ctime=2021:03:19D11:04:31+0100
+ctime=20210318T100431
+umode=0755
+uid=17
+gid=124
+uname=foo
+ugroup=pippo
+
+date: Thu, 18 Mar 2021 00:35:30 +0100
+date: 2021:03:18D00:35:30.123+0100
+date: 20210317T233530
+

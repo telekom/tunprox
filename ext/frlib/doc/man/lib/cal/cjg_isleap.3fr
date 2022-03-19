@@ -1,0 +1,48 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_isleap" 3fr "03 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_isleap,
+cjg_isleap2 -
+checks, wether year is a leap year.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "int cjg_isleap (tmo_t " year ", int " rul ");"
+.BI "int cjg_isleap2 (tmo_t " year ");"
+.fi
+
+
+.SH DESCRIPTION
+These functions take a year and checks wether it is a leap year or not
+considering the given rule.
+.B cjg_isleap2
+does use the default rule 
+.IR CRUL_T_CJG .
+
+.SH "SEE ALSO"
+.BR cjg_breakdown "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR cjg_prttimestr "(3fr), "
+.BR cjg_getyear "(3fr), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

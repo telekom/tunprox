@@ -1,0 +1,69 @@
+#!/bin/bash
+#makedepend -f.depend -- $(CFLAGS) -- *.c
+
+if test "x$1" != "x-h" && which makedepend >/dev/null 2>&1; then
+	exec makedepend $@
+fi
+
+PROG="$(basename "$0")" 
+
+if which getopt >/dev/null 2>&1; then
+	SOPTS="f:"
+	TEMP="$(getopt -o "$SOPTS" -n "$PROG" -- "$@")"
+	test $? = 0 && eval set -- "$TEMP"
+fi
+
+function usage()
+{
+	echo "$PROG: usage: $PROG [options] [<name>]"
+	cat << .
+$PROG: usage: $PROG [<options>] -- [<cflags>] -- <cfiles>
+   cflags are c-preprocessor flags as passed to gcc
+   cfiles are the file to parse
+   options are:
+      -h            - this help screen
+      -f <depfile>  - the dependency file to create
+
+.
+}
+
+depfile=".depend"
+
+while test "$1"; do
+	case "$1" in
+	-h)
+		usage
+		exit 0
+		;;
+	-f)
+		depfile="$2"
+		shift
+		;;
+	--)
+		shift
+		break
+		;;
+	esac
+done
+
+
+
+gcc -M $@ > "$depfile"
+
+
+
+
+
+#
+# Overrides for XEmacs and vim so that we get a uniform tabbing style.
+# XEmacs/vim will notice this stuff at the end of the file and automatically
+# adjust the settings for this buffer only.  This must remain at the end
+# of the file.
+# ---------------------------------------------------------------------------
+# Local variables:
+# c-indent-level: 3
+# c-basic-offset: 3
+# tab-width: 3
+# End:
+# vim:tw=0:ts=3:wm=0:
+#

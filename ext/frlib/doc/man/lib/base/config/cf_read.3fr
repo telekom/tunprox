@@ -1,0 +1,136 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_read" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_read,
+cf_mayread,
+cf_reread,
+cf_hup_reread,
+cf_parse,
+cf_register_cv_list,
+cf_deregister_cv_list,
+cf_hfree_cvlist,
+cf_free_config
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.BI "int cf_read ();"
+.BI "int cf_reread ();"
+.BI "int cf_mayread ();"
+.B #define CF_MAY_READ	{ if (!config_read) read_config(); cf_mayread (); }
+.B #define CF_MAYREAD CF_MAY_READ
+.BI "int cf_hup_reread ();"
+.BI "int cf_parse (char *" buf ", struct cf_cvlist*" list ");"
+.BI "int cf_register_cv_list (struct cf_cvlist *" list ");"
+.BI "int cf_deregister_cv_list (struct cf_cvlist *" list ");"
+.BI "int cf_hfree_cvlist (struct cf_cvlist *" list ", int " freebufs ");"
+.BI "int cf_free_config ();"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B cf_read()
+does read the config file. Normally this function is called implicitely by
+the cf_getval or cf_getarr functions. Calling this function explicitely,
+has the only advantage, that you get an usefull error code.
+.TP
+.B cf_reread()
+rereads the config file. This function might be called by a signal handler
+function when a SIGHUP signal is received.
+.B NOTE:
+References of cf_getval, ... do lose there validity when rereading 
+the config file. See the cf_begin_read(3fr) function for more details
+on that, and how to avoid problems.
+.br
+.B NOTE:
+The cf_reread function do not actually reread, but marks the config file
+to be reread. The real reread is performed when calling on of the cf_getval-
+or cf_getarr- functions or cf_end_read() or cf_mayread().
+Rereading is not done inside cf_begin_read() and cf_end_read(), but
+scheduled and performed on cf_end_read.
+.TP
+.B cf_mayread()
+checks wether the config file needs to be (re-) read, and does so if 
+neccessary.
+.TP
+.BR CF_MAY_READ ", " CF_MAYREAD
+is a macro, that calls the function read_config if neccessary and then cf_mayread.
+Generally it is wise to read all config variables in a function read_config.
+This function should be static (limited to that file, or class in C++). The
+values are then stored in static variables. The static variable config_read should
+be set to 
+.I 1
+once the variables are read.
+.br
+Using this scheme the macro CF_MAYREAD comes handy.
+.TP
+.B cf_hup_reread()
+sets a signal handler function invoked by SIGHUP, that calls cf_reread.
+Using this function the config file is automatically reread whenever
+it receives a SIGHUP signal. See cf_begin_read(3fr) for avoiding problems
+with config file rereading.
+.TP
+.B cf_parse()
+parses a config file and returns a list of config variables, that can be
+passed to cf_register_cv_list(). 
+.TP
+.B cf_register_cv_list()
+Adds a list of config variables searched by the cf_getval and cf_getarr
+functions.
+This is usefull when using additional config files. This is used by
+the secure config file functions.
+.TP
+.B cf_deregister_cv_list()
+removes a list of config variables. Together with cf_register_cv_list()
+you can swap between several (additional) config files.
+.TP
+.B cf_hfree_cvlist ()
+frees a list of config variables created by cf_parse.
+.B Note:
+Do not free a list registered with cf_register_cv_list(). This will cause
+to crash your programme.
+.TP
+.B cf_free_config()
+Frees all config variable lists registered. This is called internally by
+the cf_reread function.
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+.SH BUGS
+The read and reread functions are not thread safe yet. When programming
+multithreading, call the function cf_read() before forking the threads.
+The cf_getval- and cf_getarr functions then are thread safe.
+.br
+The reread-mechanism can only be used when encapsulating the cf_getval-
+functions in mutexes. The frlib does not yet provide a mechanism for doing
+it automatically.
+
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr), "
+.BR cf_set_cfname "(3fr), "
+.BR cf_begin_read "(3fr), "
+.BR cf_parse_string "(3fr), "
+.BR cf_print_config "(3fr)."
+
+
+
+

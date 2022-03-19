@@ -1,0 +1,103 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "crule" 3fr "02 may 2011" "Frank Reker" "frlib"
+.SH NAME
+crul_new,
+crul_del,
+crul_get,
+crul_tzset,
+crul_tzset2 -
+function to handle calendar rules
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/crule.h>
+.sp
+.BI "int crul_new (int " type ");"
+.BI "int crul_del (int " num ");"
+.BI "int crul_get (struct crul_t **" rul ", int " num ");"
+.BI "int crul_tzset (int " num ", int " tz ");"
+.BI "int crul_tzset2 (int " num ", char *" tzstr ");"
+.fi
+
+
+
+.SH DESCRIPTION
+A calendar rule is an integer, that represents an internal structure to hold
+timezone information and calendar specific settings. For the julian-gregorian
+calendar it holds the gregorian reform (see cjg(3fr)).
+.br
+To modify the calendar specific settings one need to call the apropriate
+functions the calendar implementation offers. The timezone information can
+be altered using crul_tzset (see below).
+.TP
+.B crul_new
+creates a new calendar rule, and initializes it with its default values for the
+given calender type, and the default timezone.
+.TP
+.B crul_del
+removes a calendar rule from the system. The standard calendar rules cannot be
+removed.
+.TP
+.B crul_get
+returns the structure corresponding to the given rule.
+.TP
+.B crul_tzset
+alters the timezone information in the rule. The timezone is an integer returned
+by ctz_set(3fr), or one of the predifined timezones.
+.TP
+.B crul_tzset2
+alters the timezone information in the rule taking a timezone specification as 
+input.
+
+.SH DEFAULT RULES
+The calendar type, passed to crul_new, can even be used as a default rule for that
+calendar type. The default rule can be modified as any other rule, but cannot be
+removed by crul_del.
+.br
+Yet only the julian gregorian calendar is implemented.
+.TP
+.B CRUL_T_CJG
+The julian gregorian calendar. See cjg(3fr) for more details.
+.TP
+.B CRUL_T_UTC
+This is still the julian gregorian calendar, but initialized with UTC
+instead of the default timezone.
+
+
+
+.SH THREAD SAFETY
+The functions crul_new and crul_del are 
+.B NOT
+thread safe.
+.B crul_get
+is not thread safe at its first call. Afterwards it is. Furthermore,
+at its first call it initializes the timezone functions. So it is wise
+to call this function once before creating threads.
+The function crul_tzset is thread safe. crul_tzset2 is not, because it
+relies on ctz_set(3fr).
+
+
+.SH "SEE ALSO"
+.BR tz "(3fr), "
+.BR tzcorrect "(3fr), "
+.BR tzset "(3), "
+.BR tzfile "(5), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

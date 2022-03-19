@@ -1,0 +1,5 @@
+#!/bin/sh
+echo cleaning .depend files
+find ./ -name .depend -print | \
+	while read  i; do echo "clean: $i"; > "$i"; done
+

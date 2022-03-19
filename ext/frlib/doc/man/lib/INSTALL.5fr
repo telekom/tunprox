@@ -1,0 +1,142 @@
+.\" Copyright 2003-2010 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "INSTALL" 5fr "22 feb 2010" "Frank Reker" "frlib"
+
+.SH DOCUMENT
+This document describes how to compile and install the frlib and its
+components.
+
+.SH COMPILE
+To compile run
+.B make dep
+to create the dependencies.
+Then run
+.B make
+to make the libraries and tools.
+.br
+The make dep requires the tool makedepend.
+If you don't have installed it, delete all
+dependency files by:
+.nf
+find ./ -name .depend -exec rm -f \{\} \;
+.fi
+Consider however that then, when modifying some files you need to call
+.I make clean 
+in order to be sure that everything is recompiled correctly.
+.sp
+The makefiles are organized in a manner that you can call them from every subdirectory
+to make only that part. Hence they are autonomous and don't depend from other
+makefiles; apart of Makefile.config in the main directory. Here you can set some
+global settings, that effect the compilation.
+.sp
+The frlib does not provide a configure script yet, so you have to edit the
+makefiles directly if you want to modify anything.
+
+.SS Makefile.config
+The Makefile.config resides in the base directory of frlib and contains some global
+settings, that effect the compilation.
+.TP
+.B USE_DEBUG
+if set to 
+.IR yes ", "
+a debug version of the frlib and its tool is compiled (non optimized with debugging
+symbols in it).
+If set to no, optimization is activated and the binary is stripped.
+.TP
+.B USE_EFENCE
+if set to 
+.IR yes ", "
+the tools are linked against libduma (the successor of efence), which is a malloc
+debugger.
+.TP
+.B INCLUDE_FAKE_REGISTRY
+if set to
+.IR yes ", "
+the registry functions are made available on Non-Windows systems. These are implemented
+using the berkley db, so you need to install it, and link your binary against it.
+
+.SS DEPENDENCIES
+The frlib makes use of the dynamic linker library (libdl), so you need to link
+your programme against it, when linking with the frlib.
+I.e. pass
+.B -lfr -ldl
+to your linker.
+The frlib makes use of other libraries, such as openssl (libssl and libcrypto) 
+as well. But they are loaded dynamically as needed. So you need to install them
+only if you do use functions that makes use of them. Those libraries are:
+.IR librt " (real time), " libm " (math), " libssl ", " libcrypto " and " 
+.IR libstdc++ .
+The latter one is used to demangle c++ names in the logger. 
+So even the C functions make use of it, but will work as 
+well when the lib cannot be loaded.
+
+
+.SH INSTALL
+.SS The Library
+The make process does create a static library frlib.a and a shared library frlib.so.
+You need to copy those into a directory where your linker can find it 
+(e.g. /usr/local/lib), and then call ldconfig (as root). Alternatively you can make
+use of the LD_LIBRARY_PATH environment variable.
+
+.SS The Header Files
+After compilation you can find the header files in lib/include/.
+Copy the whole content to a location where your compiler can find them. (E.g.:
+/usr/local/include/fr/), or use the -I option to pass the path to your c compiler.
+
+
+.SH USING THE LIB
+To use the header files one should include them by section
+.nf
+#include <fr/base.h>
+#include <fr/xml.h>
+.fi
+or individual
+.nf
+#include <fr/base/config.h>
+#include <fr/base/slog.h>
+.fi
+
+.SH THE DOCUMENTATION
+To create the documentation, go to the subdirectory 
+.I doc/man
+and call
+.BR make ". "
+Then the man pages can be found in out/man*
+Invoke
+.BR "make man-install" 
+to copy them to /usr/local/man/
+.br
+/usr/local/man shall be in your MANPATH. If not, edit 
+.I /etc/man.config
+The man pages of the frlib are in the sections 1fr, 3fr and 5fr.
+To search these sections automatically you need to modify
+your MANSECT in /etc/man.config.
+It should look somewhat like that:
+.B 0p:1:1p:1fr:8:2:3:3p:3pm:3fr:4:5:5fr:6:7:9:tcl:n:l:p:o
+
+.SS The HTML Stuff
+Running 
+.I make html
+from doc/man does generate browsable html pages from the man pages.
+These can be found in out/html/
+
+
+
+.SH "SEE ALSO"
+.BR frlib "(3fr)."
+
+
+
+

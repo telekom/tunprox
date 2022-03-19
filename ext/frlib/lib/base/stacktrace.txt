@@ -1,0 +1,639 @@
+   #[1]TLUGWiki (English) [2]Creative Commons [3]copyright
+
+Obtaining a stack trace in C upon SIGSEGV
+
+From TLUGWiki
+
+   Jump to: [4]navigation, [5]search
+
+   Sometimes it's usefull to be able to obtain a stack-trace when your program
+   crashes.  An  argument  many people gave me against using C/C++ is the
+   inability to see where a program was busy executing whilst it crashed. To a
+   large extent this is true, however, debuggers invalidates this point. The
+   code presented on this page, takes this a step further though - it can give
+   you a stack trace even without running in a debugger. Similar to the traces
+   given in a kernel panic. The only downside of this solution that I've seen
+   so far is that you need to compile with -rdynamic, which slightly bloats
+   your executable. That, and the fact that the code as-is only works on glibc
+   based platforms, and it's only tested on Linux. If you can make it work on
+   other platforms, please let me know.
+
+   Contents
+
+        * [6]1 The Code
+        * [7]2 How does this work?
+             + [8]2.1 Signal Handling
+             + [9]2.2 The Stack
+        * [10]3 How to use this?
+             + [11]3.1 LD_PRELOAD hack
+             + [12]3.2 gdb
+             + [13]3.3 objdump
+             + [14]3.4 addr2line
+
+[[15]edit] The Code
+
+   sigsegv.c:
+/**
+ * This source file is used to print out a stack-trace when your program
+ * segfaults. It is relatively reliable and spot-on accurate.
+ *
+ * This code is in the public domain. Use it as you see fit, some credit
+ * would be appreciated, but is not a prerequisite for usage. Feedback
+ * on it's use would encourage further development and maintenance.
+ *
+ * Due to a bug in gcc-4.x.x you currently have to compile as C++ if you want
+ * demangling to work.
+ *
+ * Please note that it's been ported into my ULS library, thus the check for
+ * HAS_ULSLIB and the use of the sigsegv_outp macro based on that define.
+ *
+ * Author: Jaco Kroon <jaco@kroon.co.za>
+ *
+ * Copyright (C) 2005 - 2010 Jaco Kroon
+ */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+/* Bug in gcc prevents from using CPP_DEMANGLE in pure "C" */
+#if !defined(__cplusplus) && !defined(NO_CPP_DEMANGLE)
+#define NO_CPP_DEMANGLE
+#endif
+
+#include <memory.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#include <ucontext.h>
+#include <dlfcn.h>
+#ifndef NO_CPP_DEMANGLE
+#include <cxxabi.h>
+#ifdef __cplusplus
+using __cxxabiv1::__cxa_demangle;
+#endif
+#endif
+
+#ifdef HAS_ULSLIB
+#include "uls/logger.h"
+#define sigsegv_outp(x)         sigsegv_outp(,gx)
+#else
+#define sigsegv_outp(x, ...)    fprintf(stderr, x "\n", ##__VA_ARGS__)
+#endif
+
+#if defined(REG_RIP)
+# define SIGSEGV_STACK_IA64
+# define REGFORMAT "%016lx"
+#elif defined(REG_EIP)
+# define SIGSEGV_STACK_X86
+# define REGFORMAT "%08x"
+#else
+# define SIGSEGV_STACK_GENERIC
+# define REGFORMAT "%x"
+#endif
+
+static void signal_segv(int signum, siginfo_t* info, void*ptr) {
+        static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+
+        int i, f = 0;
+        ucontext_t *ucontext = (ucontext_t*)ptr;
+        Dl_info dlinfo;
+        void **bp = 0;
+        void *ip = 0;
+
+        sigsegv_outp("Segmentation Fault!");
+        sigsegv_outp("info.si_signo = %d", signum);
+        sigsegv_outp("info.si_errno = %d", info->si_errno);
+        sigsegv_outp("info.si_code  = %d (%s)", info->si_code, si_codes[info->s
+i_code]);
+        sigsegv_outp("info.si_addr  = %p", info->si_addr);
+        for(i = 0; i < NGREG; i++)
+                sigsegv_outp("reg[%02d]       = 0x" REGFORMAT, i, ucontext->uc_
+mcontext.gregs[i]);
+
+#ifndef SIGSEGV_NOSTACK
+#if defined(SIGSEGV_STACK_IA64) || defined(SIGSEGV_STACK_X86)
+#if defined(SIGSEGV_STACK_IA64)
+        ip = (void*)ucontext->uc_mcontext.gregs[REG_RIP];
+        bp = (void**)ucontext->uc_mcontext.gregs[REG_RBP];
+#elif defined(SIGSEGV_STACK_X86)
+        ip = (void*)ucontext->uc_mcontext.gregs[REG_EIP];
+        bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP];
+#endif
+
+        sigsegv_outp("Stack trace:");
+        while(bp && ip) {
+                if(!dladdr(ip, &dlinfo))
+                        break;
+
+                const char *symname = dlinfo.dli_sname;
+
+#ifndef NO_CPP_DEMANGLE
+                int status;
+                char * tmp = __cxa_demangle(symname, NULL, 0, &status);
+
+                if (status == 0 && tmp)
+                        symname = tmp;
+#endif
+
+                sigsegv_outp("% 2d: %p <%s+%lu> (%s)",
+                                ++f,
+                                ip,
+                                symname,
+                                (unsigned long)ip - (unsigned long)dlinfo.dli_s
+addr,
+                                dlinfo.dli_fname);
+
+#ifndef NO_CPP_DEMANGLE
+                if (tmp)
+                        free(tmp);
+#endif
+
+                if(dlinfo.dli_sname && !strcmp(dlinfo.dli_sname, "main"))
+                        break;
+
+                ip = bp[1];
+                bp = (void**)bp[0];
+        }
+#else
+        sigsegv_outp("Stack trace (non-dedicated):");
+        sz = backtrace(bt, 20);
+        strings = backtrace_symbols(bt, sz);
+        for(i = 0; i < sz; ++i)
+                sigsegv_outp("%s", strings[i]);
+#endif
+        sigsegv_outp("End of stack trace.");
+#else
+        sigsegv_outp("Not printing stack strace.");
+#endif
+        _exit (-1);
+}
+
+static void __attribute__((constructor)) setup_sigsegv() {
+        struct sigaction action;
+        memset(&action, 0, sizeof(action));
+        action.sa_sigaction = signal_segv;
+        action.sa_flags = SA_SIGINFO;
+        if(sigaction(SIGSEGV, &action, NULL) < 0)
+                perror("sigaction");
+}
+
+[[16]edit] How does this work?
+
+   In order to understand this one needs to understand signal handling. Whilst
+   the man pages sigaction(2), signal(2) and signal(7) are excellent references
+   they are definitely not for the feint of heart. Further we need to take a
+   basic look how the stack functions.
+
+[[17]edit] Signal Handling
+
+   The signal handling in this case is the easy part. What you need to know is
+   that your program will receive a SIGSEGV signal whenever it performs an
+   illegal page access. You get two types of errors, MAP errors and ACCESS
+   errors. MAP errors occur when the memory you are trying to dereference
+   doesn't form part of your address space (ie, the MMU says that it can't MAP
+   the virtual memory address to physical memory). This is also called a page
+   fault and only turns into a SIGSEGV once the operating system finds that it
+   is unable to swap the requested page in from swapspace. The other error is
+   ACCESS and it means you are trying to perform an action you're not supposed
+   to. The permissions on pages works the same as those on files, ie: rwx. A
+   process can have a combination of those permissions, on x86 however Read and
+   eXecute are always available, on amd64 these are all separate bits. If you
+   cause a ACCESS error you immediately receive a SIGSEGV.
+
+   How does a signal handler work? Well, if you are familiar with interrupts
+   and interrupt handling in DOS, a signal handler is the Linux (POSIX) version
+   thereof, and is actually more fine-grained as it is on a per-process basis.
+   interrupt handlers still exist but is only available in the inner protection
+   ring (ie: to the Operating System). The operating system then uses signals
+   to interrupt a user process. So whilst the analogy is there it doesn't hold
+   up all the way.
+
+   We  use  sigaction(2)  to inform the kernel that we would like to have
+   sigsegv() called whenever our process receives a SIGSEGV. Since I want to
+   get to the context data and the like I use the 3-parameter form instead of
+   the single-parameter form that is most commonly used when performing signal
+   handling.
+
+   You should note that a signal handler can at any time interrupt any other
+   piece  of code in your program - including other signal handlers (this
+   behavior can be changed), and sometimes even itself. For this reason any
+   data that it access has (should) be declared as volatile.
+
+[[18]edit] The Stack
+
+   Many people have heard the phrase 'stack frame' and even throws it around as
+   a catch phrase. I find however that very, very few people really knows what
+   it is all about. Essentially (and this is the part most programmers at least
+   knows) a stack frame is a piece of memory where a function can temporarily
+   store data. What many doesn't know is that the stack-frame also includes all
+   the variables passed to the function, as well as the return address, and the
+   base address of the callers stack frame.
+
+   The exact layout of this stack-frame is somewhat important for the purposes
+   of the code above, so if you're not interested, skip ahead. The following
+   hopefully legible piece of ascii art represents a single stack frame.
++---------+------------------+
+| EBP - 4 | local variables  |
+| EBP     | callees EBP      |
+| EBP + 4 | ret-addr         |
+| EBP + 8 | parameters       |
++---------+------------------+
+
+   BP stands for Base Pointer - and comes from days long past (is 16-bits big).
+   EBP stands for Extended Base Pointer and comes from the 32-bit era. It is
+   what most people still use. RBP is the 64-bit version. In which case all the
+   relative values needs to be doubled.
+
+   Note that the stack grows from high-memory to low memory. Thus the callee
+   can push any number of arguments onto the stack and they'll be located at
+   ESP (Extended Stack Pointer) which will always point to the top of the
+   stack. At this point in time EBP points to the current stack frame even
+   though the parameters are already on the stack for the next stack-frame.
+   What happens now is that the assembler generates a CALL (or one of the
+   various versions thereof) that does 2 things atomically:
+    1. It pushes EIP onto the stack
+    2. It alters EIP to the address specified in the CALL instruction.
+
+   Note that EIP always points to the next instruction to be executed. This
+   will be important later on.
+
+   The  first thing the callee needs to do now is not break the caller by
+   clobbering it's stack frame, so it needs to set up it's own. It does this by
+   copying the ESP variable to the EBP variable. But first it needs to save the
+   callers EBP or it won't be able to restore it later on. It does this by
+   pushing the EBP value onto the stack and then copying the ESP value to EBP.
+   Voila, stack frame set up. Now to reserve space for local variables, simply
+   subtract the amount of required space from the ESP register. It is also
+   possible to 'allocate' memory on the stack in this way.
+
+   Anyway, this all happens every time a function is called, so in theory we
+   can 'unwind the stack'. And in fact, Linux makes it all pretty easy. It
+   passes us a context variable indicating what the values of the registers was
+   at the time of crash. How friendly. Now simply grab EBP (or RBP in case of
+   amd64) and get going. cast this value into a (void**). Pointer to a pointer.
+   Since pointers are always (afaik) word sized this will always result in a
+   pointer pointing to something that is word-sized. And that is confusing.
+   Well, everything we are working with is pointers that is on the stack and we
+   need a pointer to point to these, so (void**) can be argued in two ways.
+   Just re-read all that untill one of them makes sense.
+
+   So we initialize our initial EIP and EBP values. The EIP we get initially
+   will point to the instruction after the one causing the crash. The EBP value
+   will point to the current stack frame.
+
+   Since EBP points to the previous EBP and EBP + 4 points to the return addr
+   it is now possible to get a bunch of instruction pointers. First we grab the
+   next EIP and then the next EBP.
+
+   For every pair of EIP and EBP values we decode the EIP pointer by using the
+   dlsym function. We then output some info about it. Note that this process
+   sometimes fails. Unfortunately. The only reason we trace the EBP values is
+   in order to be able to get to the successor EIP values.
+
+[[19]edit] How to use this?
+
+   I know of two ways in which to use the output generated by the segfault
+   handler. gdb (the easy way) and objdump (the hard way). I'm going to explain
+   both, although I suspect it'll just be easier to use gdb. I didn't initially
+   manage to get this info with gdb, which is why I took the objdump route.
+
+   For  the purposes of this discussion I'll be using the following as my
+   testprogram:
+#include <string.h>
+
+int die() {
+        char *err = NULL;
+        strcpy(err, "gonner");
+        return 0;
+}
+
+int main() {
+        return die();
+}
+
+   And I assume you compiled this with:
+$ gcc -o sigsegv -rdynamic -ggdb -g -O0 -ldl sigsegv.c segfaulter.c
+
+   When run this produces output such as the following:
+Segmentation Fault!
+info.si_signo = 11
+info.si_errno = 0
+info.si_code  = 1 (SEGV_MAPERR)
+info.si_addr  = (nil)
+reg[00]       = 0x00000033
+reg[01]       = 0x00000000
+reg[02]       = 0xc010007b
+reg[03]       = 0x0000007b
+reg[04]       = 0x08048b20
+reg[05]       = 0x00000000
+reg[06]       = 0xbfdeccc8
+reg[07]       = 0xbfdeccc4
+reg[08]       = 0xb7fbfff4
+reg[09]       = 0x08048c15
+reg[10]       = 0xf7fb73eb
+reg[11]       = 0x00000067
+reg[12]       = 0x0000000e
+reg[13]       = 0x00000006
+reg[14]       = 0xb7f163f5
+reg[15]       = 0x00000073
+reg[16]       = 0x00010202
+reg[17]       = 0xbfdeccc4
+reg[18]       = 0x0000007b
+Stack trace:
+ 1: 0xb7f163f5 <strcpy+25> (/lib/tls/libc.so.6)
+ 2: 0x8048864 <die+32> (./sigsegv)
+ 3: 0x8048885 <main+26> (./sigsegv)
+End of stack trace
+
+   A few notes regarding the output. The si_addr value does NOT point to the
+   code causing the segfault, it points to the referenced memory address. In
+   other words, in the above case we tried to dereference the NULL pointer, and
+   as such si_addr is nil (See sigaction(2) for more information).
+
+   Note that you do not need the debugging information upto this point, and if
+   you  don't  have  debugging  info at this point and you the exact same
+   compilation environment as with the orriginal executable you can safely
+   recompile to add the debugging info. I just find it easier to just have the
+   debugging info.
+
+   Also, not all code allows always locating a symbol. This will typically
+   output <(nil)+123> which indicates the 123 is an absolute address in the
+   memory space, even though this looks ugly I'd personally rather have that
+   absolute  address  than none at all. The code can be modified to print
+   alternative output as has been suggested to me, however, I see no real
+   benefit to such modification.
+
+[[20]edit] LD_PRELOAD hack
+
+   An alternative mechanism of getting this to work into any application (even
+   ones where you can't modify the build process) is to load up this code with
+   LD_PRELOAD  (shouldn't work with suid/sgid executables). Basically you
+   compile it into a .so file:
+g++ -shared -o libsigsegv.so -ldl sigsegv.c
+
+   This will produce a shared object file, now simply do:
+LD_PRELOAD=/path/to/libsigsegv.so normal_command
+
+   This  will  cause libsigsegv to be loaded as if it was linked into the
+   application. This allows me to pull some ultra nasty hacks, in particular
+   problematic applications (daemons, eg asterisk) now gets recompiled with
+   -rdynamic added into the CFLAGS and when running asterisk, it's gets an
+   LD_PRELOAD. Output gets logged, and when it segfaults, et voila, stack
+   trace, starting point for filing a bug.
+
+[[21]edit] gdb
+
+   Well, first things first, disassemble the function and find the assembler
+   that caused this to die:
+$ gdb ./sigsegv
+(gdb) disassemble die
+Dump of assembler code for function die:
+0x08048844 <die+0>:     push   %ebp
+0x08048845 <die+1>:     mov    %esp,%ebp
+0x08048847 <die+3>:     sub    $0x18,%esp
+0x0804884a <die+6>:     movl   $0x0,0xfffffffc(%ebp)
+0x08048851 <die+13>:    movl   $0x8048c14,0x4(%esp)
+0x08048859 <die+21>:    mov    0xfffffffc(%ebp),%eax
+0x0804885c <die+24>:    mov    %eax,(%esp)
+0x0804885f <die+27>:    call   0x804876c <_init+184>
+0x08048864 <die+32>:    mov    $0x0,%eax
+0x08048869 <die+37>:    leave
+0x0804886a <die+38>:    ret
+End of assembler dump.
+
+   Right, so +32 points to the "mov $0x0,%eax", one instruction back and we are
+   at call 0x804876c <_init+184>. Not very helpful. And I suspect gdb isn't
+   that  good at obtaining info from glibc as our segfault handler easily
+   identified strcpy(). Still no line numbers once off, but we need the +27
+   since that is where things actually went wrong. Yes, sigsegv() can quite
+   possibly be adjusted to make this calculation but considering that we just
+   segfaulted we really want to do as little as possible in that function (and
+   not provoke more segfaults - I have seen cases where that happened).
+
+   Right, now that we know that we really are looking for die+27, we can place
+   a line number to it by setting a breakpoint at that address:
+(gdb) break *die+27
+Breakpoint 1 at 0x8048af7: file segfaulter.c, line 6.
+
+   Which is correct. If, however, we used die+32 we would have obtained the
+   incorrect line number:
+(gdb) break *die+32
+Breakpoint 2 at 0x8048afc: file segfaulter.c, line 7.
+
+   An even simpler method I just discovered (which will also work with the
+   generic dump above) is to simply use the list command:
+(gdb) list *0x8048afc
+0x8048aa4 is in die (segfaulter.c:7).
+2       #include <string.h>
+3
+4       int die() {
+5           char *err = NULL;
+6           strcpy(err, "gonner");
+7           return 0;
+8       }
+9
+10      int main() {
+11          setup_sigsegv();
+(gdb)
+
+   Note that this suffers of the "wrong line syndrome" since the return addr
+   points to the next line. It _may_ in some cases point to the right line, but
+   usually not.
+
+   gdb, we love you :).
+
+[[22]edit] objdump
+
+   objdump is an extremely powerfull tool. The way we are going to use it is a
+   bit obscure, and we need bc to convert things a bit between decimal and hex.
+   You probably want two consoles to do this, so in console 1:
+$ objdump -S sigsegv | less
+
+   We use less for the search functionality, so now we search for the die
+   function using the search expression '^[0-9a-f]+ <die>'. You should see some
+   of your source code, something like this:
+08048adc <die>:
+#include "sigsegv.h"
+#include <string.h>
+
+int die() {
+ 8048adc:       55                      push   %ebp
+ 8048add:       89 e5                   mov    %esp,%ebp
+ 8048adf:       83 ec 18                sub    $0x18,%esp
+        char *err = NULL;
+ 8048ae2:       c7 45 fc 00 00 00 00    movl   $0x0,0xfffffffc(%ebp)
+        strcpy(err, "gonner");
+ 8048ae9:       c7 44 24 04 f2 8c 04    movl   $0x8048cf2,0x4(%esp)
+ 8048af0:       08
+ 8048af1:       8b 45 fc                mov    0xfffffffc(%ebp),%eax
+ 8048af4:       89 04 24                mov    %eax,(%esp)
+ 8048af7:       e8 70 fc ff ff          call   804876c <strcpy@plt>
+        return 0;
+ 8048afc:       b8 00 00 00 00          mov    $0x0,%eax
+}
+ 8048b01:       c9                      leave
+ 8048b02:       c3                      ret
+
+   Now we need to calculate where +32 (decimal) is, in a hex environment. So in
+   another console, fire up bc:
+$ bc
+> obase=16
+> 32
+< 20
+> ibase=16
+> 8048ADC+20
+< 8048AFC
+
+   (Lines marked with > is input, those marked with < is output from bc).
+
+   Right, now you scan through the die function as output by objdump and you
+   find that address. You should find this line:
+ 8048afc:       b8 00 00 00 00          mov    $0x0,%eax
+
+   Now go back one instruction, and behove and behold, we have the same call
+   instruction as with gdb. Except we can also see that the line this was
+   generated from was this one:
+        strcpy(err, "gonner");
+
+   Now just find that line in the source.
+
+[[23]edit] addr2line
+
+   Martin Leisner notified me that there is an utility called addr2line. Just
+   read the manpage, I haven't tried this yet but it looks dead simple.
+
+   Happy Hacking.
+
+   I added this to my code. I tested it and it gives source file locations and
+   procedure names. It requires that you assemble with "-g" as an option for
+   gcc so the debug information is present in the executable. I say "happy bug
+   hunting" as this makes it so easy, I don't know how I ever debugged without
+   it.
+
+   /* I use this string variable to construct a system command */
+char syscom[256];
+for (i=0; i < sz; i++){
+  if ( bt[i] < (void *)0x420000 && bt[i] > (void *)0x400000) {
+    sprintf(syscom,"addr2line %p -f -e solver",bt[i]);
+    system(syscom);
+  }
+}
+
+   Retrieved from
+   "[24]http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_S
+   IGSEGV"
+
+Views
+
+     * [25]Article
+     * [26]Discussion
+     * [27]Edit
+     * [28]History
+
+Personal tools
+
+     * [29]Log in / create account
+
+Navigation
+
+     * [30]Main Page
+     * [31]Forums
+     * [32]Mailing Lists
+     * [33]Recent changes
+     * [34]Random page
+     * [35]Help
+
+TLUG Services
+
+     * [36]IRC Server
+     * [37]Jabber Server
+     * [38]Mailing List
+
+Sections
+
+     * [39]Howto's
+     * [40]Projects
+     * [41]Development
+
+Search
+
+   ____________________ Go  Search
+
+Toolbox
+
+     * [42]What links here
+     * [43]Related changes
+     * [44]Upload file
+     * [45]Special pages
+     * [46]Printable version
+     * [47]Permanent link
+
+   [48]Powered by MediaWiki
+   [49]GNU Free Documentation License 1.2
+     * This page was last modified 21:27, 2 February 2010.
+     * This page has been accessed 35,872 times.
+     * Content is available under [50]GNU Free Documentation License 1.2.
+     * [51]Privacy policy
+     * [52]About TLUGWiki
+     * [53]Disclaimers
+
+Verweise
+
+   Sichtbare Links
+   1. http://tlug.up.ac.za/wiki/opensearch_desc.php
+   2. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=creativecommons
+   3. http://www.gnu.org/copyleft/fdl.html
+   4. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#column-one
+   5. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#searchInput
+   6. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#The_Code
+   7. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#How_does_this_work.3F
+   8. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#Signal_Handling
+   9. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#The_Stack
+  10. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#How_to_use_this.3F
+  11. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#LD_PRELOAD_hack
+  12. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#gdb
+  13. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#objdump
+  14. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV#addr2line
+  15. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=1
+  16. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=2
+  17. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=3
+  18. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=4
+  19. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=5
+  20. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=6
+  21. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=7
+  22. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=8
+  23. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit&section=9
+  24. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV
+  25. http://tlug.up.ac.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV
+  26. http://tlug.up.ac.za/wiki/index.php/Talk:Obtaining_a_stack_trace_in_C_upon_SIGSEGV
+  27. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=edit
+  28. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&action=history
+  29. http://tlug.up.ac.za/wiki/index.php?title=Special:Userlogin&returnto=Obtaining_a_stack_trace_in_C_upon_SIGSEGV
+  30. http://tlug.up.ac.za/wiki/index.php/Main_Page
+  31. http://tlug.org.za/forums
+  32. http://lists.tlug.org.za/
+  33. http://tlug.up.ac.za/wiki/index.php/Special:Recentchanges
+  34. http://tlug.up.ac.za/wiki/index.php/Special:Random
+  35. http://tlug.up.ac.za/wiki/index.php/Help:Contents
+  36. http://tlug.up.ac.za/wiki/index.php/IRC
+  37. http://tlug.up.ac.za/wiki/index.php/Jabber
+  38. http://tlug.up.ac.za/wiki/index.php/MailingList
+  39. http://tlug.up.ac.za/wiki/index.php/Category:Howto
+  40. http://tlug.up.ac.za/wiki/index.php/Projects
+  41. http://tlug.up.ac.za/wiki/index.php/Development_Howto
+  42. http://tlug.up.ac.za/wiki/index.php/Special:Whatlinkshere/Obtaining_a_stack_trace_in_C_upon_SIGSEGV
+  43. http://tlug.up.ac.za/wiki/index.php/Special:Recentchangeslinked/Obtaining_a_stack_trace_in_C_upon_SIGSEGV
+  44. http://tlug.up.ac.za/wiki/index.php/Special:Upload
+  45. http://tlug.up.ac.za/wiki/index.php/Special:Specialpages
+  46. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&printable=yes
+  47. http://tlug.up.ac.za/wiki/index.php?title=Obtaining_a_stack_trace_in_C_upon_SIGSEGV&oldid=2391
+  48. http://www.mediawiki.org/
+  49. http://www.gnu.org/copyleft/fdl.html
+  50. http://www.gnu.org/copyleft/fdl.html
+  51. http://tlug.up.ac.za/wiki/index.php/TLUGWiki:Privacy_policy
+  52. http://tlug.up.ac.za/wiki/index.php/TLUGWiki:About
+  53. http://tlug.up.ac.za/wiki/index.php/TLUGWiki:General_disclaimer
+
+   Versteckte Links:
+  54. http://tlug.up.ac.za/wiki/index.php/Main_Page

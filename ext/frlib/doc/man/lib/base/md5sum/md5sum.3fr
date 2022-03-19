@@ -1,0 +1,88 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "md5sum" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+md5sum
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/md5sum.h>
+.sp
+.BI "#define MD5SUM_FLAG_NONE   " 0
+.BI "#define MD5SUM_FLAG_B64    " 1
+.BI "#define MD5SUM_FLAG_HEX    " 2
+.BI "#define MD5SUM_FLAG_BIN    " 3
+.BI "#define MD5SUM_MASK_FORMAT " 3
+.BI "#define MD5SUM_FLAG_NOEQ   " 4
+.BI "#define MD5SUM_FLAG_CAPS   " 8
+.sp
+.BI "int md5sum (char *" hash ", char *" msg ", int " msglen ", int " flag ");"
+.fi
+
+
+
+.SH DESCRIPTION
+md5sum takes a message (
+.IR msg )
+of size
+.I msglen
+as input and calculates a md5 hash value, which is written to 
+.IR hash .
+The buffer for hash needs to be preallocated and needs to be
+at least 16 bytes long when written in binary (see the flag 
+section for more information about the format) format, 33 bytes
+when written in hexadecimal and 25 bytes when written in base64
+format. The default format is base64 with equal signs.
+
+.SH FLAGS
+.TP
+.B MD5SUM_FLAG_B64
+Using this flag the output is coded in base64 format. (This is even
+the default if no other format is given). The output will be
+NUL-terminated.
+.TP
+.B MD5SUM_FLAG_HEX
+Using this flag the output will be coded in hexadicimal.
+The output will be NUL-terminated.
+.TP
+.B MD5SUM_FLAG_BIN
+Using this flag the output will be uncoded in binary format.
+The output won't be NUL-terminated.
+.TP
+.B MD5SUM_MASK_FORMAT
+This macro can be used to mask out the format part from the flags.
+.TP
+.B MD5SUM_FLAG_NOEQ
+Using this flag when encoding in base64 format, the final equal signs
+are omitted. 
+For other formats this flag has no effect.
+.TP
+.B MD5SUM_FLAG_CAPS
+Using this flag when encoding in hexadecimal, letters are in upper
+case.
+For other formats this flag has no effect.
+
+.SH BUGS
+The md5 checksum is vulnerable, thus you should use other algorithms, such 
+as sha1 or sha256 checksum, when security matters.
+
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

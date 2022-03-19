@@ -1,0 +1,134 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "secureconfig" 3fr "15 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+scf_getfile,
+scf_askpass,
+scf_verifypass,
+scf_askverifypass,
+scf_askverifypass2,
+scf_doubleaskpass,
+scf_decrypt,
+scf_encrypt,
+scf_readpass,
+scf_free,
+scf_read,
+scf_fdread,
+scf_askread,
+scf_reread,
+scf_forgetpass,
+scf_getpass,
+scf_havefile,
+scf_writeout,
+scf_changepass,
+scf_create,
+scf_addvar,
+scf_rmvar,
+scf_encryptfile,
+scf_list
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/secureconfig.h>
+.sp
+.BI "#define SCF_FLAG_NONE      " 0x00
+.BI "#define SCF_FLAG_STRICT    " 0x01
+.BI "#define SCF_FLAG_VSTRICT2  " 0x02
+.BI "#define SCF_FLAG_VSTRICT   " "(SCF_FLAG_STRICT|SCF_FLAG_VSTRICT2)"
+.sp
+.BI "int scf_getfile (char *" filename ", char **" buf ", int *" len ");"
+.BI "int scf_askpass (char *" msg ", char *" passwd ", int " len ");"
+.BI "int scf_verifypass (char *" cf ", size_t " cf_len ", char *" passwd ", int " flags ");"
+.BI "int scf_askverifypass (char *" msg ", char *" passwd ", int " pwdlen ", char *" cf ", int " cflen ");"
+.BI "int scf_askverifypass2 (char *" msg ", char *" passwd ", int " pwdlen ");"
+.BI "int scf_doubleaskpass (char *" passwd ", int " len ");"
+.BI "int scf_decrypt (char *" cf ", size_t " cf_len ", char **" out ", char *" passwd ", int " flags ");"
+.BI "int scf_encrypt (char *" cf ", char **" out ", int *" out_len ", char *" passwd ");"
+.BI "int scf_readpass (int " fd ", char *" passwd ", int *" len ");"
+.BI "int scf_free ();"
+.BI "int scf_read (char *" passwd ");"
+.BI "int scf_fdread (int " fd ");"
+.BI "int scf_askread ();"
+.BI "int scf_reread ();"
+.BI "void scf_forgetpass();"
+.BI "char * scf_getpass();"
+.BI "int scf_havefile ();"
+.BI "int scf_writeout (char *" filename ", char *" cf ", int " len ");"
+.BI "int scf_changepass (char *" infile ", char *" outfile ");"
+.BI "int scf_create (char *" filename ");"
+.BI "int scf_addvar (char *" infile ", char *" outfile ", char *" var ");"
+.BI "int scf_rmvar (char *" infile ", char *" outfile ", char *" var ");"
+.BI "int scf_encryptfile (char *" infile ", char *" outfile ");"
+.BI "int scf_list (char *" infile ", char *" outfile ");"
+.fi
+
+
+.SH DESCRIPTION
+Sometimes certain configuration parameters, such as database passwords, ...
+are not wise to write in cleartext to disk, but passing them all to the
+running programmes by user intervention is neither a good idea. For
+that the secureconfig functions provide a safe way to store such information,
+in an encrypted config file. You still need to pass the password for decrypting
+to the programme in question. But this is only one password, while the
+config file may contain a lot of secret configuration.
+.br
+The frlib provides mechanisms to query the password, verify it and pass it
+in a secure manner to other programmes, so that in most cases it is 
+neccessary only once to insert the password by hand. Furthermore, from the
+programming point of view, there is no difference wether the secrets are in
+a secure or ordinary config file. So the user can decide wether and what
+informations to put into the secure config files.
+.sp
+To enable secure config file it is enough to use one of the functions:
+.IR scf_fdread ", " scf_read " or " scf_askread .
+In most cases those are the only functions one need. When passing the
+password to other programmes one might also call
+.IR scf_getpass .
+The other functions are needed rarely and / or are only used by the 
+scf_mgr(1fr) command line tool to manage secure config files.
+
+
+.SH "SEE ALSO"
+.BR scf_getfile "(3fr), "
+.BR scf_askpass "(3fr), "
+.BR scf_verifypass "(3fr), "
+.BR scf_askverifypass "(3fr), "
+.BR scf_askverifypass2 "(3fr), "
+.BR scf_doubleaskpass "(3fr), "
+.BR scf_decrypt "(3fr), "
+.BR scf_encrypt "(3fr), "
+.BR scf_readpass "(3fr), "
+.BR scf_free "(3fr), "
+.BR scf_read "(3fr), "
+.BR scf_fdread "(3fr), "
+.BR scf_askread "(3fr), "
+.BR scf_reread "(3fr), "
+.BR scf_forgetpass "(3fr), "
+.BR scf_getpass "(3fr), "
+.BR scf_havefile "(3fr), "
+.BR scf_writeout "(3fr), "
+.BR scf_changepass "(3fr), "
+.BR scf_create "(3fr), "
+.BR scf_addvar "(3fr), "
+.BR scf_rmvar "(3fr), "
+.BR scf_encryptfile "(3fr), "
+.BR scf_list "(3fr), "
+.BR config "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

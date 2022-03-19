@@ -1,0 +1,54 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "stacktrace" 3fr "29 apr 2011" "Frank Reker" "frlib"
+.SH NAME
+stktr_prtstack - prints a stack trace.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/stacktrace.h>
+.sp
+.BI "" "int " stktr_prtstack " (int " fd ", int " flags ", void *" ptr ")"
+.fi
+
+.SH FLAGS
+The following flags are accepted:
+.TP
+.B STKTR_F_PRTREG
+will print the register content as well.
+.TP
+.B STKTR_F_NOSTACK
+does not write any stack trace. However, when STKTR_F_PRTREG
+is given still the registers are dumped.
+
+.SH DESCRIPTION
+.TP
+.B stktr_prtstack
+prints a stacktrace to the file descriptor 
+.BR fd .
+.B ptr
+is a pointer to an 
+.B ucontext_t
+structure. If NULL, it is obtained by getcontext(2).
+
+
+.SH "SEE ALSO"
+.BR slog "(3fr), "
+.BR getcontext "(2), "
+.BR frlib "(3fr)."
+
+
+
+

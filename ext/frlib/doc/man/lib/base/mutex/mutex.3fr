@@ -1,0 +1,112 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "mutex" 3fr "29 apr 2011" "Frank Reker" "frlib"
+.SH NAME
+mutex_create,
+mutex_destroy,
+mutex_rdlock,
+mutex_wrlock,
+mutex_unlock,
+mutex_funlock -
+mutex functions for process synchronisation.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/mutex.h>
+.sp
+.BI "int mutex_create (int " key ", int " flags ")"
+.nl
+.BI "int mutex_destroy (int " id ")"
+.nl
+.BI "int mutex_rdlock (int " id ", tmo_t " tmout ", int " flags ")"
+.nl
+.BI "int mutex_wrlock (int " id ", tmo_t " tmout ", int " flags ")"
+.nl
+.BI "int mutex_unlock (int " id ", int " flags ")"
+.nl
+.BI "int mutex_funlock (int " id ")"
+.fi
+
+.SH DESCRIPTION
+.TP
+.B mutex_create
+creates a new mutex and returns an identifier, that can be used for
+the other functions. The mutex is created using the semget(2) function.
+The key is a un*x IPC key and can be IPC_PRIVATE. A key of 
+.B 0
+has the same effect then
+.B IPC_PRIVATE.
+The lower 9 bits of the flags field are the un*x permissions. A mode of
+.B 0
+is identical to 0666.
+Other flags are not accetped yet.
+.TP
+.B mutex_detroy
+destroys a mutex.
+
+.TP
+.B mutex_rdlock
+acquires a read lock. Several processes might hold a read lock, but
+when one process holds a read lock no process can hold a write lock
+at the same time.
+If timeout is greater than 0 the function fails after
+tmout microseconds with a
+.I RERR_TIMEDOUT
+if the lock could not be acquired.
+When the flag
+.B MUTEX_F_NOUNDO
+is given, the lock is 
+.B NOT
+released when the process terminates.
+.TP
+.B mutex_wrlock
+acquires a write lock. Only one process can hold a write lock. When
+a write lock is hold, no process can hold a read lock at the same
+time.
+If timeout is greater than 0 the function fails after
+tmout microseconds with a
+.I RERR_TIMEDOUT
+if the lock could not be acquired.
+When the flag
+.B MUTEX_F_NOUNDO
+is given, the lock is 
+.B NOT
+released when the process terminates.
+
+.TP
+.B mutex_unlock
+Unlocks a mutex prior locked with mutex_rdlock or mutex_wrlock.
+
+.TP
+.B mutex_funlock
+Forces an unlock on mutex. This is, that 
+.B all
+locks from all processes are released.
+
+.SH Note:
+Consider to alway unlock a mutex when not used any more.
+.sp
+Remember, that you can unlock a lock hold by another process.
+So don't unlock a locked mutex twice, and don't unlock a mutex that
+you don't have locked. This mostly will lead to hard traceable errors.
+
+
+.SH "SEE ALSO"
+.BR semget "(2), "
+.BR frlib "(3fr)."
+
+
+
+

@@ -1,0 +1,264 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg_strftime" 3fr "03 may 2011" "Frank Reker" "frlib"
+.SH NAME
+cjg_strptime,
+cjg_strptime2,
+cjg_strptime3 -
+parses a timestring according to a format string.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/cjg.h>
+.sp
+.BI "int cjg_strptime (const char *" tstr ", const char *" fmt ", struct cjg_bd_t *" tbd ", int " flags ");"
+.BI "int cjg_strptime2 (tmo_t *" tstamp ", const char *" tstr ", const char *" fmt ", int " flags ");"
+.BI "int cjg_strptime3 (tmo_t *" tstamp ", const char *" tstr ", const char *" fmt ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B cjg_strftime
+This function takes a timestring and a format string and outputs a broken down
+time (cjg_bd_t structure).
+(For the formats accepted see below).
+The function returns the number of bytes consumed for parsing. The string might
+be longer, this is not an error.
+In case of error the function returns a negative value (errors(5fr)).
+.TP
+.B cjg_strftime2
+Like cjg_strptime, but outputs a timestamp. After parsing the broken down time
+is composed using the standard calendar rule CRUL_T_CJG.
+.TP
+.B cjg_strftime3
+Like cjg_strptime2 with a flag of 0.
+
+.SH FORMAT
+The format 
+.IR "" "(" fmt ")"
+specification is a nul-terminated string and may contain special character sequences
+called 
+.I conversion specifications, 
+each of which is introduced by a percent ('%') character 
+and terminated by some other character known as a 
+.I conversion specifier character.
+The '%' sign might be followed by one or more 
+.I modifier characters,
+before terminated by the conversion specifier character.
+All other character sequences are ordinary character sequences.
+The characters of ordinary character sequences (including the nul byte) are copied
+verbatim from format to the output string.
+.sp
+.SS Modifier Characters
+The following modifier characters are accepted:
+.TP
+.B E
+Numbers are printed in an alternative form specified by the locals.
+This is parsed, but ignored.
+.TP
+.B O (letter O)
+Roman Numbers. This modifier is parsed, but ignored. The parser automatically
+detects roman numbers, and pars them with or without this modifier.
+.TP
+.B ?
+Indicates that the conversion is optional. That is, that when it cannot be
+parsed the parser continues with the format string.
+
+.SS Conversion Specifiers
+The following conversion specifiers are accepted:
+.TP
+.B %%
+a literal '%' character.
+.TP
+.B %!
+match the following character. E.g. %!a matches a literal a. This is usefull
+together with the ? modifier.
+E.g.: %?!. matches an optional . (dot).
+.TP
+.B %.
+matches any character, but no whitespaces.
+.TP
+.B %*
+matches any alphanumerical character sequence up to the next non alphanumerical
+character.
+.TP
+.B %a, %A
+The weekday name according to the current locale,
+in abbreviated form or the full name.
+.TP
+.B %b, %B
+The month name according to the current locale,
+in abbreviated form or the full name.
+.TP
+.B %c
+The preferred date and time representation for the current locale.
+If no local is present it default to '%a %d %b %Y %T %Z'.
+.TP
+.B %C, %v
+The century number (year/100).
+.TP
+.B %d
+The day of the month as a decimal number (range 1 to 31).
+.TP
+.B %D
+Equivalent to '%Y:%m:%dD%H:%M:%Q'.
+.TP
+.B %e
+Equivalent to '%Y%m%dT%H%M%S'.
+.TP
+.B %f
+Equivalent to '%Y%m%dT%H%M%Q'.
+.TP
+.B %F
+Equivalent to '%Y-%m-%d'.
+.TP
+.B %g
+Like %G, but without century, that is, with a 2-digit year.
+.TP
+.B %G
+The ISO 8601 week-based year with century as a decimal number. The year 
+corresponding to the ISO week number (see %W). This has the same format
+and value as %Y, except that if the ISO week number belongs to the 
+previous or next year, that year is used instead.
+.TP
+.B %H
+The hour as a decimal number using a 24-hour clock.
+.TP
+.B %I
+The hour as a decimal number using a 12-hour clock.
+.TP
+.B %j
+The day of the year as a decimal number (between 1 and 366).
+.TP
+.B %J
+The days since 1st january 1970.
+.TP
+.B %k
+The milliseconds as a decimal number.
+.TP
+.B %K
+The milliseconds since 1st january 1970 0:0 GMT.
+.TP
+.B %l (ell)
+parses the isleap year field of the cjg_bd_t structure
+(see cjg_breakdown for detail).
+.TP
+.B %m
+The month as a decimal number (range 1 to 12).
+.TP
+.B %M
+The minute as a decimal number (range 0 to 59).
+.TP
+.B %n
+ignored. Whitespaces are matched automatically. There's no way to match
+them explicitely.
+.TP
+.B %N, %R
+The date as a latin in abbreviate or full form. (See romkal(3fr) for detail).
+.TP
+.B %o
+The nano second part of a second as a decimal number.
+.TP
+.B %p
+Either "AM" or "PM" according to the given time value, or the corresponding 
+strings for the current locale. Noon is treated as "PM" and midnight as "AM".
+.TP
+.B %P
+Either "AD" for years after the supposed birth of christ, or "BC" for
+dates before christ.
+.TP
+.B %q
+The fraction part of a second. That is the part after the decimal point.
+.TP
+.B %Q
+Equivalent to %S.%q hence the seconds (default to two digits) followed
+by a decimal point and the fractional part (default to six digits).
+E.g. %.2Q would result to "12.345".
+.TP
+.B %r
+Equivalent to '%a, %d %b %Y %H:%M:%S %z'. This is the timeformat as specified
+in RFC 822 (i.e. in emails).
+.TP
+.B %s
+The number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+.TP
+.B %S
+The second as a decimal number (range 0 to 61).
+In case of leap seconds the second can be 60 or 61. (61 never yet occured, and
+most probably never will).
+.TP
+.B %t
+ignored. Whitespaces are matched automatically. There's no way to match
+them explicitely.
+.TP
+.B %T
+Equivalent to '%H:%M:%S'.
+.TP
+.B %u
+The microseconds as a decimal number (range 0 to 999999).
+.TP
+.B %U
+The microseconds since the Epoc, 1970-01-01 00:00:00 +0000 (UTC).
+.TP
+.B %w
+The day of the week as a decimal, range 1 to 7, Monday being 1.
+.TP
+.B %W
+The  ISO 8601 week number of the current year as a decimal number, range 01 to
+53, where week 1 is the week that contains the first thursday.
+.TP
+.B %x
+The preferred date representation for the current locale without the time.
+If no local is present it default to '%Y-%m-%d'.
+.TP
+.B %X
+The preferred time representation for the current locale without the date.
+If no local is present it default to '%H:%M:%S'.
+.TP
+.B %y
+The year as a decimal number without a century (range 0 to 99).
+.TP
+.B %Y, %V
+The year since the supposed birth of christ. The year is negative for
+dates before christ.
+.B Note:
+The year 0 (zero) does not exist. The year jumps from -1 (1 BC) to 1 (1 AD).
+.TP
+.B %z
+The +hhmm or -hhmm numeric timezone (that is, the hour and minute offset 
+from UTC). (east is positive and west is negative).
+.TP
+.B %Z
+The timezone or name or abbreviation.
+This conversion is parsed, but ignored.
+
+
+.SH BUGS
+The Locals are not honoured yet. This results in %c, %x and %X using the default
+values only. And %a, %A, %b, %B, %p, %P using the englisch names.
+
+
+.SH "SEE ALSO"
+.BR strptime "(3), "
+.BR cjg_breakdown "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_gettimestr "(3fr), "
+.BR cjg "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

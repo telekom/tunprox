@@ -1,0 +1,85 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "top_findchar" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+top_findchar,
+top_findstr
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "#define TOP_F_NONE          " 0x00
+.BI "#define TOP_F_DQUOTE        " 0x01
+.BI "#define TOP_F_SQUOTE        " 0x02
+.BI "#define TOP_F_STRIPMIDDLE   " 0x04
+.BI "#define TOP_F_NOSKIPWHITE   " 0x08
+.BI "#define TOP_F_NOSTRIPWHITE  " 0x10
+.BI "#define TOP_F_NOCR          " 0x20
+.BI "#define TOP_F_NOSKIPBLANK   " 0x40
+.BI "#define TOP_F_NOSKIPCOMMENT " 0x80
+.sp
+.BI "char *top_findchar (char *" ptr ", char *" pivot ", int " flags ");"
+.BI "char *top_findstr (char *" ptr ", char *" needle ", int " flags ");"
+.sp
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B top_findchar
+searches the first appearance of one of the chars given in
+.I pivot
+in the string 
+.IR ptr .
+TOP_F_DQUOTE and TOP_F_SQUOTE are honored.
+.TP
+.B top_findstr
+searches the first appearance of the string
+.I needle
+inside the string
+.IR ptr .
+TOP_F_DQUOTE and TOP_F_SQUOTE are honored.
+
+
+.SH FLAGS
+.TP
+.B TOP_F_DQUOTE
+if this flag is given, line comments and field separators are ignored 
+when inside double quotes. 
+When combined with TOP_F_SQUOTE, single
+quotes inside double quotes are ignored as well.
+.TP
+.B TOP_F_SQUOTE
+if this flag is given, line comments and field separators are ignored 
+when inside single quotes.
+When combined with TOP_F_DQUOTE, double
+quotes inside single quotes are ignored as well.
+.TP
+The other flags don't do nothing with these functions
+
+
+.SH "SEE ALSO"
+.BR top_getline "(3fr), "
+.BR index "(3), "
+.BR strchr "(3), "
+.BR strstr "(3), "
+.BR errors "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

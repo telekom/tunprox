@@ -1,0 +1,69 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "base64" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+top_base64decode,
+top_base64encode,
+top_base64encode_short,
+top_base32encode_short
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "int top_base64decode (char *" in ", char **" out ", int *" outlen ");"
+.BI "int top_base64encode (char *" in ", int " inlen ", char **" out ");"
+.BI "int top_base64encode_short (char *" in ", int " inlen ", char *" out ");"
+.BI "int top_base32encode_short (char *" in ", int " inlen ", char *" out ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B top_base64encode
+encodes an 
+.I in-
+buffer into base64. The result is written to out. The buffer is allocated and
+needs to be freed.
+.TP
+.B top_base64encode_short
+like top_base64encode, but does not make any line breaks. It is intended for 
+short messages. Unlike top_base64encode, the out-buffer must be allocated
+by the caller. The caller must take care that the result fits into the
+allocated buffer (not to forget the terminating NUL-character).
+You can calculate the buffersize by: inlen*4/3+4
+.TP
+.B top_base64decode
+decodes a base64 encoded 
+.I in-
+buffer. The result is written to an allocated buffer returned in
+.I out.
+If 
+.I outlen
+is given, the length of the out-buffer is returned in it.
+.TP
+.B top_base32encode_short
+like top_base64encode_short, but a base32 encoding is used.
+For encoding the characters A-Z and 0-5 are used.
+
+
+.SH "SEE ALSO"
+.BR errors "(5fr), "
+.BR frlib "(3fr)."
+
+
+
+

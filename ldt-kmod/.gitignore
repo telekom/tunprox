@@ -1,0 +1,15 @@
+*.o
+*.a
+.depend*
+bak*
+.*.cmd
+*.ko
+modules*
+Module*
+.tmp*
+*.mod.c
+unused
+*.log
+tags
+starth*
+

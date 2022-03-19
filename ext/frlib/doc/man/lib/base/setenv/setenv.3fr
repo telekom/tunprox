@@ -1,0 +1,131 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "setenv" 3fr "7 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+set_environment,
+set_environment_for,
+set_user,
+set_user_for,
+set_pwd,
+set_pwd_for,
+setup_env,
+setup_env_for,
+setenv,
+unsetenv
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/setenv.h>
+.sp
+.BI "int set_environment ();"
+.BI "int set_environment_for (char *" prog ");"
+.BI "int set_user ();"
+.BI "int set_user_for (char *" prog ");"
+.BI "int set_pwd ();"
+.BI "int set_pwd_for (char *" prog ");"
+.sp
+.BI "int setup_env ();"
+.BI "int setup_env_for (char *" prog ");"
+.sp
+#ifdef SunOS
+.BI "int setenv (char *" name ", char *" value ", int " overwrite ");"
+.BI "int unsetenv (char *" name ");"
+#endif
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B set_environment_for
+reads the variable 
+.BI "setenv_file[" prog "]"
+from config file and sets all variables
+defined inside this file as environment variables. 
+The format of that file is:
+.br
+Empty lines, and those beginning with a # are ignored.
+Other lines are of form:
+.nf
+VAR = value
+or
+export VAR = value
+.fi
+The keyword export will be ignored if present. Thus you can include
+the same file in a bash-script.
+.TP
+.B set_environment
+like set_environment_for (fr_getprog());
+.TP
+.B set_user_for
+reads the variable
+.BI user[ prog ]
+from config file and changes the actual user (and group according
+to /etc/passwd).
+.B Note: 
+This function is successfull only when the actual user is root
+or the programme has the change user capability.
+.TP
+.B set_user
+like set_user_for (fr_getprog());
+.TP
+.B set_pwd_for
+read the variable
+.BI pwd[ prog ]
+from the config file and changes the current working directory.
+.TP
+.B set_pwd
+like set_pwd_for (fr_getprog());
+.TP
+.B setup_env_for
+calls all three functions above.
+.TP
+.B setup_env
+like setup_env_for (fr_getprog());
+.TP
+.B setenv
+This function is implemented on Solaris only and is identical to the 
+Linux function setenv: The 
+.I variable
+is set to
+.IR value .
+If the environment variable already exists it is overwritten only
+if
+.I overwrite
+is set to not zero.
+.TP
+.B unsetenv
+This function is implemented on Solaris only and is identical to the 
+Linux function unsetenv. Hence the variable will be deleted from the
+environment.
+
+
+.SH Note:
+The functions set_environment, set_user and set_pwd do trust on
+fr_getprog() to get the name of the running programme. This function
+however works correctly only when the function frinit() is used.
+When frinit() is not used, only config variables without arrays
+are accepted.
+
+
+.SH "SEE ALSO"
+.BR frinit "(3fr), "
+.BR startprog "(3fr), "
+.BR setenv "(3), "
+.BR frlib "(3fr)."
+
+
+
+

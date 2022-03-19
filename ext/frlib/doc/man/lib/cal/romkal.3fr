@@ -1,0 +1,70 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "romkal" 3fr "02 may 2011" "Frank Reker" "frlib"
+.SH NAME
+romandate,
+romandateparse -
+function to print out or parse dates in latin.
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/cal/romkal.h>
+.sp
+int romandate (char *tstr, int tlen, struct cjg_bd_t *tbd, int flags);
+int romandateparse (char *tstr, struct cjg_bd_t *tbd, int flags);
+.fi
+
+
+.SH FLAGS
+.TP
+.B ROMKAL_F_ABBR
+use abbreviated names. (e.g. A.D. instead of ANTE DIEM). (romandate only)
+.TP
+.B ROMKAL_F_LCASE
+use all lower case letters. (romandate only)
+.TP
+.B ROMKAL_F_UCASE
+use all upper case letters. (romandate only)
+.TP
+.B ROMKAL_F_NOZERO
+don't zero cjg_bd_t structure before filling with the parsed date. 
+(romandateparse only)
+
+
+.SH DESCRIPTION
+These functions are helper functions for cjg_strftime(3fr) and 
+cjg_strptime(3fr), but can be used separately as well.
+.TP
+.B romandate
+prints out a date in old roman format, e.g.:
+.sp
+ante diem VI Nonas Maias MMDCCLXIV ab urbe condita
+.TP
+.B romandateparse
+this function parses a date in old roman format and fills in
+the cjg_bd_t structure.
+
+
+
+.SH "SEE ALSO"
+.BR cjg "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR roman "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

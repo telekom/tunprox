@@ -1,0 +1,50 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cf_print_config" 3fr "26 sep 2009" "Frank Reker" "frlib"
+
+.SH NAME
+cf_print_table,
+cf_print_config
+
+.SH SYNOPSIS
+
+.nf
+.B #include <fr/base/config.h>
+.sp
+.BI "int cf_print_table (int32_t **" tab ");"
+.BI "int cf_print_config ();"
+.fi
+
+.SH DESCRIPTION
+These functions are mainly for debuging purpose.
+.TP
+.B cf_print_table ()
+prints a table of unicode chars (as parsed by cf_parse_table()) to
+stdout, using a form that could be fed to a config file.
+.TP
+.B cf_print_config ()
+prints all config variables to stdout.
+
+.SH RETURN VALUE
+The functions do return an error code (RERR_OK (0) if everything is ok).
+
+.SH "SEE ALSO"
+.BR frlib.rc "(5fr), "
+.BR config "(3fr), "
+.BR cf_parse_table "(3fr)."
+
+
+
+

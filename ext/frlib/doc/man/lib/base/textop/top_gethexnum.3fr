@@ -1,0 +1,51 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "atoi" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+top_gethexnum,
+top_atoi64,
+top_atou64
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "int top_gethexnum (char *" str ");"
+.BI "int64_t top_atoi64 (const char *" str ");"
+.BI "u_int64_t top_atou64 (const char *" str ");"
+.fi
+
+
+.SH DESCRIPTION
+.TP
+.B top_gethexnum
+converts a string representation of a hexadecimal number into an integer.
+.TP
+.B top_atoi64
+converts a string representation of a decimal number into an integer.
+The behaviour is that of atoi(3), but the return value is 64bit.
+.TP
+.B top_atou64
+like top_atoi64, but for unsigned 64 bit integer.
+
+
+.SH "SEE ALSO"
+.BR atoi "(3), "
+.BR frlib "(3fr)."
+
+
+
+

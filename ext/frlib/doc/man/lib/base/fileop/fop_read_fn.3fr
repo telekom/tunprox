@@ -1,0 +1,66 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "file operation" 3fr "11 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+fop_read_fn,
+fop_read_fn2,
+fop_read_file,
+fop_read_file2,
+fop_read_fd,
+fop_read_fd2
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/fileop.h>
+.sp
+.BI "char * fop_read_fn (char *" fname ");"
+.BI "char * fop_read_fn2 (char *" fname ", int *" flen ");"
+.BI "char * fop_read_file (FILE *" f ");"
+.BI "char * fop_read_file2 (FILE *" f ", int *" flen ");"
+.BI "char * fop_read_fd (int " fd ");"
+.BI "char * fop_read_fd2 (int " fd ", int *" flen ");"
+.fi
+
+
+.SH DESCRIPTION
+Reads a file into memory allocating its buffer, which is returned.
+In case of error a NULL pointer is returned.
+.br
+The functions
+.IR fop_read_fn " and " fop_read_fn2
+take the file name as input.
+The functions
+.IR fop_read_file " and " fop_read_file2
+take a FILE pointer of an already opened file as input.
+And the functions
+.IR fop_read_fd " and " fop_read_fd2
+take a file descriptor of an already opened file as input.
+.br
+The functions with 2 at the end do return the length of the file into the
+parameter
+.IR flen ;
+interesting for binary files.
+All functions do NUL-terminate the buffer. The length however is without
+the terminating NUL byte.
+
+
+.SH "SEE ALSO"
+.BR fop_mkdir_rec "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

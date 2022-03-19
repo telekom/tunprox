@@ -1,0 +1,46 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "crc" 3fr "11 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+crc32, crc16
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/crc.h>
+.sp
+.BI "int crc32 (u_int32_t *" out ", char *" msg ", size_t " len ");"
+.BI "int crc16 (u_int16_t *" out ", char *" msg ", size_t " len ");"
+.fi
+
+
+.SH DESCRIPTION
+Does calculate a 16 or 32 bit crc-checksum (cyclic redundancy check).
+
+.SH NOTE
+The crc32 algorithm is a modified version  of the implementation
+by Eric Durbin at the University of Kentucky in 1998, which
+in turn is based upon and utilizes algorithm published by
+Ross Williams.
+The original version is public domain, and available at
+http://www.naaccr.org/standard/crc32/crc32.c
+
+
+.SH "SEE ALSO"
+.BR md5sum "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

@@ -1,0 +1,148 @@
+This repository contains the tunprox project
+
+Licensing
+=========
+
+Tunprox is NOT open source software. 
+Tunprox is made available to you under a source-available license, which
+means only non-commercial usage is permitted.
+
+The specific terms of this source-available license can be found in the file
+"LICENSE".
+
+The library frlib found in the directory /ext/frlib/ IS open source software and 
+available under the MPL-2.0 license, see /ext/frlib/LICENSE.txt for details.
+
+
+
+Instructions
+============
+
+Tunprox itself is composed of three parts:
+The kernel module. You find it in
+tunprox-kmod.
+To compile cd to tunprox-kmod and run
+#> make
+#> make install
+This compiles and installs the module for the current running
+kernel. The installation needs to be done as root.
+/lib/modules/`uname -r`/build
+must exist to compile. If the kernel headers are installed
+in another directory or the module shall be compiled using:
+#> make -C /path/to/kernel/headers M=`pwd`
+Or set the environment variable LINUXSRC to the path
+where the linux kernel sources are in. This can be easily
+done from within openwrt, too.
+The kernel modules does not need the frlib of course.
+To load the module run
+#> modprobe tunprox
+
+The tunprox-tool is the user-space tool to configure the
+kernel module and request information from it.
+to compile cd to tunprox-tool and run
+#> make
+This will compile the frlib, the libtunprox and the tool.
+The tool is linked statically to libtunprox and frlib. So
+you don't need them to run the tunprox tool.
+
+libtunprox
+is a userspace library to do the communication with the
+kernel module. The communication over the netlink interface
+uses the implementation in the frlib. So the frlib is needed
+for the tunprox-library. This library is needed by the tunprox
+tool. It is compiled together with the tool.
+To compile it manually cd to tunprox-tool/lib and run
+#> make
+The library is linked statically to the tunprox tool, so
+an installation is not needed, unless you do use the lib
+for other purposes, too.
+
+The tunprox tool itself is located in tunprox-tool/tool
+The compilation is done from within tunprox-tool, so the
+frlib and libtunprox are compiled, too.
+If you want to compile it separately cd to tunprox-tool/tool
+and run:
+#> make
+to get usage infarmation run 
+#tunprox -h 
+
+The tunprox library and frlib are linked staticaly. Modify the
+Makefile to link dynamically. Note, that when the frlib is linked
+dynamically libpthread needs to be linked, too.
+
+
+
+Debug-messages:
+The kenel module writes debug messages to the kernel-ring buffer
+which can be read using dmesg. To enable debug message:
+#> sysctl net.tunprox.debug=1
+set it to 2 to make the kernel module more verbose, or 3 to be really
+verbose.
+tunprox showdev or tunprox showall do not show the configured key
+used for authentication. For debug purpose sometimes it can be
+usefull to show the key, too. set:
+#> sysctl net.tunprox.showkey=1
+to enable output of the key. (Only root can do this, but anyone can
+call tunprox showdev/showall. So be carefull. This feature can be
+a severe security risk, when using it in a production system!!)
+
+
+Sysfs:
+The /sys/module/tunprox/tp-info directory contains some information
+of the module itself.
+To get statistics of the configured tunnels go to
+/sys/class/net/<dev>/tunnel/<tunnel-id>/statistics/
+if the device is tp0 and the tunnel-id is 0:
+/sys/class/net/tp0/tunnel/0/statistics/
+
+The userspace-tool logs to tunprox.log in the current working
+directory. To use a different logfile create a config file named
+/etc/tunprox.rc
+or
+~/.tunproxrc or ~/.config/tunprox.rc
+containing a line
+logfile="/path/to/logfile"
+Note that the path needs to be an absolute path; ~ cannot be used
+as homedir.
+
+Tars and openwrt:
+The directories tunprox-kmod and tunprox-tool contains the makefiles
+to compile two parts. These have a target "pack" to create tar-packages.
+Two tars are created (each). One starting with tunprox- containing the
+sources itself. These tars are not only a tar of tunprox-tool / -kmod.
+But files/directories are renamed and some symlinks are substituted by
+the file/directory to which it points. So the package is self containing
+and no need for other stuff when compiling. The directory to which it
+unpacks is identically to the package name without the .tar.gz suffix.
+The other tar generated starts with feeds-tunprox- and contains only
+one Makefile to be used with openwrt.
+The version information in the generated package is that of the kernel
+module, even for the tunprox-tool.
+The script mkpack in the main directory just calls make pack in the
+two subdirs tunprox-tool and tunprox-kmod.
+Note the script must be called from within the tunprox dir.
+
+Openwrt:
+To install the package in openwrt:
+- The two packages starting with tunprox- shall be copied to 
+  path/to/openwrt/dl (hence the dl subdir of the openwrt source).
+- The two tars starting with feeds shall be unpacked from inside
+  the openwirt dir.
+  #> cd /path/to/openwrt
+  #> tar xvfz /path/to/tunprox/feeds-...
+The script install-wrt does exactly the above. As a parameter the
+path to openwrt must be given.
+Note the script must be called from within the tunprox dir.
+
+
+Configure tunprox:
+<to be done>...
+for now run 
+#> tunprox -h
+to get a short help on the commands supported.
+
+
+
+
+
+

@@ -1,0 +1,95 @@
+.\" Copyright 2003-2011 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "cjg" 3fr "02 may 2011" "Frank Reker" "frlib"
+.SH NAME
+frlib - calendar
+implementation of the julian-gregorian calendar.
+
+.SH HISTORY
+The julian calendar goes back to Julius Caesar who reformed the old
+roman calendar in 46 BC. The new calendar was a pure solar calendar,
+while the old calendar was luni-solar. Caesar was inspired by the
+egyptian calendar, and so he even adopted the 4 year leap-year rule
+from the egyptians. After Caesars death the romans aplied a 3 year
+leap-year rule, which caused a shift in the calendar, which was
+corrected by Augustus. Tellings to which Augustus remodeled the
+whole calendar are most likely only legends. The 4 year rule however
+is still to much, so under the pope Gregory XIII a reform was 
+aplied. The new calendar named gregorian calendar differs only in
+the leap-year rule and the easter feast calculation. Further more
+10 days were left out (from 5th october to 14th october 1582) to
+synchronize the calendar with the council of Nicea in 325.
+.br
+Nowadays the gregorian calendar is used in most countries of the world.
+Even thu a lot of countries have their own calendar system, it is
+often only used for calculating national ond religious feasts. While
+for civil use the gregorian calendar dominates
+in most countries.
+
+.SH The Gregorian Reform
+The introduction of the new calendar by pope Gregory XIII was in october
+1582. In that year the 4th october was followed by the 15th october.
+Those days only the catholic countries introduced the new calendar.
+The protestantic countries followed later on different dates. England,
+and together with England a lot of other protestantic countries
+switch in september 1752 (from 2/9 to 14/9). Orthodox countries switched
+only in the 20th century but only for civil use. The orthodox churches
+still use the julian calendar to calculate the religious feasts.
+.sp
+Sweden wanted to go its own way and drop all leap years between 1700 and
+1740 and afterwards use the gregorian calendar. In 1700 they droped the
+leap year, but not in 1704 and 1708. So in 1712 they inserted 2 leap days
+the 29th and 30th february, and used again the julian calendar. Finally
+they switched in 1752 together with England.
+.sp
+This implementation can handle any date you specify as reform, and even
+the special case sweden. However it cannot handle more than one switch.
+In some former european colonies the switch took place more than once.
+E.g. Florida originally was spanish, so they had the gregorian calendar
+from 1582 on. Later it became british and thus switched back to julian
+calendar and 1752 again to gregorian.
+
+
+.SH DESCRIPTION
+This implementation provides function to breakdown a timestamp
+in microseconds till 1970 into a structure cjg_bd_t. (See
+.B cjg_breakdown(3fr) 
+for details). Functions to compose a broken down structure to
+a timestamp. Functions to print
+.BR "" "(" cjg_strftime(3fr) ")"
+a time/date in various formats and to parse a string 
+representation of a date
+.BR "" "(" cjg_strptime(3fr) ")."
+
+
+
+.SH "SEE ALSO"
+.BR cjg_breakdown "(3fr), "
+.BR cjg_compose "(3fr), "
+.BR cjg_strftime "(3fr), "
+.BR cjg_strptime "(3fr), "
+.BR cjg_getyear "(3fr), "
+.BR cjg_prttimestr "(3fr), "
+.BR cjg_isleap "(3fr), "
+.BR cjg_rulesetreform "(3fr), "
+.BR crule "(3fr), "
+.BR tz "(3fr), "
+.BR tzcorrect "(3fr), "
+.BR romkal "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+

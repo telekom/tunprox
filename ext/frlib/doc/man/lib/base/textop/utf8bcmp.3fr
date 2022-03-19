@@ -1,0 +1,79 @@
+.\" Copyright 2003-2009 Frank Reker <frank@reker.net>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.TH "utf8 strcmp" 3fr "13 dec 2009" "Frank Reker" "frlib"
+.SH NAME
+utf8bcmp,
+utf8ccmp,
+utf8tcmp,
+utf8lcmp
+
+
+.SH SYNOPSIS
+.nf
+.B #include <fr/base/textop.h>
+.sp
+.BI "int utf8bcmp (char *" str1 ", char *" str2 ");"
+.BI "int utf8ccmp (char *" str1 ", char *" str2 ");"
+.BI "int utf8tcmp (char *" str1 ", char *" str2 ");"
+.BI "int utf8lcmp (char *" str1 ", char *" str2 ");"
+.fi
+
+
+.SH DESCRIPTION
+These functions compare two strings encoded in utf8.
+The return value will be -1, 0 or 1 when the first
+string is less than, equal or greater than the second one.
+.TP
+.B utf8bcmp
+performs a byte-wise compare. 
+When the strings are normalized, as
+they should be according to the utf8 standard, the result is that
+of utf8ccmp. For not normalized strings the result will differ.
+Then that of utf8ccmp will be the correct result.
+However utf8bcmp is much faster than utf8ccmp.
+.TP
+.B utf8ccmp
+performs a character-wise compare. 
+When the strings are normalized, as
+they should be according to the utf8 standard, the result is that
+of utf8bcmp. For not normalized strings the result will differ.
+Then that of utf8ccmp will be the correct result.
+However utf8bcmp is much faster than utf8ccmp.
+.TP
+.B utf8tcmp
+like utf8ccmp, but honors compose characters. Some characters (e.g.
+the german umlauts) can be represented directly or by a sequence of
+two or more characters. utf8tcmp treat them equal. Thus utf8tcmp is
+closer to the utf8-standard, than the functions above.
+.br
+.B Note:
+This function is not implemented yet, and does return only the result
+of utf8ccmp().
+.TP
+.B utf8lcmp
+like utf8tcmp(), but honors local settings, too.
+.br
+.B Note:
+This function is not implemented yet, and does return only the result
+of utf8ccmp().
+
+
+.SH "SEE ALSO"
+.BR utf8clen "(3fr), "
+.BR frlib "(3fr)."
+
+
+
+
