@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,18 +49,26 @@
  * Licensor: Deutsche Telekom AG
  */
 
-#ifndef _R__KERNEL_LDT_CFG_INT_H
-#define _R__KERNEL_LDT_CFG_INT_H
-
-
-extern unsigned int ldt_cfg_enable_debug;
+#ifndef _R__TUNPROX_TOOL_CONMAN_H
+#define _R__TUNPROX_TOOL_CONMAN_H
 
 
 
 
 
-#endif	/* _R__KERNEL_LDT_CFG_INT_H */
+int cmd_conman (int argc, char **argv);
+void usage_conman ();
 
+
+
+
+
+
+
+
+
+
+#endif	/* _R__TUNPROX_TOOL_CONMAN_H */
 
 /*
  * Overrides for XEmacs and vim so that we get a uniform tabbing style.

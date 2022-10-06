@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,8 +49,8 @@
  * Licensor: Deutsche Telekom AG
  */
 
-#ifndef _R__KERNEL_LDT_IP_INT_H
-#define _R__KERNEL_LDT_IP_INT_H
+#ifndef _R__KERNEL_LDT_IP_H
+#define _R__KERNEL_LDT_IP_H
 
 
 
@@ -75,7 +75,7 @@ int ldt_ipv6hdrlen (char *data, int sz, int *l4prot);
 
 
 
-#endif	/* _R__KERNEL_LDT_IP_INT_H */
+#endif	/* _R__KERNEL_LDT_IP_H */
 
 
 /*

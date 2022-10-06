@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -60,10 +60,11 @@
 #include "ldt_sysctl.h"
 #include "ldt_dev.h"
 #include "ldt_version.h"
-#include "ldt_kernel.h"
+#include "ldt_uapi.h"
 #if IS_ENABLED(CONFIG_IP_DCCP)
 # include "ldt_mpdccp.h"
 #endif
+#include "ldt_debug.h"
 
 
 static
@@ -73,20 +74,18 @@ ldt_module_init (void)
 {
 	int	ret;
 
-	printk("ldt_module_init\n");
+	tp_prtk ("load module version %s", LDT_VERSION);
 	ret = ldt_nl_register ();
 	if (ret < 0) return ret;
 	ret = ldt_sysctl_init ();
 	if (ret < 0) return ret;
 	ret = ldt_dev_global_init ();
 	if (ret < 0) return ret;
-	ret = ldt_tun_reginit ();
-	if (ret < 0) return ret;
 #if IS_ENABLED(CONFIG_IP_DCCP)
 	ret = ldt_mpdccp_register ();
 	if (ret < 0) return ret;
 #endif
-	printk ("ldt module version %s successfully loaded\n", LDT_VERSION);
+	tp_prtk ("module version %s successfully loaded\n", LDT_VERSION);
 	return 0;
 }
 
@@ -96,16 +95,14 @@ void
 __exit
 ldt_module_exit (void)
 {
-	ldt_dev_remove_all ();
 	ldt_dev_global_destroy ();
-	ldt_tun_regdeinit ();
 #if IS_ENABLED(CONFIG_IP_DCCP)
 	ldt_mpdccp_unregister ();
 #endif
-	ldt_event_crsend (LDT_EVTYPE_LDTDOWN, NULL, 0);
+	ldt_event_crsend (LDT_EVTYPE_TPDOWN, NULL, 0);
 	ldt_sysctl_exit ();
 	ldt_nl_unregister ();
-	printk ("ldt_module_exit\n");
+	tp_prtk ("module ver %s unloaded\n", LDT_VERSION);
 }
 
 
@@ -114,7 +111,6 @@ module_init (ldt_module_init);
 module_exit (ldt_module_exit);
 
 
-//MODULE_LICENSE("Dual MPL/GPL");
 MODULE_LICENSE("Proprietary");
 MODULE_AUTHOR("Frank Reker <frank@reker.net>");
 MODULE_VERSION(LDT_VERSION);

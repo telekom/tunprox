@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -74,12 +74,13 @@
 
 #include <ldt/ldt.h>
 
+static int do_tun_setpeer (const char *name, frad_t *raddr);
+static int do_tun_serverstart (const char *);
 
 
 int
-ldt_create_dev (name, type, out_name, flags)
+ldt_create_dev (name, out_name, flags)
 	const char	*name;
-	const char	*type;
 	char			**out_name;
 	uint32_t		flags;
 {
@@ -88,7 +89,7 @@ ldt_create_dev (name, type, out_name, flags)
 	char		*ptr;
 
 	if (!name) name = "";
-	len = FNL_MSGMINLEN + strlen (name) + (type ? strlen (type) + 4 : 0) + 2 + 128;
+	len = FNL_MSGMINLEN + strlen (name) + 2 + 128;
 	msg = malloc (len);
 	bzero (msg, len);
 	ret = fnl_setcmd (msg,	LDT_CMD_CREATE_DEV);
@@ -102,13 +103,6 @@ ldt_create_dev (name, type, out_name, flags)
 	if (!ptr) {
 		free (msg);
 		return RERR_INTERNAL;
-	}
-	if (type) {
-		ptr = fnl_putattr (ptr, LDT_CMD_CREATE_DEV_ATTR_TYPE, type, strlen (type)+1);
-		if (!ptr) {
-			free (msg);
-			return RERR_INTERNAL;
-		}
 	}
 	ptr = fnl_putattr (ptr, LDT_CMD_CREATE_DEV_ATTR_FLAGS, &flags, 4);
 	len = ptr - msg;
@@ -169,66 +163,28 @@ ldt_rm_dev (name)
 
 
 int
-ldt_tunbind (name, laddr, dev, flags)
-	const char	*name, *dev;
-	frad_t		*laddr;
-	uint32_t		flags;
+ldt_rm_tun (name)
+	const char	*name;
 {
 	char		*msg;
 	int		ret, len;
 	char		*ptr;
-	uint16_t	port;
 
-	if (!name) return RERR_PARAM;
-	if (!laddr && !dev) return RERR_PARAM;
-	len = FNL_MSGMINLEN + strlen (name) + (dev ? strlen (dev) : 0) + 128;
+	if (!name) name = "";
+	len = FNL_MSGMINLEN + strlen (name) + 2 + 128;
 	msg = malloc (len);
 	bzero (msg, len);
-	ret = fnl_setcmd (msg, LDT_CMD_BIND);
+	ret = fnl_setcmd (msg,	LDT_CMD_RM_TUN);
 	if (!RERR_ISOK(ret)) {
 		free (msg);
 		return ret;
 	}
 	ptr = fnl_getmsgdata (msg, 0);
-	ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_NAME, name,
+	ptr = fnl_putattr (	ptr, LDT_CMD_RM_TUN_ATTR_NAME, name,
 								strlen(name)+1);
 	if (!ptr) {
 		free (msg);
 		return RERR_INTERNAL;
-	}
-	if (laddr) {
-		if (!FRADP_ISIPV6(laddr)) {
-			ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_ADDR4,
-										&laddr->v4.sin_addr.s_addr, 4);
-		} else {
-			ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_ADDR6,
-										laddr->v6.sin6_addr.s6_addr, 16);
-		}
-		if (!ptr) {
-			free (msg);
-			return RERR_INTERNAL;
-		}
-		port = frad_getport (laddr);
-		ptr = fnl_putattr (ptr, LDT_CMD_BIND_ATTR_PORT, &port, 2);
-		if (!ptr) {
-			free (msg);
-			return RERR_INTERNAL;
-		}
-	}
-	if (dev) {
-		ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_DEV, dev,
-									strlen(dev)+1);
-		if (!ptr) {
-			free (msg);
-			return RERR_INTERNAL;
-		}
-	}
-	if (flags) {
-		ptr = fnl_putattr (ptr, LDT_CMD_BIND_ATTR_FLAGS, &flags, 4);
-		if (!ptr) {
-			free (msg);
-			return RERR_INTERNAL;
-		}
 	}
 	len = ptr - msg;
 	ret = ldt_nl_send (msg, len);
@@ -245,7 +201,217 @@ ldt_tunbind (name, laddr, dev, flags)
 }
 
 int
-ldt_setpeer (name, raddr)
+ldt_newtun (name, tuntype)
+	const char	*name, *tuntype;
+{
+	char		*msg;
+	int		ret, len;
+	char		*ptr;
+
+	if (!name || !tuntype) return RERR_PARAM;
+	len = FNL_MSGMINLEN + strlen (name) + strlen (tuntype) + 64;
+	msg = malloc (len);
+	if (!msg) return RERR_NOMEM;
+	bzero (msg, len);
+	ret = fnl_setcmd (msg, LDT_CMD_NEWTUN);
+	if (!RERR_ISOK(ret)) {
+		free (msg);
+		return ret;
+	}
+	ptr = fnl_getmsgdata (msg, 0);
+	ptr = fnl_putattr (	ptr, LDT_CMD_NEWTUN_ATTR_NAME, name,
+								strlen(name)+1);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	ptr = fnl_putattr (	ptr, LDT_CMD_NEWTUN_ATTR_TUN_TYPE, tuntype,
+								strlen(tuntype)+1);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	len = ptr - msg;
+	ret = ldt_nl_send (msg, len);
+	free (msg);
+	if (!RERR_ISOK(ret)) {
+		SLOGFE (LOG_ERR, "error sending request to ldt kernel module: %s",
+					rerr_getstr3(ret));
+		return ret;
+	}
+	SLOGF (LOG_VVERB, "sent %d bytes", ret);
+	ret = ldt_nl_getret ();
+	ldt_mayclose ();
+	return ret;
+}
+
+int
+ldt_tunbind (name, laddr)
+	const char	*name;
+	frad_t		*laddr;
+{
+	char		*msg;
+	int		ret, len;
+	char		*ptr;
+	uint16_t	port;
+
+	if (!name) return RERR_PARAM;
+	if (!laddr) return RERR_PARAM;
+	len = FNL_MSGMINLEN + strlen (name) + 128;
+	msg = malloc (len);
+	bzero (msg, len);
+	ret = fnl_setcmd (msg, LDT_CMD_BIND);
+	if (!RERR_ISOK(ret)) {
+		free (msg);
+		return ret;
+	}
+	ptr = fnl_getmsgdata (msg, 0);
+	ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_NAME, name,
+								strlen(name)+1);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	if (!FRADP_ISIPV6(laddr)) {
+		ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_ADDR4,
+									&laddr->v4.sin_addr.s_addr, 4);
+	} else {
+		ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_ADDR6,
+									laddr->v6.sin6_addr.s6_addr, 16);
+	}
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	port = frad_getport (laddr);
+	ptr = fnl_putattr (ptr, LDT_CMD_BIND_ATTR_PORT, &port, 2);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	len = ptr - msg;
+	ret = ldt_nl_send (msg, len);
+	free (msg);
+	if (!RERR_ISOK(ret)) {
+		SLOGFE (LOG_ERR, "error sending request to ldt kernel module: %s",
+					rerr_getstr3(ret));
+		return ret;
+	}
+	SLOGF (LOG_VVERB, "sent %d bytes", ret);
+	ret = ldt_nl_getret ();
+	ldt_mayclose ();
+	return ret;
+}
+
+int
+ldt_tunbind2dev (name, dev)
+	const char	*name, *dev;
+{
+	char		*msg;
+	int		ret, len;
+	char		*ptr;
+
+	if (!name) return RERR_PARAM;
+	if (!dev) return RERR_PARAM;
+	len = FNL_MSGMINLEN + strlen (name) + (dev ? strlen (dev) : 0) + 128;
+	msg = malloc (len);
+	bzero (msg, len);
+	ret = fnl_setcmd (msg, LDT_CMD_BIND2DEV);
+	if (!RERR_ISOK(ret)) {
+		free (msg);
+		return ret;
+	}
+	ptr = fnl_getmsgdata (msg, 0);
+	ptr = fnl_putattr (	ptr, LDT_CMD_BIND_ATTR_NAME, name,
+								strlen(name)+1);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	ptr = fnl_putattr (	ptr, LDT_CMD_BIND2DEV_ATTR_DEV, dev,
+								strlen(dev)+1);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	len = ptr - msg;
+	ret = ldt_nl_send (msg, len);
+	free (msg);
+	if (!RERR_ISOK(ret)) {
+		SLOGFE (LOG_ERR, "error sending request to ldt kernel module: %s",
+					rerr_getstr3(ret));
+		return ret;
+	}
+	SLOGF (LOG_VVERB, "sent %d bytes", ret);
+	ret = ldt_nl_getret ();
+	ldt_mayclose ();
+	return ret;
+}
+
+int
+ldt_tun_setpeer (name, raddr, tout)
+	const char	*name;
+	frad_t		*raddr;
+	tmo_t			tout;
+{
+	int							ret;
+	struct ldt_evinfo	evinfo;
+
+	ldt_event_open ();
+	ret = do_tun_setpeer (name, raddr);
+	if (!RERR_ISOK(ret)) {
+		SLOGFE (LOG_ERR, "error setting peer: %s", rerr_getstr3(ret));
+		ldt_mayclose ();
+		return ret;
+	}
+	if (tout == 0) return RERR_OK;
+
+	bzero (&evinfo, sizeof (evinfo));
+	ret = ldt_waitifaceev (&evinfo, name, 
+						(1<<LDT_EVTYPE_TUNDOWN) | (1<<LDT_EVTYPE_IFDOWN) |
+						(1<<LDT_EVTYPE_TPDOWN) | (1<<LDT_EVTYPE_REBIND) |
+						(1<<LDT_EVTYPE_CONN_ESTAB_FAIL) |
+						(1<<LDT_EVTYPE_CONN_ESTAB), tout, 0);
+	if (!RERR_ISOK(ret)) {
+		if (ret != RERR_TIMEDOUT) {
+			SLOGFE (LOG_ERR, "error waiting on connection establishment: %s",
+									rerr_getstr3(ret));
+			ldt_event_send (	name, LDT_EVTYPE_CONN_ESTAB_FAIL,
+										errno);
+		}
+		ldt_mayclose ();
+		return ret;
+	}
+	if (evinfo.evtype != LDT_EVTYPE_CONN_ESTAB) {
+		switch (evinfo.evtype) {
+		case LDT_EVTYPE_TUNDOWN:
+		case LDT_EVTYPE_IFDOWN:
+		case LDT_EVTYPE_TPDOWN:
+			ldt_event_send (	name, LDT_EVTYPE_CONN_ESTAB_FAIL,
+										ENOTCONN);
+			break;
+		case LDT_EVTYPE_REBIND:
+			ldt_event_send (	name, LDT_EVTYPE_CONN_ESTAB_FAIL,
+										ENOTCONN);
+			break;
+		case LDT_EVTYPE_CONN_ESTAB_FAIL:
+			SLOGF (LOG_ERR, "connection failed with error: %s", strerror (evinfo.reason));
+			ldt_mayclose ();
+			errno = evinfo.reason;
+			return RERR_SYSTEM;
+		default:
+			break;
+		}
+		ldt_mayclose ();
+		return RERR_FAIL;
+	}
+	ldt_mayclose ();
+	return ret;
+}
+
+static
+int
+do_tun_setpeer (name, raddr)
 	const char	*name;
 	frad_t		*raddr;
 {
@@ -254,7 +420,7 @@ ldt_setpeer (name, raddr)
 	char		*ptr;
 	uint16_t	port;
 
-	if (!name || !raddr) return RERR_PARAM;
+	if (!name) return RERR_PARAM;
 	len = FNL_MSGMINLEN + strlen (name) + 128;
 	msg = malloc (len);
 	bzero (msg, len);
@@ -270,22 +436,24 @@ ldt_setpeer (name, raddr)
 		free (msg);
 		return RERR_INTERNAL;
 	}
-	if (!FRADP_ISIPV6(raddr)) {
-		ptr = fnl_putattr (	ptr, LDT_CMD_PEER_ATTR_ADDR4,
-									&raddr->v4.sin_addr.s_addr, 4);
-	} else {
-		ptr = fnl_putattr (	ptr, LDT_CMD_PEER_ATTR_ADDR6,
-									raddr->v6.sin6_addr.s6_addr, 16);
-	}
-	if (!ptr) {
-		free (msg);
-		return RERR_INTERNAL;
-	}
-	port = frad_getport (raddr);
-	ptr = fnl_putattr (ptr, LDT_CMD_PEER_ATTR_PORT, &port, 2);
-	if (!ptr) {
-		free (msg);
-		return RERR_INTERNAL;
+	if (raddr) {
+		if (!FRADP_ISIPV6(raddr)) {
+			ptr = fnl_putattr (	ptr, LDT_CMD_PEER_ATTR_ADDR4,
+										&raddr->v4.sin_addr.s_addr, 4);
+		} else {
+			ptr = fnl_putattr (	ptr, LDT_CMD_PEER_ATTR_ADDR6,
+										raddr->v6.sin6_addr.s6_addr, 16);
+		}
+		if (!ptr) {
+			free (msg);
+			return RERR_INTERNAL;
+		}
+		port = frad_getport (raddr);
+		ptr = fnl_putattr (ptr, LDT_CMD_PEER_ATTR_PORT, &port, 2);
+		if (!ptr) {
+			free (msg);
+			return RERR_INTERNAL;
+		}
 	}
 	len = ptr - msg;
 	ret = ldt_nl_send (msg, len);
@@ -302,7 +470,7 @@ ldt_setpeer (name, raddr)
 }
 
 int
-ldt_setqueue (name, txqlen, qpolicy)
+ldt_tun_setqueue (name, txqlen, qpolicy)
 	const char	*name;
 	int			txqlen, qpolicy;
 {
@@ -359,7 +527,68 @@ ldt_setqueue (name, txqlen, qpolicy)
 }
 
 int
-ldt_serverstart (name)
+ldt_tun_serverstart (name, tout)
+	const char	*name;
+	tmo_t			tout;
+{
+	int							ret;
+	struct ldt_evinfo	evinfo;
+
+	ldt_event_open ();
+	ret = do_tun_serverstart (name);
+	if (!RERR_ISOK(ret)) {
+		SLOGFE (LOG_ERR, "error starting server: %s", rerr_getstr3(ret));
+		ldt_mayclose ();
+		return ret;
+	}
+	if (tout == 0) return RERR_OK;
+
+	bzero (&evinfo, sizeof (evinfo));
+	ret = ldt_waitifaceev (&evinfo, name, 
+						(1<<LDT_EVTYPE_TUNDOWN) | (1<<LDT_EVTYPE_IFDOWN) |
+						(1<<LDT_EVTYPE_TPDOWN) | (1<<LDT_EVTYPE_REBIND) |
+						(1LL<<LDT_EVTYPE_CONN_LISTEN_FAIL) |
+						(1LL<<LDT_EVTYPE_CONN_LISTEN), tout, 0);
+	if (!RERR_ISOK(ret)) {
+		if (ret != RERR_TIMEDOUT) {
+			SLOGFE (LOG_ERR, "error waiting on connection establishment: %s",
+									rerr_getstr3(ret));
+			ldt_event_send (	name, LDT_EVTYPE_CONN_LISTEN_FAIL,
+										errno);
+		}
+		ldt_mayclose ();
+		return ret;
+	}
+	if (evinfo.evtype != LDT_EVTYPE_CONN_LISTEN) {
+		switch (evinfo.evtype) {
+		case LDT_EVTYPE_TUNDOWN:
+		case LDT_EVTYPE_IFDOWN:
+		case LDT_EVTYPE_TPDOWN:
+			ldt_event_send (	name, LDT_EVTYPE_CONN_LISTEN_FAIL,
+										ENOTCONN);
+			break;
+		case LDT_EVTYPE_REBIND:
+			ldt_event_send (	name, LDT_EVTYPE_CONN_LISTEN_FAIL,
+										ENOTCONN);
+			break;
+		case LDT_EVTYPE_CONN_LISTEN_FAIL:
+			SLOGF (LOG_ERR, "connection failed with error: %s", strerror (evinfo.reason));
+			ldt_mayclose ();
+			errno = evinfo.reason;
+			return RERR_SYSTEM;
+		default:
+			break;
+		}
+		ldt_mayclose ();
+		return RERR_FAIL;
+	}
+	ldt_mayclose ();
+	return ret;
+}
+
+static
+int
+do_tun_serverstart (name)
 	const char	*name;
 {
 	char		*msg;
@@ -395,6 +624,7 @@ ldt_serverstart (name)
 	ldt_mayclose ();
 	return ret;
 }
+
 
 int
 ldt_set_mtu (name, mtu)
@@ -440,24 +670,41 @@ ldt_set_mtu (name, mtu)
 	return ret;
 }
 
+
 int
-ldt_ping (data)
-	uint32_t		data;
+ldt_event_send (name, evtype, reason)
+	const char	*name;
+	int			evtype;
+	int			reason;
 {
 	char		*msg;
 	int		ret, len;
 	char		*ptr;
+	uint32_t	reason32 = (uint32_t)reason;
+	uint32_t	evtype32 = (uint32_t)evtype;
 
-	len = FNL_MSGMINLEN + 8 + 128;
+	if (!name) return RERR_PARAM;
+	len = FNL_MSGMINLEN + strlen (name) + 18 + 128;
 	msg = malloc (len);
 	bzero (msg, len);
-	ret = fnl_setcmd (msg,LDT_CMD_PING);
+	ret = fnl_setcmd (msg,LDT_CMD_EVSEND);
 	if (!RERR_ISOK(ret)) {
 		free (msg);
 		return ret;
 	}
 	ptr = fnl_getmsgdata (msg, 0);
-	ptr = fnl_putattr (ptr, LDT_CMD_PING_ATTR_DATA, &data, 4);
+	ptr = fnl_putattr (	ptr, LDT_CMD_EVSEND_ATTR_NAME, name,
+								strlen(name)+1);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	ptr = fnl_putattr (ptr, LDT_CMD_EVSEND_ATTR_EVTYPE, &evtype32, 4);
+	if (!ptr) {
+		free (msg);
+		return RERR_INTERNAL;
+	}
+	ptr = fnl_putattr (ptr, LDT_CMD_EVSEND_ATTR_REASON, &reason32, 4);
 	if (!ptr) {
 		free (msg);
 		return RERR_INTERNAL;

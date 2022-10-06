@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,6 +49,7 @@
  * Licensor: Deutsche Telekom AG
  */
 
+
 #ifndef _R__KERNEL_LDT_TUN_INT_H
 #define _R__KERNEL_LDT_TUN_INT_H
 
@@ -58,7 +59,6 @@
 #include "ldt_dev.h"
 struct sock;
 
-#define LDT_TUN_BIND_F_NOBIND	0x01
 #define LDT_TUN_BIND_F_ADDRCHG	0x02
 
 struct ldt_tun;
@@ -73,47 +73,18 @@ struct ldt_tunops {
 	ssize_t (*tp_gettuninfo)(void*, char*, size_t);
 	int (*tp_createvent)(void*, char*, size_t, const char*, const char*);
 	int (*tp_needheadroom)(void*);
-	int (*tp_maxmtu)(void*);
 	int (*tp_getmtu)(void*);
 	int (*tp_setqueue)(void*, int, int);
 	int	ipv6;
 };
 
-struct ldt_tunstats {
-	u32	tx_packets,
-			rx_packets,
-			tx_dropped,
-			rx_dropped,
-			tx_error,
-			rx_interror,
-			rx_errpacket,
-			rx_authfail,
-			tx_inits,
-			rx_inits,
-			tx_keepalive,
-			rx_keepalive,
-			tx_busy,
-			tx_tot,
-			ev_down,
-			ev_up,
-			ev_init;
-	u64	tx_bytes,
-			rx_bytes;
-};
 
 struct ldt_dev;
 struct ldt_tun {
-	u16							id;
-	u16							devbound:1,
-									isbound:1,
-									pdevdown:1;
-	u32							active;
-	u32							iniths_flags;
+	u32							pdevdown:1;
 	void							*tundata;
 	struct ldt_tunops			*tunops;
 	struct ldt_dev				*tdev;
-	char							pdev[33];
-	struct ldt_tunstats		stats;
 	time_t						ctime, mtime, atime;
 };
 			
@@ -137,8 +108,7 @@ void ldt_tun_unregister (const char *);
 # define smp_store_release(x,y) *(x) = (y)
 #endif
 
-#define TUNISACTIVE(tun)	(smp_load_acquire(&((tun)->active)))
-#define TUNIFACT(tun)		((tun) && TUNISACTIVE(tun) && (tun)->tunops)
+#define TUNIFACT(tun)		((tun) && (tun)->tunops)
 #define TUNIFFUNC(tun,f)	(TUNIFACT(tun) && (tun)->tunops->f)
 
 
@@ -151,20 +121,19 @@ inline
 netdev_tx_t
 ldt_tun_xmit (struct ldt_tun *tun, struct sk_buff *skb)
 {
-	if (!TUNISACTIVE(tun)) return NETDEV_TX_BUSY;
+	if (!TUNIFACT(tun)) return NETDEV_TX_BUSY;
 	return tun->tunops->tp_xmit (tun->tundata, skb);
 };
 
 
-int ldt_tun_bind (struct ldt_tun*, tp_addr_t *addr, const char *dev, int flags);
-int ldt_tun_rebind (struct ldt_tun*);
+int ldt_tun_bind (struct ldt_tun*, tp_addr_t *addr);
+int ldt_tun_rebind (struct ldt_tun*, int flags);
 int ldt_tun_peer (struct ldt_tun*, tp_addr_t *addr);
 int ldt_tun_serverstart (struct ldt_tun*);
 int ldt_tun_getmtu (struct ldt_tun *tun);
 int ldt_tun_needheadroom (struct ldt_tun *tun);
 ssize_t ldt_tun_gettuninfo (	struct ldt_tun *tun, char *buf,
 											size_t blen);
-int ldt_tun_maxmtu (struct ldt_tun *tun);
 int ldt_tun_createvent (	struct ldt_tun *tun, char *evbuf,
 										size_t evlen, const char *evtype,
 										const char *desc);

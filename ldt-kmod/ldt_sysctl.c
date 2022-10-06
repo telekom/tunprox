@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -55,16 +55,111 @@
 #include <linux/init.h>
 #include <linux/errno.h>
 
-#include "ldt_cfg.h"
+#include "ldt_sysctl.h"
+
+unsigned int tp_cfg_enable_debug = 0;
+unsigned int tp_cfg_show_key = 0;
+unsigned int tp_cfg_loglevel = 5;
+unsigned int tp_cfg_logflags = TP_CFG_LOG_F_RATELIMIT | TP_CFG_LOG_F_PRTFILE;
+
+
+static unsigned i_0 = 0;
+static unsigned i_1 = 1;
+static unsigned i_3 = 3;
+static unsigned i_9 = 9;
+
+static unsigned old_loglevel = 5;
+
+static
+int
+proc_loglevel (
+	struct ctl_table	*ctl,
+	int					write,
+	void __user			*buffer,
+	size_t				*lenp,
+	loff_t				*ppos)
+{
+	unsigned				val;
+	struct ctl_table	tbl = {
+										.data = &val,
+										.maxlen = sizeof (unsigned),
+										.extra1 = &i_0,
+										.extra2 = &i_9,
+									};
+	int					ret;
+
+	val = tp_cfg_loglevel;
+	ret = proc_dointvec_minmax (&tbl, write, buffer, lenp, ppos);
+	if (write && ret == 0) {
+		old_loglevel = tp_cfg_loglevel;
+		tp_cfg_loglevel = val;
+		tp_cfg_enable_debug = (val >= 7) ? val - 6 : 0;
+	}
+	return ret;
+}
+
+static
+int
+proc_debug (
+	struct ctl_table	*ctl,
+	int					write,
+	void __user			*buffer,
+	size_t				*lenp,
+	loff_t				*ppos)
+{
+	unsigned				val;
+	struct ctl_table	tbl = {
+										.data = &val,
+										.maxlen = sizeof (unsigned),
+										.extra1 = &i_0,
+										.extra2 = &i_3,
+									};
+	int					ret;
+
+	val = tp_cfg_enable_debug;
+	ret = proc_dointvec_minmax (&tbl, write, buffer, lenp, ppos);
+	if (write && ret == 0) {
+		tp_cfg_enable_debug = val;
+		tp_cfg_loglevel = (val > 0) ? val + 6 : old_loglevel;
+	}
+	return ret;
+}
 
 
 static struct ctl_table net_ldt_table[] = {
 	{
 		.procname       = "debug",
-		.data           = &ldt_cfg_enable_debug,
+		.data           = &tp_cfg_enable_debug,
+		.maxlen         = sizeof(unsigned int),
+		.mode           = 0644,
+		.proc_handler   = proc_debug,
+		.extra1			 = &i_0,
+		.extra2			 = &i_3,
+	},
+	{
+		.procname       = "loglevel",
+		.data           = &tp_cfg_loglevel,
+		.maxlen         = sizeof(unsigned int),
+		.mode           = 0644,
+		.proc_handler   = proc_loglevel,
+		.extra1			 = &i_0,
+		.extra2			 = &i_9,
+	},
+	{
+		.procname       = "logflags",
+		.data           = &tp_cfg_logflags,
 		.maxlen         = sizeof(unsigned int),
 		.mode           = 0644,
 		.proc_handler   = proc_dointvec_minmax,
+	},
+	{
+		.procname       = "show_key",
+		.data           = &tp_cfg_show_key,
+		.maxlen         = sizeof(unsigned int),
+		.mode           = 0644,
+		.proc_handler   = proc_dointvec_minmax,
+		.extra1			 = &i_0,
+		.extra2			 = &i_1,
 	},
 	{ }
 };
@@ -87,6 +182,10 @@ ldt_sysctl_exit (void)
 	if (sysctl_hdr) unregister_sysctl_table (sysctl_hdr);
 	sysctl_hdr = NULL;
 }
+
+
+
+
 
 
 

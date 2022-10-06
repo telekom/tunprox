@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -56,7 +56,6 @@
 #include "ldt_tunaddr.h"
 #include "ldt_dev.h"
 #include "ldt_tun.h"
-#include "ldt_cfg.h"
 
 
 void
@@ -78,9 +77,8 @@ ldt_tunaddr_bind (tad, addr, flags)
 {
 	if (!tad || !addr) return -EINVAL;
 	if (TP_ADDRP_FAM(addr) != TP_ADDR_FAM(tad->raddr)) {
-		if (ldt_cfg_enable_debug)
-			printk ("ldt_tunaddr_bind(): try to bind to wrong address family"
-						" - expecting %s", tad->ipv6 ? "ipv6" : "ipv4");
+		tp_debug ("try to bind to wrong address family - expecting %s",
+						tad->ipv6 ? "ipv6" : "ipv4");
 		return -EINVAL;
 	}
 	if (flags & LDT_TUN_BIND_F_ADDRCHG) {
@@ -106,9 +104,8 @@ ldt_tunaddr_setpeer (tad, addr, dyn)
 	if (!tad || !addr) return -EINVAL;
 	if (dyn && !tad->anyraddr) return 0;	/* nothing to be done */
 	if (TP_ADDRP_FAM(addr) != TP_ADDR_FAM(tad->raddr)) {
-		if (ldt_cfg_enable_debug)
-			printk ("ldt_tunaddr_setpeer(): try to connect to wrong address family"
-						" - expecting %s", tad->ipv6 ? "ipv6" : "ipv4");
+		tp_debug ("try to connect to wrong address family - expecting %s",
+						tad->ipv6 ? "ipv6" : "ipv4");
 		return -EINVAL;
 	}
 	tp_addr_cp (&tad->raddr, addr);

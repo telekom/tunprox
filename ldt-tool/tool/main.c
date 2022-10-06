@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -59,9 +59,10 @@
 
 #include <fr/base.h>
 #include "cmd.h"
+#include "conman.h"
 #include <ldt.h>
 
-#define LDT_TOOL_VERSION	"0.1"
+#define LDT_TOOL_VERSION	"0.4.0"
 
 
 const char	*PROG = "ldt";
@@ -84,18 +85,20 @@ usage ()
 				"  (to get help on a specific command - type: <cmd> -h)\n"
 				"    newdev | new - creates a new ldt device\n"
 				"    rmdev - removes a ldt dev\n"
-				"    tunbind - binds tunnel to address\n"
-				"    setpeer | peer - sets peer address to connect to\n"
-				"    serverstart - sets server to listen mode\n"
-				"    setmtu - sets mtu for given ldt device\n"
-				"    setqueue - set tx queue length and/or queueing policy\n"
 				"    getversion | getver - prints version of running ldt module\n"
 				"    getdevlist | getlist - prints a list of ldt devices\n"
 				"    showdev - shows information for a specific device\n"
 				"    showinfo | info - shows specific info for specific device\n"
 				"    showall - shows information for all ldt devices\n"
-				"    ping - sends pong on event channel (for debugging only)\n"
+				"    newtun | addtun - creates a new tunnel\n"
+				"    tunbind - binds tunnel to address\n"
+				"    setpeer | peer - sets peer address to connect to\n"
+				"    serverstart - sets server to listen mode\n"
+				"    rmtun - remove a tunnel from a ldt device\n"
+				"    setmtu - sets mtu for given ldt device\n"
 				"    printev | prtev - prints (all) ldt events\n"
+				"    setqueue - set tx queue length and/or queueing policy\n"
+				"    conman - start connection manager\n"
 				"\n");
 }
 
@@ -172,6 +175,13 @@ main (argc, argv)
 	sicase ("showall")
 		ret = cmd_showall (argc, argv);
 		break;
+	sicase ("rmtun")
+		ret = cmd_rmtun (argc, argv);
+		break;
+	sicase ("newtun")
+	sicase ("addtun")
+		ret = cmd_newtun (argc, argv);
+		break;
 	sicase ("tunbind")
 		ret = cmd_tunbind (argc, argv);
 		break;
@@ -186,15 +196,15 @@ main (argc, argv)
 	sicase ("setmtu")
 		ret = cmd_set_mtu (argc, argv);
 		break;
-	sicase ("ping")
-		ret = cmd_ping (argc, argv);
-		break;
 	sincase ("printev")
 	sincase ("prtev")
 		ret = cmd_prtev (argc, argv);
 		break;
 	sicase ("setqueue")
 		ret = cmd_setqueue (argc, argv);
+		break;
+	sicase ("conman")
+		ret = cmd_conman (argc, argv);
 		break;
 	sdefault
 		argv--;

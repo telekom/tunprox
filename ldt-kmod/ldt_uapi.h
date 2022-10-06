@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,6 +49,7 @@
  * Licensor: Deutsche Telekom AG
  */
 
+
 #ifndef _R__KERNEL_LDT_H
 #define _R__KERNEL_LDT_H
 
@@ -64,7 +65,7 @@ extern "C" {
 
 
 #define LDT_NAME "ldt"
-#define LDT_NL_VERSION 1	/* netlink protocol version */
+#define LDT_NL_VERSION 3	/* netlink protocol version */
 
 
 /* netlink definitions */
@@ -77,16 +78,18 @@ enum ldt_nl_commands {
 	LDT_CMD_GET_DEVLIST,
 	LDT_CMD_SHOW_DEV,
 	LDT_CMD_SHOW_DEVLIST,
+	LDT_CMD_RM_TUN,
+	LDT_CMD_NEWTUN,
 	LDT_CMD_BIND,
+	LDT_CMD_BIND2DEV,
 	LDT_CMD_PEER,
 	LDT_CMD_SERVERSTART,
 	LDT_CMD_SET_MTU,
 	LDT_CMD_SET_QUEUE,
 	LDT_CMD_SUBSCRIBE,
-	LDT_CMD_PING,
 	LDT_CMD_SEND_INFO,			/* answer */
 	LDT_CMD_SEND_EVENT,			/* unsolicate event answer */
-	LDT_CMD_AUTHFAIL,
+	LDT_CMD_EVSEND,
 	__LDT_CMD_MAX
 };
 #define LDT_CMD_MAX (__LDT_CMD_MAX - 1)
@@ -97,7 +100,6 @@ enum ldt_attrs_create_dev {
 	LDT_CMD_CREATE_DEV_ATTR_UNSPEC,
 	LDT_CMD_CREATE_DEV_ATTR_NAME,	/* NLA_NUL_STRING */
 	LDT_CMD_CREATE_DEV_ATTR_FLAGS,	/* NLA_U32 */
-	LDT_CMD_CREATE_DEV_ATTR_TYPE,		/* NLA_NUL_STRING */
 	__LDT_CMD_CREATE_DEV_ATTR_MAX
 };
 #define LDT_CMD_CREATE_DEV_ATTR_MAX (__LDT_CMD_CREATE_DEV_ATTR_MAX - 1)
@@ -140,25 +142,44 @@ enum ldt_attrs_show_devlist {
 #define LDT_CMD_SHOW_DEVLIST_ATTR_MAX (__LDT_CMD_SHOW_DEVLIST_ATTR_MAX - 1)
 
 
+enum ldt_attrs_rm_tun {
+	LDT_CMD_RM_TUN_ATTR_UNSPEC,
+	LDT_CMD_RM_TUN_ATTR_NAME,		/* NLA_NUL_STRING */
+	__LDT_CMD_RM_TUN_ATTR_MAX
+};
+#define LDT_CMD_RM_TUN_ATTR_MAX (__LDT_CMD_RM_TUN_ATTR_MAX - 1)
+
+enum ldt_attrs_newtun {
+	LDT_CMD_NEWTUN_ATTR_UNSPEC,
+	LDT_CMD_NEWTUN_ATTR_NAME,			/* NLA_NUL_STRING */
+	LDT_CMD_NEWTUN_ATTR_TUN_TYPE,	/* NLA_NUL_STRING */
+	__LDT_CMD_NEWTUN_ATTR_MAX
+};
+#define LDT_CMD_NEWTUN_ATTR_MAX	(__LDT_CMD_NEWTUN_ATTR_MAX - 1)
+
 enum ldt_attr_bind {
 	LDT_CMD_BIND_ATTR_UNSPEC,
 	LDT_CMD_BIND_ATTR_NAME,		/* NLA_NUL_STRING */
-	LDT_CMD_BIND_ATTR_ADDR4,	/* NLA_U32 */
-	LDT_CMD_BIND_ATTR_ADDR6, 	/* NLA_BINARY */
+	LDT_CMD_BIND_ATTR_ADDR4,		/* NLA_U32 */
+	LDT_CMD_BIND_ATTR_ADDR6, 		/* NLA_BINARY */
 	LDT_CMD_BIND_ATTR_PORT,		/* NLA_U16 */
-	LDT_CMD_BIND_ATTR_DEV,		/* NLA_NUL_STRING */
-	LDT_CMD_BIND_ATTR_FLAGS,	/* NLA_U32 */
 	__LDT_CMD_BIND_ATTR_MAX
 };
 #define LDT_CMD_BIND_ATTR_MAX	(__LDT_CMD_BIND_ATTR_MAX - 1)
 
-#define LDT_CMD_BIND_FLAG_DIRECTROUTE	0x01
-	
+enum ldt_attr_bind2dev {
+	LDT_CMD_BIND2DEV_ATTR_UNSPEC,
+	LDT_CMD_BIND2DEV_ATTR_NAME,		/* NLA_NUL_STRING */
+	LDT_CMD_BIND2DEV_ATTR_DEV, 		/* NLA_NUL_STRING - binding device */
+	__LDT_CMD_BIND2DEV_ATTR_MAX
+};
+#define LDT_CMD_BIND2DEV_ATTR_MAX	(__LDT_CMD_BIND2DEV_ATTR_MAX - 1)
+
 enum ldt_attr_peer {
 	LDT_CMD_PEER_ATTR_UNSPEC,
 	LDT_CMD_PEER_ATTR_NAME,		/* NLA_NUL_STRING */
-	LDT_CMD_PEER_ATTR_ADDR4,	/* NLA_U32 */
-	LDT_CMD_PEER_ATTR_ADDR6, 	/* NLA_BINARY */
+	LDT_CMD_PEER_ATTR_ADDR4,		/* NLA_U32 */
+	LDT_CMD_PEER_ATTR_ADDR6, 		/* NLA_BINARY */
 	LDT_CMD_PEER_ATTR_PORT,		/* NLA_U16 */
 	__LDT_CMD_PEER_ATTR_MAX
 };
@@ -180,6 +201,7 @@ enum ldt_attrs_set_mtu {
 };
 #define LDT_CMD_SET_MTU_ATTR_MAX (__LDT_CMD_SET_MTU_ATTR_MAX - 1)
 
+
 enum ldt_attrs_setqueue {
 	LDT_CMD_SETQUEUE_ATTR_UNSPEC,
 	LDT_CMD_SETQUEUE_ATTR_NAME,			/* NLA_NUL_STRING */
@@ -194,13 +216,6 @@ enum ldt_attrs_setqueue {
 #define LDT_CMD_SETQUEUE_QPOLICY_MAX				1
 
 
-enum ldt_attrs_ping {
-	LDT_CMD_PING_ATTR_UNSPEC,
-	LDT_CMD_PING_ATTR_DATA,		/* NLA_U32 */
-	__LDT_CMD_PING_ATTR_MAX,
-};
-#define LDT_CMD_PING_ATTR_MAX (__LDT_CMD_PING_ATTR_MAX - 1)
-
 enum ldt_attrs_send_info {
 	LDT_CMD_SEND_INFO_ATTR_UNSPEC,
 	LDT_CMD_SEND_INFO_ATTR_RET,				/* NLA_BINARY - int */
@@ -211,34 +226,51 @@ enum ldt_attrs_send_info {
 
 enum ldt_attrs_send_event {
 	LDT_CMD_SEND_EVENT_ATTR_UNSPEC,
-	LDT_CMD_SEND_EVENT_ATTR_EVTYPE,		/* NLA_U32 */
+	LDT_CMD_SEND_EVENT_ATTR_EVTYPE,			/* NLA_U32 */
 	LDT_CMD_SEND_EVENT_ATTR_IARG,			/* NLA_U32 */
 	LDT_CMD_SEND_EVENT_ATTR_SARG,			/* NLA_NUL_STRING */
 	__LDT_CMD_SEND_EVENT_ATTR_MAX,
 };
 #define LDT_CMD_SEND_EVENT_ATTR_MAX (__LDT_CMD_SEND_EVENT_ATTR_MAX - 1)
 
+enum ldt_attrs_evsend {
+	LDT_CMD_EVSEND_ATTR_UNSPEC,
+	LDT_CMD_EVSEND_ATTR_NAME,		/* NLA_NUL_STRING */
+	LDT_CMD_EVSEND_ATTR_EVTYPE,	/* NLA_U32 */
+	LDT_CMD_EVSEND_ATTR_REASON,	/* NLA_U32 */
+	__LDT_CMD_EVSEND_ATTR_MAX
+};
+#define LDT_CMD_EVSEND_ATTR_MAX (__LDT_CMD_EVSEND_ATTR_MAX - 1)
+
+
 /* event definition */
 
 enum ldt_event_type {
 	LDT_EVTYPE_UNSPEC,
-	LDT_EVTYPE_PONG,
-	LDT_EVTYPE_IFDOWN,				/* interface brought down */
-	LDT_EVTYPE_IFUP,					/* new interface brought up */
-	LDT_EVTYPE_LDTDOWN,				/* ldt module unloaded */
-	LDT_EVTYPE_REBIND,				/* tunnel was rebound (tunbind, setpeer) */
-	LDT_EVTYPE_SUBFLOW_UP,			/* new subflow came up */
-	LDT_EVTYPE_SUBFLOW_DOWN,		/* subflow removed */
-	LDT_EVTYPE_CONN_ESTAB,			/* connection established */
-	LDT_EVTYPE_CONN_ESTAB_FAIL,	/* connection establishment failed */
+	LDT_EVTYPE_INIT,						/* initial handshake successfull */
+	LDT_EVTYPE_DOWN,						/* keep alive timed out */
+	LDT_EVTYPE_UP,						/* remote host up again */
+	LDT_EVTYPE_TUNDOWN,					/* tunnel brought down */
+	LDT_EVTYPE_TUNUP,					/* new tunnel brought up */
+	LDT_EVTYPE_IFDOWN,					/* interface brought down */
+	LDT_EVTYPE_IFUP,						/* new interface brought up */
+	LDT_EVTYPE_TPDOWN,					/* ldt module unloaded */
+	LDT_EVTYPE_PDEVDOWN,				/* underlying physical device went down */
+	LDT_EVTYPE_PDEVUP,					/* underlying physical device came up */
+	LDT_EVTYPE_NIFDOWN,					/* some network if went down */
+	LDT_EVTYPE_NIFUP,					/* some network if came up */
+	LDT_EVTYPE_REBIND,					/* tunnel was rebound (tunbind, setpeer) */
+	LDT_EVTYPE_SUBFLOW_UP,				/* new subflow came up */
+	LDT_EVTYPE_SUBFLOW_DOWN,			/* subflow removed */
+	LDT_EVTYPE_CONN_ESTAB,				/* connection established */
+	LDT_EVTYPE_CONN_ESTAB_FAIL,		/* connection establishment failed */
 	LDT_EVTYPE_CONN_ACCEPT,			/* connection accepted */
-	LDT_EVTYPE_CONN_ACCEPT_FAIL,	/* connection failed to accept */
+	LDT_EVTYPE_CONN_ACCEPT_FAIL,		/* connection failed to accept */
 	LDT_EVTYPE_CONN_LISTEN,			/* server listening */
-	LDT_EVTYPE_CONN_LISTEN_FAIL,	/* listening failed */
+	LDT_EVTYPE_CONN_LISTEN_FAIL,		/* listening failed */
 	__LDT_EVTYPE_MAX,
 };
 #define LDT_EVTYPE_MAX (__LDT_EVTYPE_MAX - 1)
-
 
 
 

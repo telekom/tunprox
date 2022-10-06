@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -53,6 +53,9 @@
 #include <linux/kobject.h>
 #include <linux/types.h>
 #include <linux/string.h>
+#ifdef CONFIG_SYSFS
+#include <linux/sysfs.h>
+#endif
 #include <linux/init.h>
 #include <linux/version.h>
 #include <linux/netdevice.h>
@@ -61,18 +64,16 @@
 #include <linux/in.h>
 #include <linux/in6.h>
 
+#include "ldt_uapi.h"
 #include "ldt_dev.h"
 #include "ldt_tun.h"
-#include "ldt_cfg.h"
-#include "ldt_kernel.h"
+#include "ldt_debug.h"
 #include "ldt_event.h"
-#include "ldt_lock.h"
 
 #define TUNFUNCHK(tun,f) { if (!(tun)) return -EINVAL; else if (!TUNIFFUNC((tun),f)) return 0; }
-#define SETACTIVE(tun,on)	do { smp_store_release (&((tun)->active), (on)); } while (0)
 
 static struct ldt_tunops* tp_findtun (const char*);
-static int tptun_rebind (struct ldt_tun*);
+static int tptun_rebind (struct ldt_tun*, int);
 
 int
 ldt_tun_init (tun, type)
@@ -90,26 +91,22 @@ ldt_tun_init (tun, type)
 #endif
 	}
 	*tun = (struct ldt_tun) { .tdev = tun->tdev };
-	if (ldt_cfg_enable_debug >= 2)
-		printk ("ldt_tuninit(): create tunnel of type %s\n", type);
+	tp_debug ("create tunnel of type %s\n", type);
 	tun->tunops = tp_findtun (type);
 	if (!tun->tunops) {
-		printk ("ldt_tuninit(): cannot find tunnel type %s\n", type);
+		tp_note ("cannot find tunnel type %s\n", type);
 		return -ENOENT;
 	}
-	
+
 	tun->ctime = tun->mtime = tun->atime = get_seconds();
 	ret = tun->tunops->tp_new (tun, type);
 	if (ret < 0) {
-		if (ldt_cfg_enable_debug)
-			printk ("ldt_tuninit(): error setting up tunnel %s: %d\n", type, ret);
+		tp_err ("error setting up tunnel %s: %d", type, ret);
 		ldt_tun_remove (tun);
 		tun->tunops = NULL;
 		return ret;
 	}
-	SETACTIVE (tun, 1);
-	if (ldt_cfg_enable_debug >= 2)
-		printk ("ldt_tuninit(): tunnel creating successfully\n");
+	tp_debug2 ("tunnel creating successfully");
 	return 0;
 }
 
@@ -119,83 +116,60 @@ ldt_tun_remove (tun)
 	struct ldt_tun	*tun;
 {
 	if (!tun || !tun->tunops) return;
-	SETACTIVE (tun, 0);
 	if (tun->tunops && tun->tunops->tp_remove) 
 		tun->tunops->tp_remove(tun->tundata);
-	*tun = (struct ldt_tun) { .tdev = tun->tdev, .id = tun->id, };
+	*tun = (struct ldt_tun) { .tdev = tun->tdev,  };
 };
 
 
+
+
 int
-ldt_tun_bind (tun, addr, dev, flags)
+ldt_tun_bind (tun, addr)
 	struct ldt_tun	*tun;
 	tp_addr_t		*addr;
-	const char		*dev;
-	int				flags;
 {
 	int			ret=0;
 
-	if (ldt_cfg_enable_debug >= 3)
-		printk ("ldt_tun_bind(): enter\n");
+	if (!tun || !addr) return -EINVAL;
 	TUNFUNCHK(tun,tp_bind);
-	SETACTIVE (tun, 0);
-	if (addr) {
-		if (ldt_cfg_enable_debug >= 3)
-			printk ("ldt_tun_bind(): call tp_bind\n");
-		ret = tun->tunops->tp_bind(tun->tundata, addr, 0);
-	}
-	if (dev) {
-		strncpy (tun->pdev, dev, sizeof (tun->pdev)-1);
-		tun->pdev[sizeof(tun->pdev)-1] = 0;
-	}
-	if (dev && !addr) {
-		if (ldt_cfg_enable_debug >= 3)
-			printk ("ldt_tun_bind(): rebind\n");
-		tun->devbound=1;
-		ret = tptun_rebind (tun);
-	} else {
-		tun->devbound=0;
-	}
+	tp_debug3 ("call tp_bind\n");
+	ret = tun->tunops->tp_bind(tun->tundata, addr, 0);
 	tun->mtime = get_seconds();
 	if (ret == 0) 
 		ldt_event_crsend (LDT_EVTYPE_REBIND, tun, 0);
-	tun->isbound = 1;
-	SETACTIVE (tun, 1);
-	if (ldt_cfg_enable_debug >= 3)
-		printk ("ldt_tun_bind(): done\n");
+	tp_debug3 ("done\n");
 	return ret;
 }
 
 int
-ldt_tun_rebind (tun)
+ldt_tun_rebind (tun, flags)
 	struct ldt_tun	*tun;
+	int				flags;
 {
 	int	ret;
 
 	TUNFUNCHK(tun,tp_bind);
-	SETACTIVE (tun, 0);
-	ret = tptun_rebind (tun);
-	SETACTIVE (tun, 1);
+	ret = tptun_rebind (tun,flags);
+	if (ret == 0) 
+		ldt_event_crsend (LDT_EVTYPE_REBIND, tun, 0);
 	return ret;
 }
 
 static
 int
-tptun_rebind (tun)
+tptun_rebind (tun, flags)
 	struct ldt_tun	*tun;
+	int				flags;
 {
 	struct net_device	*ndev;
 	tp_addr_t			ad;
 	int					ret;
 
 	if (!tun) return -EINVAL;
-	if (!tun->devbound) return 0;
-	if (ldt_cfg_enable_debug >= 3)
-		printk ("ldt::tptun_rebind(): enter\n");
-	ndev = dev_get_by_name (TUN2NET(tun), tun->pdev);
+	ndev = tun->tdev->pdev;
 	if (!ndev) return -ENOENT;
-	if (ldt_cfg_enable_debug >= 3)
-		printk ("ldt::tptun_rebind(): search address\n");
+	tp_debug3 ("search address\n");
 #if defined (CONFIG_IPV6) && LINUX_VERSION_CODE >= KERNEL_VERSION(3,11,0)
 	if (tun->tunops->ipv6) {
 		struct inet6_ifaddr  *ia6;
@@ -206,16 +180,10 @@ tptun_rebind (tun)
 	} else
 #endif
 		tp_addr_setipv4 (&ad, ndev->ip_ptr->ifa_list->ifa_local, 0);
-	dev_put (ndev);
-	if (ldt_cfg_enable_debug >= 3)
-		printk ("ldt::tptun_rebind(): call tp_bind\n");
-	ret = tun->tunops->tp_bind(tun->tundata, &ad, 
-										tun->devbound ? LDT_TUN_BIND_F_ADDRCHG : 0);
+	tp_debug3 ("call tp_bind\n");
+	ret = tun->tunops->tp_bind(tun->tundata, &ad, flags);
 	if (ret < 0) return ret;
-	if (ldt_cfg_enable_debug >= 3)
-		printk ("ldt::tptun_rebind(): done\n");
-	ldt_event_crsend (LDT_EVTYPE_REBIND, tun, 0);
-	tun->isbound = 1;
+	tp_debug3 ("done\n");
 	return 0;
 }
 
@@ -227,12 +195,10 @@ ldt_tun_peer (tun, addr)
 	int	ret;
 
 	TUNFUNCHK(tun,tp_peer);
-	SETACTIVE (tun, 0);
 	ret = tun->tunops->tp_peer(tun->tundata, addr);
 	tun->mtime = get_seconds();
 	if (ret == 0) 
 		ldt_event_crsend (LDT_EVTYPE_REBIND, tun, 0);
-	SETACTIVE (tun, 1);
 	return ret;
 }
 
@@ -243,9 +209,7 @@ ldt_tun_serverstart (tun)
 	int	ret;
 
 	TUNFUNCHK(tun,tp_serverstart);
-	SETACTIVE (tun, 0);
 	ret = tun->tunops->tp_serverstart (tun->tundata);
-	SETACTIVE (tun, 1);
 	return ret;
 }
 
@@ -257,9 +221,7 @@ ldt_tun_setqueue (tun, txlen, qpolicy)
 	int	ret;
 
 	TUNFUNCHK(tun,tp_setqueue);
-	SETACTIVE (tun, 0);
 	ret = tun->tunops->tp_setqueue (tun->tundata, txlen, qpolicy);
-	SETACTIVE (tun, 1);
 	return ret;
 }
 
@@ -290,13 +252,6 @@ ldt_tun_gettuninfo (tun, buf, blen)
 	return tun->tunops->tp_gettuninfo (tun->tundata, buf, blen);
 }
 
-int
-ldt_tun_maxmtu (tun)
-	struct ldt_tun	*tun;
-{
-	TUNFUNCHK(tun, tp_maxmtu);
-	return tun->tunops->tp_maxmtu (tun->tundata);
-}
 
 
 int
@@ -320,15 +275,10 @@ ldt_tun_prot1xmit (tun, buf, blen, addr, force)
 	tp_addr_t			*addr;
 	int					force;
 {
-	int	ret;
-
 	if (!tun || !tun->tunops || !tun->tunops->tp_prot1xmit) return -EINVAL;
-	if (!force && !TUNISACTIVE(tun)) {
-		return -EAGAIN;
-	}
-	ret = tun->tunops->tp_prot1xmit (tun->tundata, buf, blen, addr);
-	return ret;
+	return tun->tunops->tp_prot1xmit (tun->tundata, buf, blen, addr);
 }
+
 
 
 
@@ -341,25 +291,9 @@ struct tun_reg {
 };
 static struct tun_reg	*tun_reg_list = NULL;
 
-//static DEFINE_MUTEX(tun_mutex);
-static struct tp_lock   tun_mutex;
-#define G_LOCK  do { tp_lock (&tun_mutex); } while (0)
-#define G_UNLOCK  do { tp_unlock (&tun_mutex); } while (0)
-
+static DEFINE_MUTEX(tun_mutex);
 static struct tun_reg* tun_reg_find_lock (const char*);
 static struct tun_reg* tun_reg_find (const char*);
-
-int
-ldt_tun_reginit (void)
-{
-	tp_lock_init (&tun_mutex);
-	return 0;
-}
-void
-ldt_tun_regdeinit (void)
-{
-	tp_lock_destroy (&tun_mutex);
-}
 
 int
 ldt_tun_register (type, tunops)
@@ -369,15 +303,15 @@ ldt_tun_register (type, tunops)
 	struct tun_reg	*p;
 
 	if (!type || !*type || !tunops || !tunops->tp_new) return -EINVAL;
-	G_LOCK;
+	mutex_lock (&tun_mutex);
 	p = tun_reg_find (type);
 	if (p) {
-		G_UNLOCK;
+		mutex_unlock (&tun_mutex);
 		return -EEXIST;
 	}
 	p = kmalloc (sizeof (struct tun_reg), GFP_KERNEL);
 	if (!p) {
-		G_UNLOCK;
+		mutex_unlock (&tun_mutex);
 		return -ENOMEM;
 	}
 	*p = (struct tun_reg) { .type = type, .tunops = tunops };
@@ -389,7 +323,7 @@ ldt_tun_register (type, tunops)
 		p->prev = p;
 	}
 	tun_reg_list = p;
-	G_UNLOCK;
+	mutex_unlock (&tun_mutex);
 	return 0;
 }
 
@@ -401,10 +335,10 @@ ldt_tun_unregister (type)
 	struct tun_reg	*p;
 
 	if (!type || !*type) return;
-	G_LOCK;
+	mutex_lock (&tun_mutex);
 	p = tun_reg_find (type);
 	if (!p) {
-		G_UNLOCK;
+		mutex_unlock (&tun_mutex);
 		return;
 	}
 	if (p->next) p->next->prev = p->prev;
@@ -412,10 +346,12 @@ ldt_tun_unregister (type)
 		tun_reg_list = p->next;
 	else
 		p->prev->next = p->next;
-	G_UNLOCK;
+	mutex_unlock (&tun_mutex);
 	*p = (struct tun_reg) { .type = "" };
 	kfree (p);
 }
+
+
 
 static
 struct ldt_tunops*
@@ -436,9 +372,9 @@ tun_reg_find_lock (type)
 {
 	struct tun_reg	*p;
 
-	G_LOCK;
+	mutex_lock (&tun_mutex);
 	p = tun_reg_find (type);
-	G_UNLOCK;
+	mutex_unlock (&tun_mutex);
 	return p;
 }
 
@@ -454,10 +390,6 @@ tun_reg_find (type)
 		if (!strcasecmp (p->type, type)) return p;
 	return NULL;
 }
-
-
-
-
 
 
 

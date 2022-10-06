@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,16 +49,15 @@
  * Licensor: Deutsche Telekom AG
  */
 
-#ifndef _R__KERNEL_LDT_EVENT_LINK_INT_H
-#define _R__KERNEL_LDT_EVENT_LINK_INT_H
+#ifndef _R__KERNEL_TP_EVENT_H
+#define _R__KERNEL_TP_EVENT_H
 
-#include "ldt_kernel.h"
+#include "ldt_uapi.h"
 
 
 
 struct net;
 int ldt_event_send (struct net*, enum ldt_event_type, u32 iarg, const char *sarg);
-int ldt_event_pong (struct net*, u32 data);
 struct ldt_tun;
 int ldt_event_crsend2 (struct ldt_tun*, int evtype, const char *evstype,
 									const char *desc);
@@ -69,11 +68,17 @@ int ldt_event_crsend2 (struct ldt_tun*, int evtype, const char *evstype,
  */
 int ldt_event_crsend (int evtype, void *dat, int reason);	
 
+#define TP_EVKIND_GLOBAL		1		/* needs NULL */
+#define TP_EVKIND_TDEV			2		/* needs struct ldt_dev */
+#define TP_EVKIND_TUN			3		/* needs struct ldt_tun */
+#define TP_EVKIND_TUNCONNECT	4		/* needs struct ldt_tun */
+#define TP_EVKIND_NDEV			5		/* needs struct net_device */
+#define TP_EVKIND_TUNFAIL		6		/* needs struct ldt_tun */
+
+int ldt_event_getkind (int evtype);
 
 
-
-
-#endif	/* _R__KERNEL_LDT_EVENT_LINK_INT_H */
+#endif	/* _R__KERNEL_TP_EVENT_H */
 
 /*
  * Overrides for XEmacs and vim so that we get a uniform tabbing style.

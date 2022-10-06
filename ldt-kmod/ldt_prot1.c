@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -59,11 +59,11 @@
 #include <linux/netdevice.h>
 #include <linux/err.h>
 
-#include "ldt_cfg.h"
 #include "ldt_dev.h"
 #include "ldt_tun.h"
-#include "ldt_kernel.h"
+#include "ldt_uapi.h"
 #include "ldt_prot1.h"
+#include "ldt_debug.h"
 
 static int tp_prot1_recv (struct ldt_tun*, char*, int);
 
@@ -78,8 +78,7 @@ ldt_prot1_recv (tun, skb)
 	ret = tp_prot1_recv (tun, skb->data, skb->len);
 	kfree_skb (skb);
 	if (ret < 0) {
-		if (ldt_cfg_enable_debug && printk_ratelimit())
-			printk ("ldt_prot1_recv(): error receiving prot 1 packet: %d\n", ret);
+		tp_debug ("error receiving prot 1 packet: %d\n", ret);
 		return ret;
 	}
 	return 0;
@@ -102,8 +101,7 @@ tp_prot1_recv (tun, data, len)
 	if (len < xlen) return -EBADMSG;
 	len = xlen;
 	type = (int)(u32)data[3];
-	if (ldt_cfg_enable_debug >= 2 && printk_ratelimit())
-		printk ("ldt_prot1_recv(): received prot 1 type %d msg\n", type);
+	tp_debug2 ("received prot 1 type %d msg\n", type);
 	switch (type) {
 	case TP_PROT1_T_KEEPALIVE:
 		break;

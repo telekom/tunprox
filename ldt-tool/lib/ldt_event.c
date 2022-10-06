@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -216,16 +216,17 @@ int
 ldt_waitifaceev (evinfo, listen_iface, listen_evtypes,
 							timeout, flags)
 	struct ldt_evinfo	*evinfo;
-	const char					*listen_iface;
-	int							flags, listen_evtypes;
-	tmo_t							timeout;
+	const char			*listen_iface;
+	int					flags;
+	uint64_t				listen_evtypes;
+	tmo_t					timeout;
 {
-	int							ret;
-	char							*ev;
-	int							needflags;
-	tmo_t							now, start;
+	int					ret;
+	char					*ev;
+	int					needflags;
+	tmo_t					now, start;
 	struct ldt_evinfo	_evinfo;
-	int							out_evtype;
+	int					out_evtype;
 
 	if (!evinfo) evinfo = &_evinfo;
 	TMO_START(start,timeout);
@@ -339,14 +340,13 @@ tp_getparseflags (evtype)
 {
 	static const struct needflags needflags[] = {
 		{ LDT_EVTYPE_UNSPEC, 0},
-		{ LDT_EVTYPE_PONG, 0 },
 #if 0
 		{ LDT_EVTYPE_DOWN, TP_PARSE_NEED_IFC},
 		{ LDT_EVTYPE_UP, TP_PARSE_NEED_IFC},
 #endif
 		{ LDT_EVTYPE_IFDOWN, TP_PARSE_NEED_IFC },
 		{ LDT_EVTYPE_IFUP, TP_PARSE_NEED_IFC },
-		{ LDT_EVTYPE_LDTDOWN, 0 },
+		{ LDT_EVTYPE_TPDOWN, 0 },
 		{ LDT_EVTYPE_REBIND, TP_PARSE_NEED_IFC},
 		{ LDT_EVTYPE_SUBFLOW_UP, TP_PARSE_NEED_IFC},
 		{ LDT_EVTYPE_SUBFLOW_DOWN, TP_PARSE_NEED_IFC},
@@ -362,7 +362,6 @@ tp_getparseflags (evtype)
 #endif
 static const struct top_flagmap evnamemap[] = {
 	{ "unspec", 1<<LDT_EVTYPE_UNSPEC },
-	{ "pong", 1<<LDT_EVTYPE_PONG },
 #if 0
 	{ "down", 1<<LDT_EVTYPE_DOWN },
 	{ "linkdown", 1<<LDT_EVTYPE_DOWN },
@@ -371,7 +370,7 @@ static const struct top_flagmap evnamemap[] = {
 #endif
 	{ "ifdown", 1<<LDT_EVTYPE_IFDOWN },
 	{ "ifup", 1<<LDT_EVTYPE_IFUP },
-	{ "ldtdown", 1<<LDT_EVTYPE_LDTDOWN },
+	{ "ldtdown", 1<<LDT_EVTYPE_TPDOWN },
 	{ "rebind", 1<<LDT_EVTYPE_REBIND },
 	{ "subflowup", 1<<LDT_EVTYPE_SUBFLOW_UP },
 	{ "subflowdown", 1<<LDT_EVTYPE_SUBFLOW_UP },
@@ -398,14 +397,13 @@ ldt_evgetname (evtype)
 
 static const struct top_flagmap evhelpmap[] = {
 	{ "error condition", 1<<LDT_EVTYPE_UNSPEC },
-	{ "ping response", 1<<LDT_EVTYPE_PONG },
 #if 0
 	{ "remote host down", 1<<LDT_EVTYPE_DOWN },
 	{ "remote host came up", 1<<LDT_EVTYPE_UP },
 #endif
 	{ "interface brought down", 1<<LDT_EVTYPE_IFDOWN },
 	{ "new interface brought up", 1<<LDT_EVTYPE_IFUP },
-	{ "ldt module unloaded", 1<<LDT_EVTYPE_LDTDOWN },
+	{ "ldt module unloaded", 1<<LDT_EVTYPE_TPDOWN },
 	{ "address was rebinded", 1<<LDT_EVTYPE_REBIND },
 	{ NULL, -1 }};
 

@@ -1,6 +1,6 @@
 # vim:tw=0:ts=3:wm=0:
 #
-# Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+# Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
 #
 # LDT - Lightweight (MP-)DCCP Tunnel kernel module
 #

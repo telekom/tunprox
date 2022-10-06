@@ -1,2 +1,2 @@
-#define LDT_VERSION	"0.2"
+#define LDT_VERSION	"0.4.1"
 

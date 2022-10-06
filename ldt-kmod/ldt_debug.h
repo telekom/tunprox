@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,13 +49,49 @@
  * Licensor: Deutsche Telekom AG
  */
 
+#ifndef _R__KERNEL_LDT_DEBUG_H
+#define _R__KERNEL_LDT_DEBUG_H
+
+#include "ldt_sysctl.h"
+
+#define TP_PRTK_RATE(a)	(\
+			((a) || !(tp_cfg_logflags & TP_CFG_LOG_F_RATELIMIT) || \
+			 printk_ratelimit()))
+
+#define TP_FILE	( { const char *s = strrchr (__FILE__, '/'); s ? s+1 : __FILE__; } )
+#define TP_EOL(fmt)	( ((fmt) && *(fmt) && (fmt)[strlen(fmt)-1] == '\n') ? "" : "\n" )
+#define TP_PRTK(enable,norate,hdr,fmt,a...) \
+				do { \
+					if (enable && TP_PRTK_RATE(norate)) { \
+						if (tp_cfg_logflags & TP_CFG_LOG_F_PRTFILE) \
+							printk (hdr "%s(%s:%d):%s(): " fmt "%s", KBUILD_MODNAME, \
+										TP_FILE, __LINE__,__func__, ##a, TP_EOL(fmt)); \
+						else \
+							printk (hdr "%s:%s(): " fmt "%s", KBUILD_MODNAME, \
+										__func__, ##a, TP_EOL(fmt)); \
+					} \
+				} while(0)
+#define TP_PRTKL(mlevel,norate,hdr,fmt,a...) \
+				TP_PRTK((tp_cfg_loglevel >= (mlevel)), norate, hdr, fmt, ##a)
+
+#define tp_debug(fmt,a...)  TP_PRTKL(7, 0, KERN_DEBUG,   fmt, ##a)
+#define tp_debug2(fmt,a...) TP_PRTKL(8, 0, KERN_DEBUG,   fmt, ##a)
+#define tp_debug3(fmt,a...) TP_PRTKL(9, 0, KERN_DEBUG,   fmt, ##a)
+#define tp_info(fmt,a...)   TP_PRTKL(6, 0, KERN_INFO,    fmt, ##a)
+#define tp_note(fmt,a...)   TP_PRTKL(5, 1, KERN_NOTICE,  fmt, ##a)
+#define tp_warn(fmt,a...)   TP_PRTKL(4, 1, KERN_WARNING, fmt, ##a)
+#define tp_err(fmt,a...)    TP_PRTKL(3, 1, KERN_ERR,     fmt, ##a)
+#define tp_crit(fmt,a...)   TP_PRTKL(2, 1, KERN_CRIT,    fmt, ##a)
+#define tp_alert(fmt,a...)  TP_PRTKL(1, 1, KERN_ALERT,   fmt, ##a)
+#define tp_emerg(fmt,a...)  TP_PRTKL(0, 1, KERN_EMERG,   fmt, ##a)
+#define tp_prtk(fmt,a...)   TP_PRTK( 1, 1, "",           fmt, ##a)
 
 
-unsigned int ldt_cfg_enable_debug = 0;
 
 
 
 
+#endif	/* _R__KERNEL_LDT_DEBUG_H */
 
 
 /*

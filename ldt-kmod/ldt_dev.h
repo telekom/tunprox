@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,31 +49,31 @@
  * Licensor: Deutsche Telekom AG
  */
 
-#ifndef _R__KERNEL_LDT_DEV_INT_H
-#define _R__KERNEL_LDT_DEV_INT_H
+#ifndef _R__KERNEL_LDT_DEV_H
+#define _R__KERNEL_LDT_DEV_H
 
 #include <linux/types.h>
 #include <linux/netdevice.h>
 
 #include "ldt_addr.h"
+#include "ldt_debug.h"
 #include "ldt_tun.h"
-
+#include "ldt_lock.h"
 
 
 #define LDT_MAGIC		((u32)(0xa0ec9374L))
-//struct ldt_tun;
 struct ldt_dev {
-	u32							MAGIC;
-	struct net_device			*ndev;
-	struct ldt_dev				*next, *prev;
-	u32							active;
-	u16							islinked:1,
-									setmtu:1,
-									client:1,
-									server:1,
-									kobjinit:1;
-	time_t						ctime,mtime;
-	struct ldt_tun				tun;
+	u32						MAGIC;
+	struct hlist_node		list;
+	struct net_device		*ndev;
+	struct net_device		*pdev;
+	struct tp_lock			lock;
+	u32						active;
+	u32						hastun:1,
+								client:1,
+								server:1;
+	time_t					ctime,mtime;
+	struct ldt_tun			tun;
 };
 
 
@@ -83,6 +83,8 @@ struct ldt_dev {
 #define ISACTIVE(tdev) (smp_load_acquire (&((tdev)->active)))
 #define ISACTIVETPDEV(tdev) (ISLDTDEV(tdev) && ISACTIVE(tdev))
 #define ISLDTNDEV(ndev) (LDTDEV2(ndev) != NULL)
+#define TPDEV_ISLDT(ndev) ((ndev)->dev.type && (ndev)->dev.type->name && \
+					!strcmp (ndev->dev.type->name, "ldt") && ISLDTNDEV(ndev))
 
 static inline int TDEV_HOLDACTIVE(struct ldt_dev *tdev)
 {
@@ -109,8 +111,7 @@ LDTDEV (struct net_device	*ndev)
 	if (!ndev) return NULL;
 	tdev = (struct ldt_dev*) netdev_priv (ndev);
 	if (!ISLDTDEV2(tdev,ndev)) {
-		printk ("ldt: netdevice >>%s<< not a ldt device\n",
-									ndev->name);
+		tp_note ("netdevice >>%s<< not a ldt device", ndev->name);
 		return NULL;
 	}
 	return tdev;
@@ -139,7 +140,7 @@ LDTDEV_BYNAME (struct net *net, const char *name)
 	struct ldt_dev	*tdev;
 	struct net_device		*ndev = dev_get_by_name (net, name);
 	if (!ndev) {
-		printk ("ldt: invalid netdevice >>%s<<\n", name);
+		tp_note ("invalid netdevice >>%s<<", name);
 		return NULL;
 	}
 	tdev = LDTDEV (ndev);
@@ -147,15 +148,14 @@ LDTDEV_BYNAME (struct net *net, const char *name)
 	return tdev;
 };
 
-extern int ldt_numdev;
 
 int ldt_dev_global_init (void);
-int ldt_dev_global_destroy (void);
+void ldt_dev_global_destroy (void);
 
-int ldt_create_dev (struct net*, const char *name,
-							const char **out_name, const char *type, int flags);
+int ldt_create_dev (struct net*, const char *name, 
+								const char **out_name, int flags);
 void ldt_free_dev (struct ldt_dev *tdev);
-void ldt_dev_remove_all (void);
+int ldt_dev_set_group (struct ldt_dev*, const char *name);
 
 int ldt_dev_set_mtu (struct ldt_dev *tdev, int mtu);
 
@@ -163,14 +163,20 @@ int ldt_get_devlist (struct net *net, char**devlist, u32 *dlen);
 ssize_t ldt_get_devinfo (struct ldt_dev *tdev, char **info);
 ssize_t ldt_get_alldevinfo (struct net *net, char **info);
 
-int ldt_dev_bind (struct ldt_dev *tdev, tp_addr_t *laddr, const char *dev, int flags);
+int ldt_rm_tun (struct ldt_dev *tdev);
+int ldt_dev_newtun (struct ldt_dev *tdev, const char *tuntype);
+int ldt_dev_bind (struct ldt_dev *tdev, tp_addr_t *laddr);
+int ldt_dev_bind2dev (	struct ldt_dev *tdev, const char *dev);
 int ldt_dev_peer (struct ldt_dev *tdev, tp_addr_t *raddr);
 int ldt_dev_serverstart (struct ldt_dev *tdev);
 int ldt_dev_setqueue (struct ldt_dev*, int txlen, int qpolicy);
 
 
+int ldt_dev_evsend (struct ldt_dev *tdev, int evtype, int reason);
 
-#endif	/* _R__KERNEL_LDT_DEV_INT_H */
+
+
+#endif	/* _R__KERNEL_LDT_DEV_H */
 
 /*
  * Overrides for XEmacs and vim so that we get a uniform tabbing style.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,9 +49,17 @@
  * Licensor: Deutsche Telekom AG
  */
 
-#ifndef _R__KERNEL_LDT_SYSCTL_INT_H
-#define _R__KERNEL_LDT_SYSCTL_INT_H
+#ifndef _R__KERNEL_LDT_SYSCTL_H
+#define _R__KERNEL_LDT_SYSCTL_H
 
+
+extern unsigned int tp_cfg_enable_debug;
+extern unsigned int tp_cfg_show_key;
+extern unsigned int tp_cfg_loglevel;
+extern unsigned int tp_cfg_logflags;
+
+#define TP_CFG_LOG_F_PRTFILE     0x01
+#define TP_CFG_LOG_F_RATELIMIT   0x02
 
 
 
@@ -64,7 +72,7 @@ void ldt_sysctl_exit (void);
 
 
 
-#endif	/* _R__KERNEL_LDT_SYSCTL_INT_H */
+#endif	/* _R__KERNEL_LDT_SYSCTL_H */
 
 
 /*

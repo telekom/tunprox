@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -61,13 +61,14 @@ int cmd_getdevlist (int argc, char **argv);
 int cmd_showdev (int argc, char **argv);
 int cmd_showinfo (int argc, char **argv);
 int cmd_showall (int argc, char **argv);
+int cmd_rmtun (int argc, char **argv);
 int cmd_set_mtu (int argc, char **argv);
-int cmd_ping (int argc, char **argv);
 int cmd_prtev (int argc, char **argv);
+int cmd_newtun (int argc, char **argv);
 int cmd_tunbind (int argc, char **argv);
 int cmd_setpeer (int argc, char **argv);
 int cmd_serverstart (int argc, char **argv);
-int cmd_setqueue (int argc, char **argv);
+int cmd_setqueue (int arcg, char **argv);
 
 
 void usage_newdev ();
@@ -77,9 +78,10 @@ void usage_getdevlist ();
 void usage_showdev ();
 void usage_showinfo ();
 void usage_showall ();
+void usage_rmtun ();
 void usage_set_mtu ();
-void usage_ping ();
 void usage_prtev ();
+void usage_newtun ();
 void usage_tunbind ();
 void usage_setpeer ();
 void usage_serverstart ();

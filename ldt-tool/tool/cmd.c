@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+ * Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
  *
  * LDT - Lightweight (MP-)DCCP Tunnel kernel module
  *
@@ -49,6 +49,7 @@
  * Licensor: Deutsche Telekom AG
  */
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -68,6 +69,7 @@ static int print_devlist (char **, int);
 static int showdev (char *, int);
 static int printxml (struct xml*, int);
 static int printdev (struct xml_tag*, int);
+static int printtunlist (struct xml_tag*, int);
 static int printtun (struct xml_tag*, int);
 static int printudptun (struct xml_tag*, int);
 static int showinfo (char *, const char *, int);
@@ -87,16 +89,16 @@ usage_newdev ()
 				"                       which is substituded by a unique number. If no name is given\n"
 				"                       tp%%d is used\n"
 				"      -h             - this help screen\n"
+				"      -q <num>       - number of queues (default 1)\n"
 				"      -a             - print name of created device\n"
 				"      -f <flags>     - flags are one or more of the following values, sperated by\n"
 				"                       a pipe (|) or comma (,): \n"
 				"           client    - we are a client device (unused yet)\n"
 				"           server    - we are a server device (unused yet)\n"
-				"      -T <type>      - tunnel type. Possible tunnel types are:\n"
-				"           dccp      - dccp tunnel over ipv4\n"
-				"           dccp6     - dccp tunnel over ipv6\n"
-				"           mpdccp    - mpdccp tunnel over ipv4\n"
-				"           mpdccp6   - mpdccp tunnel over ipv6\n"
+				"           sndip     - list of ip's send to other side, if locally changed\n"
+				"           rcvip     - receive ip list from other side\n"
+				"           sndmptcp  - send mptcp options (such as prio) if locally changed\n"
+				"           rcvmptcp  - receive mptcp options from other side\n"
 				"\n", PROG);
 }
 
@@ -111,14 +113,13 @@ cmd_newdev (argc, argv)
 	char	**argv;
 {
 	const char	*name = NULL;
-	const char	*type = NULL;
 	int			c;
 	char			*out_name = NULL;
 	int			answer = 0;
 	int			ret;
 	int			flags = 0;
 
-	while ((c=getopt (argc, argv, "haT:f:")) != -1) {
+	while ((c=getopt (argc, argv, "haf:")) != -1) {
 		switch (c) {
 		case 'h':
 			usage_newdev();
@@ -130,15 +131,12 @@ cmd_newdev (argc, argv)
 			flags = top_parseflags (optarg, creat_fmap);
 			if (flags < 0) return flags;
 			break;
-		case 'T':
-			type = optarg;
-			break;
 		}
 	}
 	if (optind < argc) {
 		name = argv[optind];
 	}
-	ret = ldt_create_dev (name, type, answer ? &out_name : 0, flags);
+	ret = ldt_create_dev (name, answer ? &out_name : 0, flags);
 	if (!RERR_ISOK(ret)) {
 		SLOGFE (LOG_ERR2, "error creating dev >>%s<<: %s", name,
 							rerr_getstr3(ret));
@@ -186,6 +184,7 @@ cmd_rmdev (argc, argv)
 }
 
 
+
 void
 usage_set_mtu()
 {
@@ -231,39 +230,6 @@ cmd_set_mtu (argc, argv)
 	return ldt_set_mtu (name, mtu);
 }
 
-void
-usage_ping ()
-{
-	printf ("ping: usage: %s ping <options>\n"
-				"        - sends a pong event (for debug purpose only)\n"
-				"          NB: the ping is NOT send to the other tunnel side - it just\n"
-				"          sends a pong over the event channel - this only serves for\n"
-				"          event-debugging only\n"
-				"  options are:\n"
-				"      -h             - this help screen\n"
-				"      -d <data>      - integer to be included in pong response (default 0)\n"
-				"\n", PROG);
-}
-int
-cmd_ping (argc, argv)
-	int	argc;
-	char	**argv;
-{
-	int			data = 0;
-	int			c;
-
-	while ((c=getopt (argc, argv, "hd:")) != -1) {
-		switch (c) {
-		case 'h':
-			usage_ping();
-			return RERR_OK;
-		case 'd':
-			data = atoi (optarg);
-			break;
-		}
-	}
-	return ldt_ping (data);
-}
 
 void
 usage_getversion()
@@ -530,6 +496,90 @@ cmd_showall (argc, argv)
 	return RERR_OK;
 }
 
+void
+usage_rmtun()
+{
+	printf ("rmtun: usage: %s rmtun <options>\n"
+				"         - removes a tunnel from ldt device\n"
+				"  options are:\n"
+				"      <name>         - name of ldt device\n"
+				"      -h             - this help screen\n"
+				"\n", PROG);
+}
+
+
+int
+cmd_rmtun (argc, argv)
+	int	argc;
+	char	**argv;
+{
+	const char	*name = NULL;
+	int			c;
+
+	while ((c=getopt (argc, argv, "t:")) != -1) {
+		switch (c) {
+		case 'h':
+			usage_rmtun();
+			return RERR_OK;
+		}
+	}
+	if (optind < argc) {
+		name = argv[optind];
+	}
+	if (!name) {
+		SLOGF (LOG_ERR2, "missing device name");
+		return RERR_PARAM;
+	}
+	return ldt_rm_tun (name);
+}
+
+
+void
+usage_newtun()
+{
+	printf ("newtun: usage: %s newtun <options> <name>\n"
+				"         - creates a new tunnel\n"
+				"  options are:\n"
+				"      <name>         - name of ldt device\n"
+				"      -h             - this help screen\n"
+				"      -T <type>      - tunnel type. Possible tunnel types are:\n"
+				"           dccp      - dccp tunnel over ipv4\n"
+				"           dccp6     - dccp tunnel over ipv6\n"
+				"           mpdccp    - mpdccp tunnel over ipv4\n"
+				"           mpdccp6   - mpdccp tunnel over ipv6\n"
+				"\n", PROG);
+}
+
+
+int
+cmd_newtun (argc, argv)
+	int	argc;
+	char	**argv;
+{
+	const char	*name = NULL;
+	int			c;
+	const char	*tuntype = "udp4tun";
+
+	while ((c=getopt (argc, argv, "hT:")) != -1) {
+		switch (c) {
+		case 'h':
+			usage_newtun();
+			return RERR_OK;
+		case 'T':
+			tuntype = optarg;
+			break;
+		}
+	}
+	if (optind < argc) {
+		name = argv[optind];
+		optind++;
+	}
+	if (!name) {
+		SLOGF (LOG_ERR2, "missing device name");
+		return RERR_PARAM;
+	}
+	return ldt_newtun (name, tuntype);
+}
 
 void
 usage_tunbind()
@@ -563,10 +613,9 @@ cmd_tunbind (argc, argv)
 {
 	const char	*name = NULL;
 	int			c, ret;
-	const char	*sladdr=NULL, *sgw=NULL, *dev=NULL;
-	frad_t		laddr, gw;
+	const char	*sladdr=NULL, *dev=NULL;
+	frad_t		laddr;
 	int			flags = 0;
-	int			xflags = 0;
 
 	while ((c=getopt (argc, argv, "hl:b:I:64")) != -1) {
 		switch (c) {
@@ -603,17 +652,13 @@ cmd_tunbind (argc, argv)
 										rerr_getstr3(ret));
 			return ret;
 		}
+		return ldt_tunbind (name, &laddr);
+	} else if (dev) {
+		return ldt_tunbind2dev (name, dev);
+	} else {
+		SLOGF (LOG_ERR2, "either address or device must be given to bind to");
+		return RERR_PARAM;
 	}
-	if (sgw) {
-		ret = frad_getaddr (&gw, sgw, flags | FRAD_F_NOPORT);
-		if (!RERR_ISOK(ret)) {
-			SLOGFE (LOG_ERR2, "error parsing gateway address: %s",
-										rerr_getstr3(ret));
-			return ret;
-		}
-	}
-	return ldt_tunbind (name, (sladdr ? &laddr : NULL),
-									dev, xflags);
 }
 
 void
@@ -629,10 +674,14 @@ usage_setpeer()
 				"                       ipv6 addresses must be enclosed in brackets:\n"
 				"                       [::]:2374 (0.0.0.0 or :: means any address\n"
 				"                       address can be host name to be resolved, too\n"
+				"                       For (mp-)dccp tunnels the address can miss, which\n"
+				"                       then triggers a reconnect\n"
+				"      -T <timeout>   - timeout (important for (mp-)dccp only\n"
 				"      -4             - force address to be ipv4 (for name resolution)\n"
 				"      -6             - force address to be ipv6 (for name resolution)\n"
 				"\n", PROG);
 }
+
 
 int
 cmd_setpeer (argc, argv)
@@ -644,8 +693,9 @@ cmd_setpeer (argc, argv)
 	const char	*sraddr=NULL;
 	frad_t		raddr;
 	int			flags = 0;
+	tmo_t			tout = 0;
 
-	while ((c=getopt (argc, argv, "hr:64")) != -1) {
+	while ((c=getopt (argc, argv, "hr:64T:")) != -1) {
 		switch (c) {
 		case 'h':
 			usage_setpeer();
@@ -659,6 +709,9 @@ cmd_setpeer (argc, argv)
 		case '4':
 			flags |= FRAD_F_IPV4;
 			break;
+		case 'T':
+			tout = cf_atotm (optarg);
+			break;
 		}
 	}
 	if (optind < argc) {
@@ -670,18 +723,16 @@ cmd_setpeer (argc, argv)
 		return RERR_PARAM;
 	}
 	/* parse addresses */
-	if (!sraddr) {
-		SLOGF (LOG_ERR2, "missing remote address");
-		return RERR_PARAM;
-	}
-	ret = frad_getaddr (&raddr, sraddr, flags);
-	if (!RERR_ISOK(ret)) {
-		SLOGFE (LOG_ERR2, "error parsing remote ip address: %s",
-									rerr_getstr3(ret));
-		return ret;
+	if (sraddr) {
+		ret = frad_getaddr (&raddr, sraddr, flags);
+		if (!RERR_ISOK(ret)) {
+			SLOGFE (LOG_ERR2, "error parsing remote ip address: %s",
+										rerr_getstr3(ret));
+			return ret;
+		}
 	}
 
-	return ldt_setpeer (name, &raddr);
+	return ldt_tun_setpeer (name, sraddr ? &raddr : NULL, tout);
 }
 
 void
@@ -692,6 +743,7 @@ usage_serverstart()
 				"  options are:\n"
 				"      <name>         - name of ldt device\n"
 				"      -h             - this help screen\n"
+				"      -T <timeout>   - timeout (important for (mp-)dccp only\n"
 				"\n", PROG);
 }
 
@@ -702,12 +754,16 @@ cmd_serverstart (argc, argv)
 {
 	const char	*name = NULL;
 	int			c;
+	tmo_t			tout = 0;
 
-	while ((c=getopt (argc, argv, "h")) != -1) {
+	while ((c=getopt (argc, argv, "hT:")) != -1) {
 		switch (c) {
 		case 'h':
 			usage_serverstart();
 			return RERR_OK;
+		case 'T':
+			tout = cf_atotm (optarg);
+			break;
 		}
 	}
 	if (optind < argc) {
@@ -719,7 +775,7 @@ cmd_serverstart (argc, argv)
 		return RERR_PARAM;
 	}
 
-	return ldt_serverstart (name);
+	return ldt_tun_serverstart (name, tout);
 }
 
 void
@@ -745,7 +801,7 @@ cmd_setqueue (argc, argv)
 	int			c;
 	int			txqlen=-1, qpolicy=-1;
 
-	while ((c=getopt (argc, argv, "hT:Q:")) != -1) {
+	while ((c=getopt (argc, argv, "ht:T:Q:")) != -1) {
 		switch (c) {
 		case 'h':
 			usage_setqueue();
@@ -786,8 +842,9 @@ cmd_setqueue (argc, argv)
 		return RERR_PARAM;
 	}
 
-	return ldt_setqueue (name, txqlen, qpolicy);
+	return ldt_tun_setqueue (name, txqlen, qpolicy);
 }
+
 
 
 
@@ -911,7 +968,7 @@ printdev (tag, pflags)
 		cjg_strftime3 (buf, sizeof(buf), "%D", ts*1000000LL);
 		printf ("          mtime: %s\n", buf);
 	}
-	ret = printtun (tag, pflags);
+	ret = printtunlist (tag, pflags);
 	if (!RERR_ISOK(ret)) {
 		SLOGFE (LOG_ERR2, "error printing tunnel list: %s", rerr_getstr3(ret));
 		ret2 = ret;
@@ -919,6 +976,28 @@ printdev (tag, pflags)
 	return ret2;
 }
 
+
+static
+int
+printtunlist (tag, pflags)
+	struct xml_tag	*tag;
+	int				pflags;
+{
+	struct xml_cursor	curs;
+	int					ret;
+
+	ret = xmlcurs_newtag (&curs, tag);
+	if (!RERR_ISOK(ret)) return ret;
+	ret = xmlcurs_searchtag (&curs, "tun", 0);
+	if (ret == RERR_NOT_FOUND) return RERR_OK;
+	if (!RERR_ISOK(ret)) return ret;
+	tag = xmlcurs_tag (&curs);
+	if (tag && tag->name && !strcasecmp (tag->name, "tun")) {
+		ret = printtun (tag, pflags);
+		if (!RERR_ISOK(ret)) return ret;
+	}
+	return RERR_OK;
+}
 
 
 static
@@ -958,19 +1037,19 @@ printtun (tag, pflags)
 		xmltag_search (&s, tag, "ctime", 0);
 		ts = atoll (s);
 		cjg_strftime3 (buf, sizeof(buf), "%D", ts*1000000LL);
-		printf ("          ctime:  %s\n", buf);
+		printf ("              ctime:  %s\n", buf);
 		xmltag_search (&s, tag, "mtime", 0);
 		ts = atoll (s);
 		cjg_strftime3 (buf, sizeof(buf), "%D", ts*1000000LL);
-		printf ("          mtime:  %s\n", buf);
+		printf ("              mtime:  %s\n", buf);
 		xmltag_search (&s, tag, "atime", 0);
 		ts = atoll (s);
 		cjg_strftime3 (buf, sizeof(buf), "%D", ts*1000000LL);
-		printf ("          atime:  %s\n", buf);
+		printf ("              atime:  %s\n", buf);
 		xmltag_search (&s, tag, "lstime", 0);
 		ts = atoll (s);
 		cjg_strftime3 (buf, sizeof(buf), "%D", ts*1000000LL);
-		printf ("          lstime: %s\n", buf);
+		printf ("              lstime: %s\n", buf);
 	}
 	return func (tag, pflags);
 }
@@ -998,15 +1077,15 @@ printudptun (tag, pflags)
 	locport=s2;
 	if (s2) {
 		if (ipv6) {
-			printf ("          %nlocal:  [%s]:%s%n", &pos3, s, s2, &pos);
+			printf ("              %nlocal:  [%s]:%s%n", &pos3, s, s2, &pos);
 		} else {
-			printf ("          %nlocal:  %s:%s%n", &pos3, s, s2, &pos);
+			printf ("              %nlocal:  %s:%s%n", &pos3, s, s2, &pos);
 		}
 	} else {
 		if (ipv6) {
-			printf ("          %nlocal:  %s%n", &pos3, s, &pos);
+			printf ("              %nlocal:  %s%n", &pos3, s, &pos);
 		} else {
-			printf ("          %nlocal:  %s%n", &pos3, s, &pos);
+			printf ("              %nlocal:  %s%n", &pos3, s, &pos);
 		}
 	}
 	ret = xmltag_search (&s, tag, "remaddr", 0);
@@ -1053,9 +1132,15 @@ printudptun (tag, pflags)
 	} else if (hasactloc) {
 		printf ("\n");
 	}
+	ret = xmltag_search (&s, tag, "directroute/gw", 0);
+	if (RERR_ISOK(ret)) {
+		ret = xmltag_search (&s2, tag, "directroute/dev", 0);
+		if (!RERR_ISOK(ret)) s2="";
+		printf ("              route via %s dev %s\n", s, s2);
+	}
 	ret = xmltag_search (&s, tag, "status", 0);
 	if (RERR_ISOK(ret)) {
-		printf ("          status: %s\n", s);
+		printf ("              status: %s\n", s);
 	}
 
 	return RERR_OK;
@@ -1107,6 +1192,11 @@ printinfo (xml, stag, flags)
 		SLOGFE (LOG_ERR, "no >>dev<< tag found: %s", rerr_getstr3(ret));
 		return ret;
 	}
+	ret = xmlcurs_fsearchtag (&cursor, 0, "tun");
+	if (!RERR_ISOK(ret)) {
+		SLOGFE (LOG_ERR2, "tunnel not found: %s", rerr_getstr3(ret));
+		return ret;
+	}
 	ret = xmlcurs_search (&text, &cursor, (char*)stag, flags);
 	if (!RERR_ISOK(ret)) {
 		SLOGFE (LOG_ERR2, "querry >>%s<< not found: %s", stag, rerr_getstr3(ret));
@@ -1115,6 +1205,7 @@ printinfo (xml, stag, flags)
 	printf ("%s\n", text);
 	return RERR_OK;
 }
+
 
 
 

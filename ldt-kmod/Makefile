@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2015-2021 by Frank Reker, Deutsche Telekom AG
+# Copyright (C) 2015-2022 by Frank Reker, Deutsche Telekom AG
 #
 # LDT - Lightweight (MP-)DCCP Tunnel kernel module
 #
@@ -65,7 +65,7 @@ install: modules_install
 
 obj-m += ldt.o
 
-ldt-y := ldt_cfg.o ldt_dev.o ldt_event.o ldt_ip.o \
+ldt-y := ldt_dev.o ldt_event.o ldt_ip.o \
 				ldt_mod.o ldt_netlink.o ldt_prot1.o \
 				ldt_sysctl.o ldt_tunaddr.o ldt_tun.o \
 				ldt_queue.o ldt_lock.o
