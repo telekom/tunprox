@@ -1335,12 +1335,7 @@ do_xmit_skb (tdat, skb)
 		sock = tdat->active;
 	}
 	if (!sock) return -ENOTCONN;
-#if IS_ENABLED(CONFIG_IP_MPDCCP)
-	if (tdat->ismpdccp) {
-		ret = mpdccp_xmit_skb (sock->sk, skb);
-	} else
-#endif
-	{
+	else {
 		struct kvec		kvec = (struct kvec) {
 			.iov_base = skb->data,
 			.iov_len = skb->len,
