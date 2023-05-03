@@ -75,6 +75,7 @@
 #include <linux/scatterlist.h>
 #include <linux/udp.h>
 #include <linux/ipv6.h>
+#include <linux/inetdevice.h>
 #include <net/ipv6.h>
 #include <net/udp.h>
 #ifdef CONFIG_NET_UDP_TUNNEL
@@ -526,6 +527,22 @@ mpdccptun_closesk (tdat)
 
 static
 int
+is_mpdccp_link (struct mpdccptun *tdat)
+{
+	struct net_device *ndev;
+	tp_addr_t ad = tdat->addr.laddr;
+	if(TP_ADDR_ISIPV4(ad)) {
+		ndev = ip_dev_find(NDEV2NET(tdat->ndev),ad.v4.sin_addr.s_addr);
+		if(ndev && ndev->flags & IFF_MPDCCPON) return 1;
+	} else {
+	 // ndev = ipv6_dev_find(NDEV2NET(tdat->ndev),ad.v6.sin6_addr);
+	 // if(ndev && ndev->flags & IFF_MPDCCPON) return 1;
+	}
+	return 0;
+}
+
+static
+int
 mpdccptun_dobind (tdat)
 	struct mpdccptun	*tdat;
 {
@@ -572,10 +589,17 @@ mpdccptun_dobind (tdat)
 
 #if IS_ENABLED(CONFIG_IP_MPDCCP)
 	if (tdat->ismpdccp) {
-		tp_debug2 ("switch to multipath");
-		val = 1;
-		ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, DCCP_SOCKOPT_MULTIPATH,
-              	(char*)&val, sizeof(val));
+		if(is_mpdccp_link(tdat)){
+			tp_debug2 ("switch to multipath");
+			val = 1;
+			ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, 
+					DCCP_SOCKOPT_MULTIPATH, (char*)&val, sizeof(val));
+		} else {
+			tp_err ("error binding mpdccp socket, link is not mp-capable\n");
+			tdat->ismpdccp = 0;
+			ret = -EPROTONOSUPPORT;
+		}
+
 		if (ret < 0) {
 			tp_err ("error switching to multipath: %d", ret);
 			set_fs(old_fs);
@@ -1311,12 +1335,7 @@ do_xmit_skb (tdat, skb)
 		sock = tdat->active;
 	}
 	if (!sock) return -ENOTCONN;
-#if IS_ENABLED(CONFIG_IP_MPDCCP)
-	if (tdat->ismpdccp) {
-		ret = mpdccp_xmit_skb (sock->sk, skb);
-	} else
-#endif
-	{
+	else {
 		struct kvec		kvec = (struct kvec) {
 			.iov_base = skb->data,
 			.iov_len = skb->len,
