@@ -81,6 +81,7 @@ ldt_tun_init (tun, type)
 	const char		*type;
 {
 	int	ret;
+	struct timespec64 ts;
 
 	if (!tun || !tun->tdev) return -EINVAL;
 	if (!type) {
@@ -98,7 +99,9 @@ ldt_tun_init (tun, type)
 		return -ENOENT;
 	}
 
-	tun->ctime = tun->mtime = tun->atime = get_seconds();
+	//tun->ctime = tun->mtime = tun->atime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tun->ctime = tun->mtime = tun->atime = ts.tv_sec;
 	ret = tun->tunops->tp_new (tun, type);
 	if (ret < 0) {
 		tp_err ("error setting up tunnel %s: %d", type, ret);
@@ -130,12 +133,15 @@ ldt_tun_bind (tun, addr)
 	tp_addr_t		*addr;
 {
 	int			ret=0;
+	struct timespec64 ts;
 
 	if (!tun || !addr) return -EINVAL;
 	TUNFUNCHK(tun,tp_bind);
 	tp_debug3 ("call tp_bind\n");
 	ret = tun->tunops->tp_bind(tun->tundata, addr, 0);
-	tun->mtime = get_seconds();
+	//tun->mtime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tun->mtime = ts.tv_sec;
 	if (ret == 0) 
 		ldt_event_crsend (LDT_EVTYPE_REBIND, tun, 0);
 	tp_debug3 ("done\n");
@@ -193,10 +199,14 @@ ldt_tun_peer (tun, addr)
 	tp_addr_t				*addr;
 {
 	int	ret;
+	struct timespec64 ts;
 
 	TUNFUNCHK(tun,tp_peer);
 	ret = tun->tunops->tp_peer(tun->tundata, addr);
-	tun->mtime = get_seconds();
+
+	ktime_get_raw_ts64(&ts);
+	tun->mtime = ts.tv_sec;
+	//tun->mtime = get_seconds();
 	if (ret == 0) 
 		ldt_event_crsend (LDT_EVTYPE_REBIND, tun, 0);
 	return ret;

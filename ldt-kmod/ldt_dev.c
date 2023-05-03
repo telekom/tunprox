@@ -243,6 +243,7 @@ tpdev_setup (
 	struct net_device	*ndev)
 {
 	struct ldt_dev	*tdev;
+	struct timespec64 ts;
 
 	/* lock must be held by caller */
 	if (!ndev) return;
@@ -256,7 +257,9 @@ tpdev_setup (
 	ndev->type = ARPHRD_PPP;
 	ndev->flags = IFF_POINTOPOINT | IFF_NOARP | IFF_MULTICAST;
 	ndev->tx_queue_len = 10000;
-	tdev->ctime = tdev->mtime = get_seconds();
+	//tdev->ctime = tdev->mtime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tdev->ctime = tdev->mtime = ts.tv_sec;
 	SET_NETDEV_DEVTYPE(ndev, &tp_devtype);
 	tdev->MAGIC = LDT_MAGIC;
 	return;
@@ -369,6 +372,7 @@ tpdev_change_mtu (ndev, new_mtu)
 {
 	struct ldt_dev	*tdev;
 	int						ret = -ERANGE;
+	struct timespec64 ts;
 
 	if (!ndev) return -EINVAL;
 	tdev = LDTDEV (ndev);
@@ -377,7 +381,9 @@ tpdev_change_mtu (ndev, new_mtu)
 	if (new_mtu > 65535) goto out;
 	ndev->mtu = new_mtu;
 	ret = 0;
-	tdev->mtime = get_seconds();
+	//tdev->mtime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tdev->mtime = ts.tv_sec;
 out:
 	DEV_UNLOCK(tdev);
 	return 0;
@@ -546,7 +552,7 @@ get_devinfo (tdev, info, ilen)
 int
 ldt_rm_tun (tdev)
 	struct ldt_dev	*tdev;
-{
+{	struct timespec64 ts;
 	if (!tdev) return -EINVAL;
 	if (!DEV_LOCK_CHK(tdev)) return -EINVAL;
 	if (tdev->ndev->flags & IFF_UP) {
@@ -555,7 +561,9 @@ ldt_rm_tun (tdev)
 	}
 	SETACTIVE(tdev,0);
 	ldt_rm_tun2 (tdev);
-	tdev->mtime = get_seconds();
+	//tdev->mtime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tdev->mtime = ts.tv_sec;
 	SETACTIVE(tdev,1);
 	DEV_UNLOCK(tdev);
 	return 0;
@@ -584,6 +592,7 @@ ldt_dev_newtun (tdev, tuntype)
 {
 	int						ret;
 	struct ldt_tun	*tun;
+	struct timespec64 ts;
 	int						mhead;
 
 	if (!DEV_LOCK_CHK(tdev)) return -EINVAL;
@@ -599,7 +608,9 @@ ldt_dev_newtun (tdev, tuntype)
 	mhead = ldt_tun_needheadroom (tun);
 	if (mhead > 0 && tdev->ndev->needed_headroom < mhead) tdev->ndev->needed_headroom = mhead;
 	tdev->hastun = 1;
-	tdev->mtime = get_seconds();
+	//tdev->mtime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tdev->mtime = ts.tv_sec;
 	ldt_event_crsend (LDT_EVTYPE_TUNUP, tun, 0);
 out:
 	SETACTIVE(tdev,1);
@@ -835,13 +846,16 @@ tp_ev_register (
 	struct net_device	*ndev)
 {
 	struct ldt_dev	*tdev;
+	struct timespec64 ts;
 
 	if (!ndev) return -EINVAL;
 	if (!TPDEV_ISLDT (ndev)) return 0;
 	tp_debug ("finish tp device registration");
 	tdev = LDTDEV (ndev);
 	if (!tdev) return -EINVAL;
-	tdev->ctime = tdev->mtime = get_seconds();
+	//tdev->ctime = tdev->mtime = get_seconds();
+	ktime_get_raw_ts64(&ts);
+	tdev->ctime = tdev->mtime = ts.tv_sec;
 	SETACTIVE(tdev,1);
 	ldt_event_crsend (LDT_EVTYPE_IFUP, tdev, 0);
 	/* we are done */

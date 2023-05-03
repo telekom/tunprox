@@ -85,7 +85,8 @@ struct ldt_tun {
 	void							*tundata;
 	struct ldt_tunops			*tunops;
 	struct ldt_dev				*tdev;
-	time_t						ctime, mtime, atime;
+	//unsigned long						ctime, mtime, atime;
+    time64_t                    ctime, mtime, atime;
 };
 			
 #define TUNSTATADD(tun,key,val) \

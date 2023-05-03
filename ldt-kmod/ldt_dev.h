@@ -72,7 +72,7 @@ struct ldt_dev {
 	u32						hastun:1,
 								client:1,
 								server:1;
-	time_t					ctime,mtime;
+	unsigned long					ctime,mtime;
 	struct ldt_tun			tun;
 };
 

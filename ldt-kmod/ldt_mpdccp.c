@@ -65,6 +65,7 @@
 #include <linux/init.h>
 #include <linux/kthread.h>
 #include <linux/types.h>
+#include <linux/uaccess.h>
 #include <linux/netdevice.h>
 #include <linux/ip.h>
 #include <linux/delay.h>
@@ -75,7 +76,6 @@
 #include <linux/scatterlist.h>
 #include <linux/udp.h>
 #include <linux/ipv6.h>
-#include <linux/inetdevice.h>
 #include <net/ipv6.h>
 #include <net/udp.h>
 #ifdef CONFIG_NET_UDP_TUNNEL
@@ -168,7 +168,7 @@ static void connect_handler (struct work_struct*);
 #if IS_ENABLED(CONFIG_IP_MPDCCP)
 static int mpdccptun_linkdown (struct mpdccptun*);
 #endif
-static void conn_timer_handler (unsigned long data);
+static void conn_timer_handler (struct timer_list *t);
 
 static int do_xmit_skb (struct mpdccptun *, struct sk_buff*);
 static int mpdccptun_needheadroom (struct mpdccptun*);
@@ -412,7 +412,8 @@ mpdccptun_new (tun, type)
 	tpq_init (&tdat->xmit_queue, TP_QUEUE_DROP_NEWEST, 1000);
 	tp_lock_init (&tdat->lock);
 	tp_lock_init (&tdat->lock2);
-	setup_timer(&tdat->conn_timer, conn_timer_handler, (unsigned long)tdat);
+	timer_setup(&tdat->conn_timer, conn_timer_handler, 0);
+	// setup_timer(&tdat->conn_timer, conn_timer_handler, (unsigned long)tdat);
 	tp_debug3 ("tdat=%p, tun=%p\n", tdat, tdat->tun);
 	return 0;
 }
@@ -527,28 +528,12 @@ mpdccptun_closesk (tdat)
 
 static
 int
-is_mpdccp_link (struct mpdccptun *tdat)
-{
-	struct net_device *ndev;
-	tp_addr_t ad = tdat->addr.laddr;
-	if(TP_ADDR_ISIPV4(ad)) {
-		ndev = ip_dev_find(NDEV2NET(tdat->ndev),ad.v4.sin_addr.s_addr);
-		if(ndev && ndev->flags & IFF_MPDCCPON) return 1;
-	} else {
-	 // ndev = ipv6_dev_find(NDEV2NET(tdat->ndev),ad.v6.sin6_addr);
-	 // if(ndev && ndev->flags & IFF_MPDCCPON) return 1;
-	}
-	return 0;
-}
-
-static
-int
 mpdccptun_dobind (tdat)
 	struct mpdccptun	*tdat;
 {
 	int			ret;
 	int			val;
-	mm_segment_t old_fs;
+	sockptr_t val2;
 
 	tp_debug3 ("enter");
 	if (!tdat) return -EINVAL;
@@ -575,13 +560,12 @@ mpdccptun_dobind (tdat)
 		tp_err ("error creating socket: %d", ret);
 		return ret;
 	}
-	old_fs = get_fs();
-	set_fs(KERNEL_DS);
 
 	if (tp_addr_getport (&tdat->addr.laddr) > 0) {
 		val = 1;
+		val2 = KERNEL_SOCKPTR((char*)&val);
 		ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_SOCKET, SO_REUSEADDR,
-              	(char*)&val, sizeof(val));
+              	val2, sizeof(val2));
 		if (ret < 0) {
 			tp_warn ("warn: error setting reuseaddr: %d", ret);
 		}
@@ -589,20 +573,13 @@ mpdccptun_dobind (tdat)
 
 #if IS_ENABLED(CONFIG_IP_MPDCCP)
 	if (tdat->ismpdccp) {
-		if(is_mpdccp_link(tdat)){
-			tp_debug2 ("switch to multipath");
-			val = 1;
-			ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, 
-					DCCP_SOCKOPT_MULTIPATH, (char*)&val, sizeof(val));
-		} else {
-			tp_err ("error binding mpdccp socket, link is not mp-capable\n");
-			tdat->ismpdccp = 0;
-			ret = -EPROTONOSUPPORT;
-		}
-
+		tp_debug2 ("switch to multipath");
+		val = 1;
+		val2 = KERNEL_SOCKPTR((char*)&val);
+		ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, DCCP_SOCKOPT_MULTIPATH,
+              	val2, sizeof(val2));
 		if (ret < 0) {
 			tp_err ("error switching to multipath: %d", ret);
-			set_fs(old_fs);
 			goto dorelease;
 		}
 	}
@@ -610,19 +587,19 @@ mpdccptun_dobind (tdat)
 #if defined DCCP_SOCKOPT_QPOLICY_TXQLEN
 	tpq_set_maxlen (&tdat->xmit_queue, tdat->tx_qlen);
 	val = tdat->tx_qlen;
+	val2 = KERNEL_SOCKPTR((char*)&val);
 	ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, DCCP_SOCKOPT_QPOLICY_TXQLEN,
-              (char*)&val, sizeof(val));
+              val2, sizeof(val2));
 	if (ret < 0) {
 		tp_err ("error setting tx qlen: %d\n", ret);
-		set_fs(old_fs);
 		goto dorelease;
 	}
 #endif
 #if defined DCCP_SOCKOPT_QPOLICY_ID
 	val = tdat->qpolicy;
+	val2 = KERNEL_SOCKPTR((char*)&val);
 	ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, DCCP_SOCKOPT_QPOLICY_ID,
-              (char*)&val, sizeof(val));
-	set_fs(old_fs);
+              val2, sizeof(val2));
 	if (ret < 0) {
 		tp_err ("error setting qpolicy: %d\n", ret);
 		goto dorelease;
@@ -707,7 +684,8 @@ mpdccptun_elab_connect (tdat)
 	if (!tdat) return -EINVAL;
 	if (timer_pending (&tdat->conn_timer)) {
 		del_timer (&tdat->conn_timer);
-		setup_timer(&tdat->conn_timer, conn_timer_handler, (unsigned long)tdat);
+		// setup_timer(&tdat->conn_timer, conn_timer_handler, (unsigned long)tdat);
+		timer_setup(&tdat->conn_timer, conn_timer_handler, 0);
 	}
 	ret = mpdccptun_dobind (tdat);
 	if (ret < 0) {
@@ -730,12 +708,12 @@ mpdccptun_elab_connect (tdat)
 	return 0;
 }
 
+
 static
 void
-conn_timer_handler (data)
-	unsigned long	data;
+conn_timer_handler (struct timer_list *t)
 {
-	struct mpdccptun	*tdat = (struct mpdccptun*)data;
+	struct mpdccptun	*tdat = from_timer(tdat, t, conn_timer);
 	if (!tdat) return;
 	if (!tdat->ismpdccp) return;
 	if (tdat->num_subflow > 0) return;
@@ -743,7 +721,6 @@ conn_timer_handler (data)
 	mpdccptun_linkdown (tdat);
 #endif
 }
-
 
 static
 int
@@ -819,8 +796,7 @@ mpdccptun_setqueue (tdat, txqlen, qpolicy)
 {
 	int				ret = 0;
 	int				val;
-	mm_segment_t	old_fs;
-
+	sockptr_t val2;
 	if (!tdat) return -EINVAL;
 	//if (!tdat->sock || !tdat->sock->sk) return -EPERM;
 	tp_debug ("set queue txqlen=%d, qpolicy=%d\n", txqlen, qpolicy);
@@ -848,16 +824,15 @@ mpdccptun_setqueue (tdat, txqlen, qpolicy)
 		}
 	}
 	if (tdat->bound) {
-		old_fs = get_fs();
-		set_fs(KERNEL_DS);
 #ifdef DCCP_SOCKOPT_QPOLICY_TXQLEN
 		if (txqlen >= 0) {
 			tpq_set_maxlen (&tdat->xmit_queue, txqlen);
+			//val2.kernel = &txqlen;
+			val2 = KERNEL_SOCKPTR((char*)&txqlen);
 			ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, DCCP_SOCKOPT_QPOLICY_TXQLEN,
-              		(char*)&txqlen, sizeof(txqlen));
+              		val2, sizeof(val2));
 			if (ret < 0) {
 				tp_err ("error setting tx qlen: %d\n", ret);
-				set_fs(old_fs);
 				goto dorelease;
 			}
 		}
@@ -865,16 +840,15 @@ mpdccptun_setqueue (tdat, txqlen, qpolicy)
 #ifdef DCCP_SOCKOPT_QPOLICY_ID
 		if (qpolicy >= 0) {
 			val = tdat->qpolicy;
+			val2 = KERNEL_SOCKPTR((char*)&val);
 			ret = tdat->sock->ops->setsockopt(tdat->sock, SOL_DCCP, DCCP_SOCKOPT_QPOLICY_ID,
-              		(char*)&val, sizeof(val));
+              		val2, sizeof(val2));
 			if (ret < 0) {
 				tp_err ("error setting qpolicy: %d\n", ret);
-				set_fs(old_fs);
 				goto dorelease;
 			}
 		}
 #endif
-		set_fs(old_fs);
 	}
 
 dorelease:
@@ -1335,7 +1309,12 @@ do_xmit_skb (tdat, skb)
 		sock = tdat->active;
 	}
 	if (!sock) return -ENOTCONN;
-	else {
+#if IS_ENABLED(CONFIG_IP_MPDCCP)
+	if (tdat->ismpdccp) {
+		ret = mpdccp_xmit_skb (sock->sk, skb);
+	} else
+#endif
+	{
 		struct kvec		kvec = (struct kvec) {
 			.iov_base = skb->data,
 			.iov_len = skb->len,
@@ -1374,7 +1353,7 @@ mpdccptun_scrub_skb (skb)
    skb->pkt_type = PACKET_HOST;
    skb->skb_iif = 0;
    skb_dst_drop(skb);
-   nf_reset(skb);
+   nf_reset_ct(skb);
    nf_reset_trace(skb);
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3,11,0)
@@ -1514,8 +1493,10 @@ dorcv_datagram (skbuf, sk, flags)
 	if (!skbuf || !sk) return -EINVAL;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,10,0)
 	skb = __skb_recv_datagram (sk, flags, &peeked, &off, &err);
-#else
+#elseif LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	skb = __skb_recv_datagram (sk, flags, NULL, &peeked, &off, &err);
+#else
+	skb = __skb_recv_datagram (sk, &sk->sk_receive_queue, flags, &off, &err);
 #endif
 	if (!skb) return err;
 	tp_debug3 ("receive datagramm of %d bytes\n", skb->len);
