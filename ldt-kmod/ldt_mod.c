@@ -111,7 +111,7 @@ module_init (ldt_module_init);
 module_exit (ldt_module_exit);
 
 
-MODULE_LICENSE("Propietary");
+MODULE_LICENSE("Proprietary");
 MODULE_AUTHOR("Frank Reker <frank@reker.net>");
 MODULE_VERSION(LDT_VERSION);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
